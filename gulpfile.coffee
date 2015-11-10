@@ -38,8 +38,10 @@ vendorPaths =
   else vendor.dev
 
 gulp.task 'vendor', ->
+  # just copy these files, do NOT inject
+  copyPaths = vendor.copy.map (p) -> path.resolve("./bower_components", p)
   absolutePaths = vendorPaths.map (p) -> path.resolve("./bower_components", p)
-  gulp.src absolutePaths, base: './bower_components'
+  gulp.src absolutePaths.concat(copyPaths), base: './bower_components'
     .pipe gulp.dest paths.vendor
 
 gulp.task 'images', ->
@@ -69,9 +71,20 @@ gulp.task 'coffee', ->
     .pipe if argv.production then uglify() else gutil.noop()
     .pipe gulp.dest(paths.dest)
 
+gulp.task 'meteor', ->
+  gulp.src paths.meteor
+    .pipe cache 'meteor'
+    .pipe coffeelint()
+    .pipe coffeelint.reporter coffeStylish
+    .pipe coffee().on('error', gutil.log)
+    .pipe if argv.production then uglify() else gutil.noop()
+    .pipe gulp.dest(paths.meteor_dest)
+
 gulp.task 'index', ->
   # Inject in the correct order to startup app
-  vendor = gulp.src [paths.vendor+'**/*.js','!**/lib/ionic/**'], read: false
+  skipVendorPaths = vendor.copy.map (p) -> "!**/"+p
+  gutil.log(["do NOT inject:"].concat(skipVendorPaths))
+  vendor = gulp.src [paths.vendor+'**/*.js','!**/lib/ionic/**'].concat(skipVendorPaths), read: false
   blocks = gulp.src ['./www/blocks/router/*.module.js', './www/blocks/router/*.js'], read: false
   core = gulp.src ['./www/core/core.module.js', './www/core/core.*.js'], read: false
   layout = gulp.src ['./www/layout/layout.module.js', './www/layout/layout.route.js'], read: false

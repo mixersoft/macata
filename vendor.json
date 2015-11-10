@@ -4,13 +4,14 @@
     "ionic/fonts/*"
   ],
   "dev": [
-    "ionic/js/ionic.bundle.js", 
     "ionic/fonts/*", 
     "lodash/lodash.min.js",
     "angular-toastr/dist/angular-toastr.tpls.min.js",
     "angular-toastr/dist/angular-toastr.min.css",
-    "robotodraft/fonts/**/*",
-    "moment/min/moment.min.js",
     "angular-moment/angular-moment.js"
+  ],
+  "copy": [
+    "ionic/js/ionic.bundle.js",
+    "moment/min/moment.min.js"
   ]
 }
