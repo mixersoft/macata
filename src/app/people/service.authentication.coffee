@@ -4,56 +4,32 @@
 # works with sign-in-register directive
 AAAHelpers = ($rootScope, $q, $location, $stateParams
   UsersResource
-  appModalSvc
+  signInRegisterSvc
   devConfig, $log, toastr)->
     self = {
-      signIn: (person, fnComplete)->
+      signIn: (person)->
         return $q.when()
-        .then (result)->
+        .then ()->
           # TODO: do password sign-in
           return UsersResource.query({username:person.username})
         .then (results)->
-          if results.length
-            return person = results.shift()
-          return $q.reject("NOT FOUND")
-        .then (person)->
-          return devConfig.loginUser( person.id , true)
-          .then (user)->
-            # $rootScope.$emit 'user:sign-in', $rootScope['user']
-            return fnComplete?(user) || user
+          return results?[0]
         .catch (err)->
           $rootScope.$emit 'user:sign-out'
-          if err == 'NOT FOUND'
-            toastr.warning "The Username/password combination was not found. Please try again."
-            return false # try again
-
           if _.isString err
             err = {
               message: err
             }
           err['isError'] = true
-          return fnComplete?(err) || err
+          return err
 
-      register: (person, fnComplete)->
+      register: (person)->
         return $q.when()
-        .then (result)->
-          return $q.reject('REQUIRED VALUE') if !person.username
-          return UsersResource.query({username:person.username})
-        .then (results)->
-          if results.length
-            return $q.reject('DUPLICATE USERNAME')
+        .then ()->
           person.face = UsersResource.randomFaceUrl()
           return UsersResource.post(person)
-        .then (person)->
-          return devConfig.loginUser( person.id , true)
-          .then (user)->
-            # $rootScope.$emit 'user:sign-in', $rootScope['user']
-            return fnComplete?(user) || user
         .catch (err)->
           $rootScope.$emit 'user:sign-out'
-          if err == 'REQUIRED VALUE'
-            toastr.warning "Expecting a username. Please try again."
-            return false # try again
           if err == 'DUPLICATE USERNAME'
             toastr.warning "That username was already taken. Please try again."
             return false # try again
@@ -63,7 +39,21 @@ AAAHelpers = ($rootScope, $q, $location, $stateParams
               message: err
             }
           err['isError'] = true
-          return fnComplete?(err) || err
+          return err
+
+      # exaple AAAHelpers.showSignInRegister.apply(vm, arguments)
+      showSignInRegister: (initialSlide)->
+        vm = this
+        return signInRegisterSvc.showSignInRegister(null, {
+          signIn: self.signIn
+          checkIfUserExists: (data)->
+            return UsersResource.query({username:data.username})
+          register: self.register
+          notImplemented: vm.on.notReady
+        })
+        .then (person)->
+          console.log ['SignInRegisterSvc', person]
+          return devConfig.loginUser( person.id , true)
     }
     
     return self # AAAHelpers
@@ -71,7 +61,7 @@ AAAHelpers = ($rootScope, $q, $location, $stateParams
 
 AAAHelpers.$inject = ['$rootScope', '$q', '$location', '$stateParams'
 'UsersResource'
-'appModalSvc'
+'signInRegisterSvc'
 'devConfig', '$log', 'toastr']
 
 

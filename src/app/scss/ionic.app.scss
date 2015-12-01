@@ -47,25 +47,37 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   margin: -10px;
 }
 
-#profile {
-  .hero {
-    .hero-bg {
+.pull-right {
+  float:right;
+}
+
+$hero-wrap-bg-height: 170px;
+#profile, #menu-item {
+  .hero-a {
+    .hero-wrap {
+      overflow: hidden;
       position: absolute;
       top: 0;
       right: 0;
       width: 100%;
-      height: 170px;
+      height: $hero-wrap-bg-height;
       z-index: -1;
+      .hero-bg {
+        width: 100%;
+        height: 100%;
+      }
     }
     .hero-toolbar {
       position: absolute;
-      top: 170px;
+      top: $hero-wrap-bg-height;
       right: 0;
       font-size: 24px;
     }
     .face {
       border-radius: 50%;
       border: 2px solid white;
+      width: 200px;
+      height: 200px;
     }
   }
 }

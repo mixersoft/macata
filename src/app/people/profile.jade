@@ -1,16 +1,21 @@
-// people/profile.jade
+//- people/profile.html
 ion-view(view-title="{{vm.title}}")
-  ion-content#profile.has-header{{me=vm.me;''}}
-    div.hero
+  ion-content#profile.has-header.light-bg {{person=vm.person;''}}
+    div.hero-a
       div.content
-        div.hero-bg.has-mask-reverse(ng-style="vm.imgAsBg(vm.me.face)")
+        div.hero-wrap.has-mask-reverse
+          div.hero-bg.blur(ng-style="vm.imgAsBg(person.face)")
         div.hero-toolbar.padding
           i.padding-left.icon.ion-heart.dark
           i.padding-left.icon.ion-ios-upload.dark
         div.text-center.padding
-          h2.light.text-center {{me.displayName}}
-          img.face(ng-src="{{vm.me.face}}")
-    div.text-center 
-      h2.capitalize {{me.firstname}} {{me.lastname}}
-      button.button.icon-left.icon.ion-chatbox Contact Me
+          h2.light.text-center {{person.displayName}}
+          img.face(
+            ng-style="vm.imgAsBg(person.face)"
+            )
+    div.content.row.responsive-sm(ng-if="vm.me != person") 
+      div.col.col-offset-25.col-50      
+        div.text-center
+          h2.capitalize {{person.firstname}} {{person.lastname}}
+          button.button.icon-left.icon.ion-chatbox Contact Me
 
