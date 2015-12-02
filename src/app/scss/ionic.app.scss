@@ -51,6 +51,33 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   float:right;
 }
 
+/* 
+ * placeholder.directive 
+ */
+.bg-image {
+  background: url('') center center;
+  background-size: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: -1
+}
+.bg-image:after {
+  content:"";
+  background-color: rgba(0,0,0,0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+/* 
+ * END: placeholder.directive 
+ */
+
+
 $hero-wrap-bg-height: 170px;
 #profile, #menu-item {
   .hero-a {
