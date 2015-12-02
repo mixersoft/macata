@@ -1,0 +1,20 @@
+// grid/grid.jade
+ion-view(view-title="{{vm.title}}")
+  ion-content.has-header(delegate-handle="collection-repeat-wrap")
+    div.content.condensed
+      div.row.ng-repeat-grid.responsive-sm
+        div.col(ng-class="vm.getColWidth(240)")(
+          ng-repeat="item in vm.rows"
+        )
+          div.card
+            div.item.item-avatar(
+            ng-class="[item.color,'bg'].join('-')"
+            style="min-height:160px;"
+            )
+              img(placeholder="img" group="face" index="{{item.id}}")
+              div(placeholder="bg-img" group="tile" index="{{item.id}}")
+              div.light(placeholder="name" group="tile" index="{{item.id}}")
+              //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}
+
+
+

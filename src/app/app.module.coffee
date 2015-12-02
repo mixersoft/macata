@@ -21,4 +21,5 @@ angular
     'starter.data'
     'starter.home'
     'starter.profile'
+    'starter.grid'
   ]
