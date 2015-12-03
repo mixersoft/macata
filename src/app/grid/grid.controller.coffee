@@ -31,24 +31,7 @@ GridCtrl = (
       color: vm.lookup.colors[i %% vm.lookup.colors.length]
     }
 
-    # grid layout methods
-    vm.getColWidth = (minW)->
-      pct = minW/$window.innerWidth
-      return 'col-20' if pct <= 0.20
-      return 'col-25' if pct <= 0.25
-      return 'col-33' if pct <= 0.33
-      return 'col-50' if pct <= 0.50
-      return null
-    angular.element($window).bind 'resize', ()->
-      $scope.$apply()
-      return
-
-      
-      
-      
-
-
-
+ 
     vm.on = {
       scrollTo: (anchor)->
         $location.hash(anchor)
