@@ -25,7 +25,7 @@ appRun = ($ionicPlatform, $rootScope, $location, $log) ->
       locationSearch = $location.search()
 
       # check if state requires user to signIn, see *.route.coffee
-      requireLogin = toState.data.requireLogin
+      requireLogin = toState.data?.requireLogin
       if requireLogin
         $log.warn "call signInRegisterSvc.showSignInRegister('signin')"
 

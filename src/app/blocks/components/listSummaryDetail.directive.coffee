@@ -81,7 +81,7 @@ ListItemContainerDirective = ()->
                 .addClass('selected')
                 .addClass(vm.calcColWidth(null, $scope.detailMaxWidth))
                 # move $detailEl after $selectedEl
-                .after(vm.$detailEl)   
+                .after(vm.$detailEl)
 
               unSelect = vm.getAllSelected vm.$summaryEl, $selectedEl
               vm.clearColSpec( unSelect )
@@ -235,7 +235,7 @@ ListDetailDirective = ()->
     transclude: true
     replace: true
     template: """
-      <div name="list-detail-wrap" class="list-item-detail col">
+      <div name="list-detail-wrap" class="list-item-detail col hide">
         <div class="card" ng-transclude-compile>
         </div>
       </div>
