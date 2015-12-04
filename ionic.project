@@ -1,5 +1,5 @@
 {
-  "name": "ionic-tabs-starter-sass-jade-coffee",
+  "name": "layout",
   "app_id": "",
   "gulpStartupTasks": [
     "sass",
