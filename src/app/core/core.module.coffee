@@ -2,6 +2,6 @@
 
 angular.module 'starter.core', [
   'blocks.router', 'blocks.data', 'blocks.components'
-  'angularMoment'
+  'angularMoment', 'jett.ionic.scroll.sista'
   'ngAnimate', 'toastr'
 ]

@@ -1,6 +1,9 @@
 // grid/grid.jade
 ion-view(view-title="{{vm.title}}")
-  ion-content.has-header(delegate-handle="list-item-scroll")
+  ion-content.xxx-has-header(
+    delegate-handle="list-item-scroll"
+    scroll-sista="header"
+  )
 
     list-item-container.content.condensed(
       xxx-collection="vm.rows"

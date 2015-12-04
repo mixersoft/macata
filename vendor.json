@@ -8,6 +8,7 @@
     "lodash/lodash.min.js",
     "angular-toastr/dist/angular-toastr.tpls.min.js",
     "angular-toastr/dist/angular-toastr.min.css",
+    "ionic-scroll-sista/dist/ionic.scroll.sista.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [

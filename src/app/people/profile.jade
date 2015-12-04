@@ -1,6 +1,8 @@
 //- people/profile.html
 ion-view(view-title="{{vm.title}}")
-  ion-content#profile.has-header.light-bg {{person=vm.person;''}}
+  ion-content#profile.has-header.light-bg(
+    scroll-sista
+  ) {{person=vm.person;''}}
     div.hero-a
       div.content
         div.hero-wrap.has-mask-reverse
