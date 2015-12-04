@@ -78,8 +78,38 @@ GridCtrl.$inject = [
   'utils', 'devConfig', 'exportDebug'
 ]
 
+
+
+###
+# @description  ItemDetailCtrl, controller for directive:list-item-detail
+###
+
+ItemDetailCtrl = (
+  $scope, $rootScope, $q
+  $log, toastr
+  ) ->
+    vm = this
+    vm.on = {
+      'click': (event, item)->
+        event.stopImmediatePropagation()
+        $log.info ['ItemDetailCtrl.on.click', item.name]
+        return
+    }
+    console.log ["ItemDetailCtrl initialized scope.$id=", $scope.$id]
+    return vm
+
+ItemDetailCtrl.$inject = [
+  '$scope', '$rootScope', '$q'
+  '$log', 'toastr'
+]
+
+
 angular.module 'starter.grid'
   .controller 'GridCtrl', GridCtrl
+  .controller 'ItemDetailCtrl', ItemDetailCtrl
+
+
+
 
 
 

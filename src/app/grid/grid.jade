@@ -1,36 +1,51 @@
 // grid/grid.jade
 ion-view(view-title="{{vm.title}}")
   ion-content.has-header(delegate-handle="list-item-scroll")
-    div.content.condensed
-      div(
-        list-summary-detail 
-        collection="vm.rows"
-        scroll-handle="list-item-scroll"
-        summary-min-width="320"
-        detail-max-width="720"
-      )
 
-          ion-item.item-avatar(     name="list-item-summary"
+    list-item-container.content.condensed(
+      xxx-collection="vm.rows"
+      scroll-handle="list-item-scroll"
+      summary-min-width="320"
+      detail-max-width="720"
+    )
+      list-item-summary(
+        collection="vm.rows"
+      )
+        ion-item.item-avatar(
           ng-class="[item.color,'bg'].join('-')"
           style="min-height:160px;"
           ng-click="on.select($event, item)"
-          )
-            img(placeholder="img" group="face" index="{{item.id}}")
-            div(placeholder="bg-img" group="tile" index="{{item.id}}")
-            div.light(placeholder="name" group="tile" index="{{item.id}}" model="item" ng-bind="item.name")
-            div.console(ng-bind="{{item.id}}")
-            //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}
+        )
+          img(placeholder="img" group="face" index="{{item.id}}")
+          div(placeholder="bg-img" group="tile" index="{{item.id}}")
+          div.light(placeholder="name" group="tile" index="{{item.id}}" model="item" ng-bind="item.name")
+          div.console(ng-bind="{{item.id}}")
+          //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}
 
-          ion-item(                 name="list-item-detail"
-          )
-            label.item-input
-              span.input-label.text-right
-                i.icon.ion-person.padding-horizontal
-              input.capitalize(type="text" ng-model="selected.name" readonly)
-            label.item-input
-              span.input-label.text-right
-                i.icon.ion-email.padding-horizontal
-              input.capitalize(type="text" ng-model="selected.color" readonly)
+      list-item-detail
+        ion-item(ng-controller="ItemDetailCtrl as dvm")
+          label.item-input
+            span.input-label.text-right
+              i.icon.ion-person.padding-horizontal
+            input.capitalize(type="text" ng-model="item.name" readonly)
+          label.item-input
+            span.input-label.text-right
+              i.icon.ion-email.padding-horizontal
+            input.capitalize(type="text" ng-model="item.color" readonly)
+          div.button-bar
+            button.button.button-full(
+              ng-class="'button-'+item.color"
+              ng-click="on.click($event, item)"
+            ) {{item.name}}
+            button.button.button-full.button-stable(
+              ng-click="on.close($event, item)"
+            ) Cancel
+            button.button.button-full.button-balanced(
+              ng-click="dvm.on.click($event, item)"
+            ) Submit
+
+
+
 
 
 
