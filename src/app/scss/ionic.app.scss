@@ -78,7 +78,9 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
  * placeholder.directive 
  */
 .bg-image {
-  background: url('') center center;
+  background-image: url('');
+  background-position-x: 50%;
+  background-position-y: 50%;
   background-size: cover;
   position: absolute;
   top: 0;

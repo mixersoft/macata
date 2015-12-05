@@ -50,7 +50,7 @@ PlaceholderDirective = ($http, $compile)->
                 # console.log ['bg-img', offset, index]
                 src = getImgSrc(index , offset, list)
                 element.addClass('bg-image')
-                  .css('background', "url({src}) 50% 50%".replace('{src}', src) )
+                  .css('background-image', "url({src})".replace('{src}', src) )
               when 'name'
                 hash = hashKey(index,offset,list)
                 name = list[hash]['author']

@@ -1,23 +1,14 @@
 # placeholder.direcctive.coffee
 'use strict'
 
-# ListController = ($scope, $window)->
-#   vm = this
-#   vm.item = {}
-#   vm.selected = (item)->
-#     console.log ["setSelected", item.name] if item?
-#     vm.item = angular.copy item if item?
-#     return vm.item
-#   return vm
-
-# ListController.$inject = ['$scope', '$window']
-
 ListItemContainerDirective = ()->
   return {
     restrict: 'E'
     scope: {
+      collection:"="
       summaryMinWidth: "="
       detailMaxWidth: "="
+      showDetailInline: "="
       scrollHandle: "@"
     }
     controllerAs: 'listItemCtrl'
@@ -25,6 +16,7 @@ ListItemContainerDirective = ()->
       '$scope', '$window', '$ionicScrollDelegate', '$timeout'
       ($scope, $window, $ionicScrollDelegate, $timeout)->
         vm = this
+        vm.collection = $scope.collection
         vm._selected = {}
         vm.$summaryEl = null  # set in postLink
         vm.$detailEl = null   # set in postLink
@@ -57,6 +49,9 @@ ListItemContainerDirective = ()->
           # console.log ionic.DomUtil.getPositionInParent($selectedEl[0])
           switch type
             when 'summary'
+              if $scope.showDetailInline == false
+                vm.$summaryEl.children().removeClass('hide')
+
               vm.clearColSpec(vm.$detailEl).addClass('hide')
 
               unSelect = vm.getAllSelected vm.$summaryEl
@@ -76,6 +71,9 @@ ListItemContainerDirective = ()->
                 return
 
             when 'detail'
+              if $scope.showDetailInline == false
+                vm.$summaryEl.children().addClass('hide')
+
               vm.clearColSpec($selectedEl)
                 .removeClass('hide')
                 .addClass('selected')
@@ -195,6 +193,14 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
       #   return
       post: (scope, element, attrs, controller, transclude) ->
         # element.addClass('row').addClass('ng-repeat-grid')
+        scope.listItemCtrl = controller
+
+        if not attrs.collection?
+          # list-item-summary[collection] takes precedence
+          scope.$watch 'listItemCtrl.collection', (newV, oldV)->
+            scope.collection = newV
+            return
+
         controller.selected(null)
 
         scope.getColWidth = controller.getColWidth

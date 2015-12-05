@@ -1,18 +1,20 @@
 // grid/grid.jade
 ion-view(view-title="{{vm.title}}")
-  ion-content.xxx-has-header(
+  ion-content(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
   )
 
     list-item-container.content.condensed(
-      xxx-collection="vm.rows"
+      collection="vm.rows"
       scroll-handle="list-item-scroll"
       summary-min-width="320"
       detail-max-width="720"
+      show-detail-inline="true"
+      xxx-use-collection-repeat="true"
     )
       list-item-summary(
-        collection="vm.rows"
+        xxx-collection="vm.rows"
       )
         ion-item.item-avatar(
           ng-class="[item.color,'bg'].join('-')"
