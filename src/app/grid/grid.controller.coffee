@@ -97,6 +97,9 @@ ItemDetailCtrl = (
       'click': (event, item)->
         event.stopImmediatePropagation()
         $log.info ['ItemDetailCtrl.on.click', item.name]
+        angular.element(
+          document.querySelector('.list-item-detail')
+        ).toggleClass('slide-under')
         return
     }
     console.log ["ItemDetailCtrl initialized scope.$id=", $scope.$id]

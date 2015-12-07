@@ -60,7 +60,6 @@ $RobotoDraftFontVersion: "1.0.0";
   } 
 }
 
-
 /* 
  * placeholder.directive 
  */
@@ -122,6 +121,22 @@ $hero-wrap-bg-height: 170px;
 }
 
 
+.list-item-detail.motion {
+  .item {
+    max-height: auto;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+    -webkit-transition: all 0.3s ease-out !important;
+    transition: all 0.3s ease-out !important;
+    transform: translate3d(0, 0, 0) !important;
+    /*overflow: hidden;*/
+  }
+  &.slide-under .item {
+    max-height: 0  !important;
+    padding-top: 0  !important;
+    padding-bottom: 0  !important;
+  }
+}
 
 /*  legacy  */
 .has-mask {
