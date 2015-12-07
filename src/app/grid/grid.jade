@@ -18,7 +18,7 @@ ion-view(view-title="{{vm.title}}")
       list-item-summary.animate-fade-slide-in-right(
         xxx-collection="vm.rows"
       )
-        ion-item.card.item-avatar.ink(
+        ion-item.card.summary.item-avatar.ink(
           ng-class="[item.color,'bg'].join('-')"
           style="min-height:160px;"
           ng-click="on.select($event, item)"
@@ -33,7 +33,7 @@ ion-view(view-title="{{vm.title}}")
           //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}
 
       list-item-detail#list-item-detail
-        ion-item.in.done(ng-controller="ItemDetailCtrl as dvm")
+        ion-item.detail.in.done(ng-controller="ItemDetailCtrl as dvm")
           label.item-input.ink
             span.input-label.text-right
               i.icon.ion-person.padding-horizontal

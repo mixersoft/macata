@@ -56,6 +56,8 @@ ListItemContainerDirective = ()->
                   .addClass('slide-under')
               unSelect = vm.getAllSelected vm.$summaryEl
               unSelect.removeClass('selected')
+              vm.$summaryEl
+                .removeClass('detail-view-active')
 
               $timeout ()->
                 # clearColSpec after .slide-under animation
@@ -92,6 +94,8 @@ ListItemContainerDirective = ()->
               vm.clearColSpec( unSelect )
                 .removeClass('selected')
                 .addClass(vm.getColWidth())
+              vm.$summaryEl
+                .addClass('detail-view-active')
 
               vm.$detailEl
                 .removeClass('hide')

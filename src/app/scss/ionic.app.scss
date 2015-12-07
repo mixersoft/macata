@@ -44,36 +44,6 @@ $RobotoDraftFontVersion: "1.0.0";
   }
 }
 
-.ng-repeat-grid {
-  &.row {
-    flex-wrap: wrap;
-    .col {
-      flex: none;
-      margin-bottom: inherit;
-    }
-  }
-  @media(min-width: $grid-responsive-sm-break) {
-    .card a {
-      max-height: 320px;
-      height: 320px;
-    }
-  } 
-}
-.col-60 {
-  -webkit-box-flex: 0;
-  -webkit-flex: 0 0 60%;
-  -moz-box-flex: 0;
-  -moz-flex: 0 0 60%;
-  -ms-flex: 0 0 60%;
-  flex: 0 0 60%;
-  max-width: 60%; 
-}
-.col-offset-25-right {
-    margin-right: 25%;
-}
-.col-offset-33-right {
-    margin-right: 33%;
-}
 
 /* 
  * placeholder.directive 
@@ -135,23 +105,78 @@ $hero-wrap-bg-height: 170px;
   }
 }
 
-
-.list-item-detail.motion {
-  .item {
-    max-height: auto;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-    -webkit-transition: all 0.3s ease-out !important;
-    transition: all 0.3s ease-out !important;
-    transform: translate3d(0, 0, 0) !important;
-    /*overflow: hidden;*/
-  }
-  &.slide-under .item {
-    max-height: 0  !important;
-    padding-top: 0  !important;
-    padding-bottom: 0  !important;
+/* 
+ * listSummaryDetail.directive 
+ */
+list-item-container {
+  .list-item-detail {
+    &.motion {
+      .item {
+        max-height: auto;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        -webkit-transition: all 0.3s ease-out !important;
+        transition: all 0.3s ease-out !important;
+        transform: translate3d(0, 0, 0) !important;
+        /*overflow: hidden;*/
+      }
+      &.slide-under .item {
+        max-height: 0  !important;
+        padding-top: 0  !important;
+        padding-bottom: 0  !important;
+      }
+    }
   }
 }
+
+body.platform-browser  {
+  list-item-container .list-item-summary {
+    &.detail-view-active .list-item-wrap:not(.selected) {
+      .item.summary {
+        opacity: 0.8;
+      }
+      .item.summary:hover {
+        opacity:1;
+      }
+    }
+  }
+}
+
+.ng-repeat-grid {
+  &.row {
+    flex-wrap: wrap;
+    .col {
+      flex: none;
+      margin-bottom: inherit;
+    }
+  }
+  @media(min-width: $grid-responsive-sm-break) {
+    .card a {
+      max-height: 320px;
+      height: 320px;
+    }
+  } 
+}
+.col-60 {
+  -webkit-box-flex: 0;
+  -webkit-flex: 0 0 60%;
+  -moz-box-flex: 0;
+  -moz-flex: 0 0 60%;
+  -ms-flex: 0 0 60%;
+  flex: 0 0 60%;
+  max-width: 60%; 
+}
+.col-offset-25-right {
+    margin-right: 25%;
+}
+.col-offset-33-right {
+    margin-right: 33%;
+}
+
+
+/* 
+ * END listSummaryDetail.directive 
+ */
 
 /*  legacy  */
 .has-mask {
