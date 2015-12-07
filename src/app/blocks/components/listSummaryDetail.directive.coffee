@@ -59,6 +59,9 @@ ListItemContainerDirective = ()->
                 .removeClass('selected')
                 .addClass(vm.getColWidth())
 
+              vm.$summaryEl
+                .append(vm.$detailEl)
+
               $timeout ()->
                 # vm.$summaryEl.children().removeClass('hide') # optional
                 # _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
@@ -78,8 +81,8 @@ ListItemContainerDirective = ()->
                 .removeClass('hide')
                 .addClass('selected')
                 .addClass(vm.calcColWidth(null, $scope.detailMaxWidth))
-                # move $detailEl after $selectedEl
-                .after(vm.$detailEl)
+                # append $detailEl after $selectedEl
+                .append(vm.$detailEl)
 
               unSelect = vm.getAllSelected vm.$summaryEl, $selectedEl
               vm.clearColSpec( unSelect )
@@ -87,9 +90,7 @@ ListItemContainerDirective = ()->
                 .addClass(vm.getColWidth())
 
               vm.$detailEl
-                .addClass(vm.calcColWidth(null, $scope.detailMaxWidth))
                 .removeClass('hide')
-
               
               $timeout ()->
                 # vm.scrollPos = _ionScroll.getScrollPosition()
@@ -180,7 +181,7 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
     template: """
       <div name="list-summary-wrap" class="list-item-summary row ng-repeat-grid">
         <div class="list-item-wrap col" ng-class="getColWidth()" ng-repeat="item in collection">
-          <div class="card" ng-transclude-compile>
+          <div ng-transclude-compile>
           </div>
         </div>
       </div>
@@ -241,8 +242,8 @@ ListDetailDirective = ()->
     transclude: true
     replace: true
     template: """
-      <div name="list-detail-wrap" class="list-item-detail col hide">
-        <div class="card" ng-transclude-compile>
+      <div name="list-detail-wrap" class="list-item-detail hide">
+        <div ng-transclude-compile>
         </div>
       </div>
       """

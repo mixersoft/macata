@@ -45,6 +45,10 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   -ms-filter: blur(20px);
   filter: blur(20px);
   margin: -10px;
+
+
+.hide {
+  display: none !important;
 }
 
 .pull-right {
