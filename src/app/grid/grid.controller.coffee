@@ -30,7 +30,6 @@ GridCtrl = (
       id: i
       color: vm.lookup.colors[i %% vm.lookup.colors.length]
     }
-
  
     vm.on = {
       scrollTo: (anchor)->
@@ -57,6 +56,11 @@ GridCtrl = (
           toastr.info "Login as userId=0"
 
     activate = ()->
+      # // Set Ink
+      ionic.material?.ink.displayEffect()
+      ionic.material?.motion.fadeSlideInRight({
+        startVelocity: 20000
+        })
       return
 
     $scope.$on '$ionicView.loaded', (e)->

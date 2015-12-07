@@ -1,5 +1,7 @@
 // grid/grid.jade
 ion-view(view-title="{{vm.title}}")
+  ion-nav-buttons(side="secondary")
+    button.button.button-icon.button-clear.ion-android-more-vertical(menu-toggle="secondary")
   ion-content(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
@@ -13,39 +15,39 @@ ion-view(view-title="{{vm.title}}")
       show-detail-inline="true"
       xxx-use-collection-repeat="true"
     )
-      list-item-summary(
+      list-item-summary.animate-fade-slide-in-right(
         xxx-collection="vm.rows"
       )
-        ion-item.item-avatar(
+        ion-item.card.item-avatar.ink(
           ng-class="[item.color,'bg'].join('-')"
           style="min-height:160px;"
           ng-click="on.select($event, item)"
         )
-          img(placeholder="img" group="face" index="{{item.id}}")
+          img.ink(placeholder="img" group="face" index="{{item.id}}")
           div(placeholder="bg-img" group="tile" index="{{item.id}}")
           div.light(placeholder="name" group="tile" index="{{item.id}}" model="item" ng-bind="item.name")
           div.console(ng-bind="{{item.id}}")
           //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}
 
-      list-item-detail
-        ion-item(ng-controller="ItemDetailCtrl as dvm")
-          label.item-input
+      list-item-detail#list-item-detail
+        ion-item.in.done(ng-controller="ItemDetailCtrl as dvm")
+          label.item-input.ink
             span.input-label.text-right
               i.icon.ion-person.padding-horizontal
             input.capitalize(type="text" ng-model="item.name" readonly)
-          label.item-input
+          label.item-input.ink
             span.input-label.text-right
               i.icon.ion-email.padding-horizontal
             input.capitalize(type="text" ng-model="item.color" readonly)
           div.button-bar
-            button.button.button-full(
+            button.button.button-raised(
               ng-class="'button-'+item.color"
               ng-click="on.click($event, item)"
             ) {{item.name}}
-            button.button.button-full.button-stable(
+            button.button.button-raised.button-stable(
               ng-click="on.close($event, item)"
             ) Cancel
-            button.button.button-full.button-balanced(
+            button.button.button-raised.button-balanced(
               ng-click="dvm.on.click($event, item)"
             ) Submit
 
