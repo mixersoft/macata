@@ -21,30 +21,8 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
 @import '../../../bower_components/ionic/scss/ionic';
 
 
-.has-mask {
-  &:after {
-    content: '';
-    background: -webkit-linear-gradient(top, transparent 20%, rgba(0, 0, 0, 0.8) 100%);
-    height: 100%;
-    left: 0;
-    position: absolute;
-    top: 0;
-    z-index: 0;
-    width: 100%;
-  }
-}
-.has-mask-reverse:after {
-  @extend .has-mask:after;
-  background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
-}
-
-.blur {
-  -webkit-filter: blur(20px);
-  -moz-filter: blur(20px);
-  -o-filter: blur(20px);
-  -ms-filter: blur(20px);
-  filter: blur(20px);
-  margin: -10px;
+.hide {
+  display:none !important;
 }
 
 .pull-right {
@@ -136,7 +114,32 @@ $hero-wrap-bg-height: 170px;
 
 
 
+/*  legacy  */
+.has-mask {
+  &:after {
+    content: '';
+    background: -webkit-linear-gradient(top, transparent 20%, rgba(0, 0, 0, 0.8) 100%);
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    z-index: 0;
+    width: 100%;
+  }
+}
+.has-mask-reverse:after {
+  @extend .has-mask:after;
+  background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
+}
 
+.blur {
+  -webkit-filter: blur(20px);
+  -moz-filter: blur(20px);
+  -o-filter: blur(20px);
+  -ms-filter: blur(20px);
+  filter: blur(20px);
+  margin: -10px;
+}
 
 
 
