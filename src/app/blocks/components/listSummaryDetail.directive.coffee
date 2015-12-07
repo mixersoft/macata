@@ -126,9 +126,9 @@ ListItemContainerDirective = ()->
             pct = maxW/$window.innerWidth
             return colSpec = 'col-100' if pct > 0.80
             return colSpec = 'col-offset-10 col-80' if pct > 0.60
-            # return colSpec = 'col-offset-20 col-60' if pct > 0.5 # col-60 does not exist
-            return colSpec = 'col-offset-25 col-50' if pct > 0.33
-            return colSpec = 'col-offset-33 col-33'
+            return colSpec = 'col-offset-20 col-60' if pct > 0.5
+            return colSpec = 'col-offset-25 col-50 col-offset-25-right' if pct > 0.33
+            return colSpec = 'col-offset-33 col-33 col-offset-33-right'
 
           pct = minW/$window.innerWidth
           return colSpec = 'col-20' if pct <= 0.20
