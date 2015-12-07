@@ -21,7 +21,10 @@ ion-view(view-title="{{vm.title}}")
           style="min-height:160px;"
           ng-click="on.select($event, item)"
         )
-          img(placeholder="img" group="face" index="{{item.id}}")
+          img(
+            placeholder="img" group="face" index="{{item.id}}"
+            ng-click="on.faceClick($event, 'slide-under')"
+          )
           div(placeholder="bg-img" group="tile" index="{{item.id}}")
           div.light(placeholder="name" group="tile" index="{{item.id}}" model="item" ng-bind="item.name")
           div.console(ng-bind="{{item.id}}")
@@ -47,7 +50,7 @@ ion-view(view-title="{{vm.title}}")
             ) Cancel
             button.button.button-full.button-balanced(
               ng-click="dvm.on.click($event, item)"
-            ) Submit
+            ) .slide-under
 
 
 

@@ -52,17 +52,18 @@ ListItemContainerDirective = ()->
               if $scope.showDetailInline == false
                 vm.$summaryEl.children().removeClass('hide')
 
-              vm.clearColSpec(vm.$detailEl).addClass('hide')
-
+              vm.clearColSpec(vm.$detailEl)
+                  .addClass('slide-under')
               unSelect = vm.getAllSelected vm.$summaryEl
-              vm.clearColSpec( unSelect )
-                .removeClass('selected')
-                .addClass(vm.getColWidth())
-
-              vm.$summaryEl
-                .append(vm.$detailEl)
+              unSelect.removeClass('selected')
 
               $timeout ()->
+                # clearColSpec after .slide-under animation
+                vm.clearColSpec( unSelect )
+                  .addClass(vm.getColWidth())
+                vm.$summaryEl
+                  .append(vm.$detailEl)
+
                 # vm.$summaryEl.children().removeClass('hide') # optional
                 # _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
                 # vm.scrollPos = {}
@@ -72,6 +73,9 @@ ListItemContainerDirective = ()->
                 }
                 _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
                 return
+              ,300
+
+
 
             when 'detail'
               if $scope.showDetailInline == false
@@ -93,15 +97,21 @@ ListItemContainerDirective = ()->
                 .removeClass('hide')
               
               $timeout ()->
+                vm.$detailEl
+                  .removeClass('slide-under')
                 # vm.scrollPos = _ionScroll.getScrollPosition()
                 # _ionScroll.scrollTo(0,0, true)
                 # vm.$summaryEl.children().addClass('hide') # optional
+                return
+
+              $timeout ()->
                 vm.scrollPos = {
                   left: 0
                   top: ionic.DomUtil.getPositionInParent($selectedEl[0]).top
                 }
                 _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
                 return
+              , 300
           return
 
         
@@ -112,7 +122,7 @@ ListItemContainerDirective = ()->
         ##
         # use _.memoize to cache value, clear cache when window.innerWidth changes
         vm.calcColWidth = (minW, maxW)->
-          if maxW?
+          if maxW?   # for .list-item-detail
             pct = maxW/$window.innerWidth
             return colSpec = 'col-100' if pct > 0.80
             return colSpec = 'col-offset-10 col-80' if pct > 0.60
@@ -206,6 +216,12 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
 
         scope.getColWidth = controller.getColWidth
         scope.on = {
+          'faceClick': (event, className)->
+            event.stopImmediatePropagation()
+            angular.element(
+              document.querySelector('.list-item-detail')
+            ).toggleClass(className)
+            return
           'select' : (event, model)->
             event.stopImmediatePropagation()
             target = angular.element event.currentTarget
@@ -242,7 +258,7 @@ ListDetailDirective = ()->
     transclude: true
     replace: true
     template: """
-      <div name="list-detail-wrap" class="list-item-detail hide">
+      <div name="list-detail-wrap" class="list-item-detail motion slide-under">
         <div ng-transclude-compile>
         </div>
       </div>
