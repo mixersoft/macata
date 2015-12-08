@@ -25,7 +25,7 @@ ion-view(view-title="{{vm.title}}")
             placeholder="img" group="face" index="{{item.id}}"
             ng-click="on.faceClick($event, 'slide-under')"
           )
-          div(placeholder="bg-img" group="tile" index="{{item.id}}")
+          div(placeholder="bg-img" class="mask" group="tile" index="{{item.id}}")
           div.light(placeholder="name" group="tile" index="{{item.id}}" model="item" ng-bind="item.name")
           div.console(ng-bind="{{item.id}}")
           //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}

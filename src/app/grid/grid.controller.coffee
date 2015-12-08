@@ -1,7 +1,7 @@
 'use strict'
 
 GridCtrl = (
-  $scope, $rootScope, $location, $window
+  $scope, $rootScope, $q, $location, $window
   $ionicScrollDelegate
   $log, toastr
   appModalSvc
@@ -26,11 +26,14 @@ GridCtrl = (
       colors: ['positive', 'calm', 'balanced', 'energized', 'assertive', 'royal', 'dark', 'stable']
     }
 
-    vm.rows = _.map [0..50], (i)-> return {
-      id: i
-      color: vm.lookup.colors[i %% vm.lookup.colors.length]
-    }
-
+    vm.rows = []
+    $q.when().then ()->
+      vm.rows = _.map [0..50], (i)-> return {
+        id: i
+        color: vm.lookup.colors[i %% vm.lookup.colors.length]
+      }
+      console.log "vm.rows set by $q"
+      return vm.rows
  
     vm.on = {
       scrollTo: (anchor)->
@@ -55,8 +58,14 @@ GridCtrl = (
           # loginUser() sets $rootScope.user
           vm.me = $rootScope.user
           toastr.info "Login as userId=0"
+          return vm.me
 
     activate = ()->
+      # // Set Ink
+      ionic.material?.ink.displayEffect()
+      ionic.material?.motion.fadeSlideInRight({
+        startVelocity: 20000
+        })
       return
 
     $scope.$on '$ionicView.loaded', (e)->
@@ -71,7 +80,7 @@ GridCtrl = (
 
 
 GridCtrl.$inject = [
-  '$scope', '$rootScope', '$location', '$window'
+  '$scope', '$rootScope', '$q', '$location', '$window'
   '$ionicScrollDelegate'
   '$log', 'toastr'
   'appModalSvc'
