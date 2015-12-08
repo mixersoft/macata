@@ -17,6 +17,7 @@ ListItemContainerDirective = ()->
       ($scope, $window, $ionicScrollDelegate, $timeout)->
         vm = this
         vm.collection = $scope.collection
+
         vm._selected = {}
         vm.$summaryEl = null  # set in postLink
         vm.$detailEl = null   # set in postLink
@@ -180,6 +181,11 @@ ListItemContainerDirective = ()->
         vm = controller
         vm['$summaryEl'] = _findByName(element.children(), 'list-summary-wrap')
         vm['$detailEl']  = _findByName(element.children(), 'list-detail-wrap')
+        if attrs.collection?
+          # list-item-summary[collection] takes precedence
+          scope.$watch 'collection', (newV, oldV)->
+            vm.collection = newV
+            return
   }
 ListItemContainerDirective.$inject =[]
 
@@ -328,6 +334,9 @@ NgTranscludeCompile = ($compile)->
           _attach = (clone)->
             part = _findByName(clone, $attrs.ngTranscludeCompile)
             $element.empty()
+            # TODO: how do we transclude parent scope??
+            # we don't know controllerAs
+            $scope.vm = $scope.$parent.$parent.vm  # ???: is this a transclude?
             $element.append $compile(part)($scope)
             # $element.append( part )
             # compile at the end
