@@ -13,6 +13,7 @@ ion-view(view-title="{{vm.title}}")
       summary-min-width="320"
       detail-max-width="720"
       show-detail-inline="true"
+      opt-item-height="160"
       todo-use-collection-repeat="true"
     )
 
@@ -23,10 +24,11 @@ ion-view(view-title="{{vm.title}}")
       list-item-summary.animate-fade-slide-in-right(
         opt-collection="vm.rows"
       )
-        //- transclude using ng-repeat="$item in collection" 
+        //- transclude using ng-repeat="$item in collection"
+        //- NOTE: ion-item(ui-sref="") doesn't work with 
+        //-   ionicMaterial CSS.  use div.item instead
         ion-item.item-avatar.ink(
-          ng-class="[item.color,'bg'].join('-')"
-          style="min-height:160px;"
+          ng-class="[$item.color,'bg'].join('-')"
           ng-click="$listItemDelegate.select($event, $item, $index)"
         )
 
@@ -53,7 +55,7 @@ ion-view(view-title="{{vm.title}}")
 
             button.button.button-flat(
               ng-class="'button-'+$item.color"
-              ng-click="dbg.click($event, $item)"
+              ng-click="$listItemDelegate.setItemHeight(200)"
             ) {{$item.name}}
             button.button.button-flat.button-dark(
               ng-click="$listItemDelegate.select($event, null)"
