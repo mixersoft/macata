@@ -68,11 +68,6 @@ GridCtrl = (
           return vm.me
 
     activate = ()->
-      # // Set Ink
-      ionic.material?.ink.displayEffect()
-      ionic.material?.motion.fadeSlideInRight({
-        startVelocity: 20000
-        })
       return
 
     $scope.$on '$ionicView.loaded', (e)->
