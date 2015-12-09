@@ -16,6 +16,10 @@ ion-view(view-title="{{vm.title}}")
       todo-use-collection-repeat="true"
     )
 
+      style.item-style.
+        .list-item-summary .list-item-wrap > .item, .list-item-summary .item.item-complex > .item-content {
+          min-height: 160px; }
+
       list-item-summary.animate-fade-slide-in-right(
         opt-collection="vm.rows"
       )
