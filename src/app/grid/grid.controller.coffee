@@ -26,14 +26,21 @@ GridCtrl = (
       colors: ['positive', 'calm', 'balanced', 'energized', 'assertive', 'royal', 'dark', 'stable']
     }
 
-    vm.rows = []
-    $q.when().then ()->
+
+    if usePromise = true
+      vm.rows = []
+      $q.when().then ()->
+        vm.rows = _.map [0..50], (i)-> return {
+          id: i
+          color: vm.lookup.colors[i %% vm.lookup.colors.length]
+        }
+        console.log "vm.rows set by $q"
+        return vm.rows
+    else
       vm.rows = _.map [0..50], (i)-> return {
         id: i
         color: vm.lookup.colors[i %% vm.lookup.colors.length]
       }
-      console.log "vm.rows set by $q"
-      return vm.rows
  
     vm.on = {
       scrollTo: (anchor)->
