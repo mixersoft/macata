@@ -6,6 +6,7 @@ ListItemContainerDirective = ()->
     restrict: 'E'
     scope: {
       collection:"="
+      itemHeight:"="
       summaryMinWidth: "="
       detailMaxWidth: "="
       showDetailInline: "="
@@ -17,13 +18,13 @@ ListItemContainerDirective = ()->
       ($scope, $window, $ionicScrollDelegate, $timeout)->
         vm = this
         vm.collection = $scope.collection
-
+        vm.itemHeight ?= 160
         vm._selected = {}
         vm.$summaryEl = null  # set in postLink
         vm.$detailEl = null   # set in postLink
         vm.selected = (item, $el)->
           if item?
-            console.log ["setSelected", item.name] 
+            console.log ["setSelected", item.name]
             vm._selected = angular.copy item
             if $el?
               vm._selected['$el'] = $el
@@ -121,6 +122,14 @@ ListItemContainerDirective = ()->
         ##
         ## layout methods
         ##
+        vm.setItemHeight = ($container, h)->
+          h ?= vm.itemHeight
+          styleEl = $container[0].querySelector('style')
+          styleEl.innerHTML = styleEl.innerHTML.replace(/(min-height:.)(\d+)(px)/, "$1"+h+"$3").trim()
+          return
+
+
+
         # use _.memoize to cache value, clear cache when window.innerWidth changes
         vm.calcColWidth = (minW, maxW)->
           if maxW?   # for .list-item-detail
@@ -196,6 +205,8 @@ ListItemContainerDirective = ()->
             vm.layout('summary', $selectedElContainer)
           'getColWidth': ()->
             return vm.getColWidth()
+          'setItemHeight' : ()-> 
+            return 'defined in link'
         }
 
         return vm
@@ -208,8 +219,18 @@ ListItemContainerDirective = ()->
           return angular.element(found)
 
         vm = controller
+        vm['export'].setItemHeight = (h)->
+          controller.setItemHeight(element, h)
+          return
         vm['$summaryEl'] = _findByName(element.children(), 'list-summary-wrap')
         vm['$detailEl']  = _findByName(element.children(), 'list-detail-wrap')
+        if attrs.itemHeight?
+          scope.$watch 'itemHeight', (newV, oldV)->
+            vm.setItemHeight(element, newV) if newV?
+            return
+        else
+          vm.setItemHeight(element)
+
         if attrs.collection?
           # list-item-summary[collection] takes precedence
           scope.$watch 'collection', (newV, oldV)->
@@ -240,7 +261,6 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
       # pre: (scope, element, attrs, controller, transclude) ->
       #   return
       post: (scope, element, attrs, controller, transclude) ->
-        # element.addClass('row').addClass('ng-repeat-grid')
         scope.$listItemDelegate = controller['export']
 
         if not attrs.collection?
@@ -300,7 +320,7 @@ ListDetailDirective = ()->
         }
         scope.$watch '$listItemDelegate.selected()', (newV, oldV)->
           scope.$item = newV
-          console.log [ "watch detail selected", newV]
+          # console.log [ "watch detail selected", newV]
         return
   }
 ListDetailDirective.$inject = []

@@ -11,16 +11,21 @@ ion-view(view-title="{{vm.title}}")
       summary-min-width="320"
       detail-max-width="720"
       show-detail-inline="true"
+      opt-item-height="160"
       todo-use-collection-repeat="true"
     )
+      style.item-style.
+        .list-item-summary .item, .list-item-summary .item.item-complex > .item-content {
+          min-height: 100px; }
+
       list-item-summary(
         opt-collection="vm.rows"
       )
         //- transclude using ng-repeat="$item in collection" 
         ion-item.item-avatar(
           ng-class="[$item.color,'bg'].join('-')"
-          style="min-height:160px;"
           ng-click="$listItemDelegate.select($event, $item, $index)"
+          ui-sref="app.grid"
         )
           img(
             placeholder="img" group="face" index="{{$item.id}}"
@@ -44,7 +49,7 @@ ion-view(view-title="{{vm.title}}")
           div.button-bar
             button.button.button-full(
               ng-class="'button-'+$item.color"
-              ng-click="dbg.click($event, $item)"
+              ng-click="$listItemDelegate.setItemHeight(200)"
             ) {{$item.name}}
             button.button.button-full.button-stable(
               ng-click="$listItemDelegate.select($event, null)"
