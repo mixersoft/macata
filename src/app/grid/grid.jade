@@ -18,7 +18,7 @@ ion-view(view-title="{{vm.title}}")
       )
         //- transclude using ng-repeat="$item in collection" 
         ion-item.item-avatar(
-          ng-class="[item.color,'bg'].join('-')"
+          ng-class="[$item.color,'bg'].join('-')"
           style="min-height:160px;"
           ng-click="$listItemDelegate.select($event, $item, $index)"
         )
