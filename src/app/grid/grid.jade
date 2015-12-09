@@ -11,45 +11,46 @@ ion-view(view-title="{{vm.title}}")
       summary-min-width="320"
       detail-max-width="720"
       show-detail-inline="true"
-      xxx-use-collection-repeat="true"
+      todo-use-collection-repeat="true"
     )
       list-item-summary(
-        xxx-collection="vm.rows"
+        opt-collection="vm.rows"
       )
+        //- transclude using ng-repeat="$item in collection" 
         ion-item.item-avatar(
           ng-class="[item.color,'bg'].join('-')"
           style="min-height:160px;"
-          ng-click="on.select($event, item)"
+          ng-click="$listItemDelegate.select($event, $item, $index)"
         )
           img(
-            placeholder="img" group="face" index="{{item.id}}"
-            ng-click="on.faceClick($event, 'slide-under')"
+            placeholder="img" group="face" index="{{$item.id}}"
+            ng-click="dbg.faceClick($event, 'slide-under')"
           )
-          div(placeholder="bg-img" class="mask" group="tile" index="{{item.id}}")
-          div.light(placeholder="name" group="tile" index="{{item.id}}" model="item" ng-bind="item.name")
-          div.console(ng-bind="{{item.id}}")
-          //- button.button.button-full(ng-class="'button-'+item.color") {{item.id}}:{{item.color}}
+          div(placeholder="bg-img" class="mask" group="tile" index="{{$item.id}}")
+          div.light(placeholder="name" group="tile" index="{{$item.id}}" model="$item" ng-bind="$item.name")
+          div.console(ng-bind="{{$item.id}}")
 
-      list-item-detail
+      list-item-detail 
+        //- $item == $listItemDelegate.selected(), e.g. selected model
         ion-item(ng-controller="ItemDetailCtrl as dvm")
           label.item-input
             span.input-label.text-right
               i.icon.ion-person.padding-horizontal
-            input.capitalize(type="text" ng-model="item.name" readonly)
+            input.capitalize(type="text" ng-model="$item.name" readonly)
           label.item-input
             span.input-label.text-right
               i.icon.ion-email.padding-horizontal
-            input.capitalize(type="text" ng-model="item.color" readonly)
+            input.capitalize(type="text" ng-model="$item.color" readonly)
           div.button-bar
             button.button.button-full(
-              ng-class="'button-'+item.color"
-              ng-click="on.click($event, item)"
-            ) {{item.name}}
+              ng-class="'button-'+$item.color"
+              ng-click="dbg.click($event, $item)"
+            ) {{$item.name}}
             button.button.button-full.button-stable(
-              ng-click="on.close($event, item)"
+              ng-click="$listItemDelegate.select($event, null)"
             ) Cancel
             button.button.button-full.button-balanced(
-              ng-click="dvm.on.click($event, item)"
+              ng-click="dvm.on.click($event, $item)"
             ) .slide-under
 
 

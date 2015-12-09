@@ -11,7 +11,7 @@ ListItemContainerDirective = ()->
       showDetailInline: "="
       scrollHandle: "@"
     }
-    controllerAs: 'listItemCtrl'
+    controllerAs: '$listItemDelegate'
     controller: [
       '$scope', '$window', '$ionicScrollDelegate', '$timeout'
       ($scope, $window, $ionicScrollDelegate, $timeout)->
@@ -22,9 +22,11 @@ ListItemContainerDirective = ()->
         vm.$summaryEl = null  # set in postLink
         vm.$detailEl = null   # set in postLink
         vm.selected = (item, $el)->
-          console.log ["setSelected", item.name] if item?
-          vm._selected = angular.copy item if item?
-          vm._selected['$el'] = $el
+          if item?
+            console.log ["setSelected", item.name] 
+            vm._selected = angular.copy item
+            if $el?
+              vm._selected['$el'] = $el
           return vm._selected
         vm.clearColSpec = ($element)->
           classes = $element.attr('class')
@@ -46,8 +48,8 @@ ListItemContainerDirective = ()->
           return angular.element _.difference( all, $skip) if $skip?
           return angular.element all
 
-        vm.layout = (type, $selectedEl)->
-          # console.log ionic.DomUtil.getPositionInParent($selectedEl[0])
+        vm.layout = (type, $selectedElContainer)->
+          # console.log ionic.DomUtil.getPositionInParent($selectedElContainer[0])
           switch type
             when 'summary'
               if $scope.showDetailInline == false
@@ -70,7 +72,7 @@ ListItemContainerDirective = ()->
                 # vm.scrollPos = {}
                 vm.scrollPos = {
                   left: 0
-                  top: ionic.DomUtil.getPositionInParent($selectedEl[0]).top
+                  top: ionic.DomUtil.getPositionInParent($selectedElContainer[0]).top
                 }
                 _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
                 return
@@ -82,15 +84,15 @@ ListItemContainerDirective = ()->
               if $scope.showDetailInline == false
                 vm.$summaryEl.children().addClass('hide')
 
-              vm.clearColSpec($selectedEl)
+              vm.clearColSpec($selectedElContainer)
                 .removeClass('hide')
                 .addClass('selected')
                 .addClass(vm.calcColWidth(null, $scope.detailMaxWidth))
-                # append $detailEl after $selectedEl
+                # append $detailEl to $selectedElContainer
                 .append(vm.$detailEl)
 
-              unSelect = vm.getAllSelected vm.$summaryEl, $selectedEl
-              vm.clearColSpec( unSelect )
+              unSelectSummaryEl = vm.getAllSelected vm.$summaryEl, $selectedElContainer
+              vm.clearColSpec( unSelectSummaryEl )
                 .removeClass('selected')
                 .addClass(vm.getColWidth())
 
@@ -108,14 +110,12 @@ ListItemContainerDirective = ()->
               $timeout ()->
                 vm.scrollPos = {
                   left: 0
-                  top: ionic.DomUtil.getPositionInParent($selectedEl[0]).top
+                  top: ionic.DomUtil.getPositionInParent($selectedElContainer[0]).top
                 }
                 _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
                 return
               , 300
           return
-
-        
 
 
         ##
@@ -165,6 +165,39 @@ ListItemContainerDirective = ()->
           angular.element($window).unbind 'resize', _handleWindowResize
           return
 
+
+
+        # these methods are available to transclude nodes
+        vm.export = {
+          'collection': ()->
+            return $scope.collection
+          'selected' : ()->
+            #note: $item should already be visible in scope of transclude nodes
+            $item = vm.selected()
+            return $item
+          'select' : (event, $item, $index)->
+            if not $item
+              return vm.export.closeDetail(event)
+            event.stopImmediatePropagation()
+            target = angular.element event.currentTarget
+            $selectedElContainer = target.parent()  # .list-item-wrap
+            if $selectedElContainer.hasClass('selected')
+              vm.selected( null )
+              vm.layout('summary', $selectedElContainer)
+            else
+              vm.selected( $item, $selectedElContainer )
+              vm.layout('detail', $selectedElContainer)
+            return
+          'closeDetail' : (event)->
+            event.stopImmediatePropagation()
+            target = angular.element event.currentTarget
+            $selectedElContainer = target.parent() # .list-item-wrap
+            vm.selected(null)
+            vm.layout('summary', $selectedElContainer)
+          'getColWidth': ()->
+            return vm.getColWidth()
+        }
+
         return vm
     ]
     link:
@@ -196,9 +229,7 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
     replace: true
     template: """
       <div name="list-summary-wrap" class="list-item-summary row ng-repeat-grid">
-        <div class="list-item-wrap col" ng-class="getColWidth()" ng-repeat="item in collection">
-          <div ng-transclude-compile>
-          </div>
+        <div class="list-item-wrap col" ng-class="$listItemDelegate.getColWidth()" ng-repeat="$item in collection" ng-transclude-parent="parent">
         </div>
       </div>
     """
@@ -210,44 +241,31 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
       #   return
       post: (scope, element, attrs, controller, transclude) ->
         # element.addClass('row').addClass('ng-repeat-grid')
-        scope.listItemCtrl = controller
+        scope.$listItemDelegate = controller['export']
 
         if not attrs.collection?
           # list-item-summary[collection] takes precedence
-          scope.$watch 'listItemCtrl.collection', (newV, oldV)->
+          scope.$watch '$listItemDelegate.collection()', (newV, oldV)->
             scope.collection = newV
             return
 
         controller.selected(null)
-
-        scope.getColWidth = controller.getColWidth
-        scope.on = {
+        scope.dbg = {
           'faceClick': (event, className)->
             event.stopImmediatePropagation()
             angular.element(
               document.querySelector('.list-item-detail')
             ).toggleClass(className)
             return
-          'select' : (event, model)->
-            event.stopImmediatePropagation()
-            target = angular.element event.currentTarget
-            $selectedEl = target.parent().parent()
-            if $selectedEl.hasClass('selected')
-              controller.selected(null)
-              controller.layout('summary', $selectedEl)
-            else
-              controller.selected(model, $selectedEl)
-              controller.layout('detail', $selectedEl)
-            return
+          'select' : controller.select
           'close' : (event)->
             event.stopImmediatePropagation()
             target = angular.element event.currentTarget
-            $selectedEl = target.parent().parent()
+            $selectedElContainer = target.parent() # .list-item-wrap
             controller.selected(null)
-            controller.layout('summary', $selectedEl)
+            controller.layout('summary', $selectedElContainer)
 
         }
-        scope.listItemCtrl = controller
         return
   }
 
@@ -264,9 +282,8 @@ ListDetailDirective = ()->
     transclude: true
     replace: true
     template: """
-      <div name="list-detail-wrap" class="list-item-detail motion slide-under">
-        <div ng-transclude-compile>
-        </div>
+      <div name="list-detail-wrap" class="list-item-detail motion slide-under"
+        ng-transclude-parent="parent" >
       </div>
       """
     scope: {}
@@ -274,22 +291,16 @@ ListDetailDirective = ()->
       # pre: (scope, element, attrs, controller, transclude) ->
       #   return
       post: (scope, element, attrs, controller, transclude) ->
-        scope.listItemCtrl = controller
-        scope.on = {
+        scope.$listItemDelegate = controller['export']
+        scope.dbg = {
           'click': (event)->
             event.stopImmediatePropagation()
-            console.log ['ListDetailDirective.on.click',scope.item.name]
-          'close': (event, model)->
-            event.stopImmediatePropagation()
-            target = angular.element event.currentTarget
-            $selectedEl = model.$el
-            controller.selected(null)
-            controller.layout('summary', $selectedEl)
-
+            console.log ['ListDetailDirective.dbg.click', scope.$item.name]
+          'close': controller.close
         }
-        scope.$watch 'listItemCtrl._selected', (newV, oldV)->
-          scope.item = newV
-          # console.log [ "watch detail selected", newV]
+        scope.$watch '$listItemDelegate.selected()', (newV, oldV)->
+          scope.$item = newV
+          console.log [ "watch detail selected", newV]
         return
   }
 ListDetailDirective.$inject = []
@@ -297,65 +308,54 @@ ListDetailDirective.$inject = []
 
 
 
-
-
-
-
-
-
-
-
-# allows ng-repeat > ng-transclude-parent
-NgTranscludeCompile = ($compile)->
-
-  _findByName = ($elements, name)->
-    return $elements if _.isEmpty name
-    found = _.find $elements, (el, i)->
-      if el.getAttribute?('name') == name
-        return true
-    return found
-
+# see: https://github.com/angular/angular.js/issues/7874#issuecomment-53450394
+NgTranscludeParent = ()->
   return {
-    restrict: 'A'
-    compile: (tElement, tAttrs, transclude)->
-      return {
-        pre: ($scope, $element, $attrs, controller, $transclude) ->
-          if !$transclude
-            throw minErr('ngTransclude')('orphan',
-             'Illegal use of ngTransclude directive in the template! ' +
-             'No parent directive that requires a transclusion found. ' +
-             'Element: {0}',
-             startingTag($element))
+    restrict: 'EAC'
+    replace: true     # added mlin
+    link: ( $scope, $element, $attrs, controller, $transclude )->
 
-          _attach = (clone)->
-            part = _findByName(clone, $attrs.ngTranscludeCompile)
+      if !$transclude
+        return throw minErr('ngTransclude')(
+          'orphan',
+          'Illegal use of ngTransclude directive in the template! ' +
+          'No parent directive that requires a transclusion found. ' +
+          'Element: {0}',
+          startingTag($element)
+        )
+
+      iScopeType = $attrs['ngTranscludeParent'] || 'sibling'
+      switch iScopeType
+        when 'sibling'
+          # standard behavior,
+          # inner scope == child scope of directive's parent
+          # no access to directive scope
+          $transclude ( clone )->
             $element.empty()
-            # TODO: how do we transclude parent scope??
-            # we don't know controllerAs
-            $scope.vm = $scope.$parent.$parent.vm  # ???: is this a transclude?
-            $element.append $compile(part)($scope)
-            # $element.append( part )
-            # compile at the end
+            $element.append( clone )
+        when 'parent'
+          # inner scope == directive scope
+          $transclude $scope, ( clone )->
+            $element.empty()
+            $element.append( clone )
+        when 'child'
+          # inner scope == child scope of directive scope
+          # access to ng-repeat $index
+          iChildScope = $scope.$new()
+          $transclude iChildScope, ( clone )->
+            $element.empty()
+            $element.append( clone )
+            $element.on '$destroy', ()->
+              iChildScope.$destroy()
+      return
+
+    }
 
 
-          if $transclude.$$element
-            console.log "attach element FIRST branch"
-            _attach($transclude.$$element)
-          else
-            $transclude $scope, (clone)->
-              $transclude.$$element = clone
-              _attach(clone)
-          return
-        post: ($scope, $element, $attrs, controller, $transclude) ->
-          return
-      }
-
-  }
-
-NgTranscludeCompile.$inject = ['$compile']
+NgTranscludeParent.$inject = ['$compile']
 
 angular.module 'blocks.components'
-  .directive 'ngTranscludeCompile', NgTranscludeCompile
+  .directive 'ngTranscludeParent', NgTranscludeParent
   .directive 'listItemContainer', ListItemContainerDirective
   .directive 'listItemSummary', ListSummaryDirective
   .directive 'listItemDetail', ListDetailDirective

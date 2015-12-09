@@ -21,14 +21,14 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
 @import '../../../bower_components/ionic/scss/ionic';
 
 
-// ionic-material 
+/*// ionic-material 
 $RobotoDraftFontPath: "../lib/robotodraft/fonts"; // REMINDER: edit as appropriate!
 $RobotoDraftFontName: "RobotoDraft";
 $RobotoDraftFontVersion: "1.0.0";
 
 @import '../../../bower_components/robotodraft/sass/robotodraft.scss';
 @import '../../../bower_components/ionic-material/src/scss/index.scss';
-
+*/
 
 .hide {
   display:none !important;
@@ -51,7 +51,7 @@ $RobotoDraftFontVersion: "1.0.0";
   left: 0;
   position: absolute;
   top: 0;
-  z-index: 0;
+  z-index: -1;
   width: 100%;
   &.fade {
     opacity: 0.85;
