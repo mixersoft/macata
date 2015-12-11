@@ -3,18 +3,18 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
   ion-content#profile.has-header.light-bg(
     scroll-sista
   )
-    div.hero-a
-      div.content
-        div.hero-wrap.has-mask-reverse
-          div.hero-bg.blur(ng-style="vm.imgAsBg(person.face)")
-        div.hero-toolbar.padding
-          i.padding-left.icon.ion-heart.dark
-          i.padding-left.icon.ion-ios-upload.dark
-        div.text-center.padding
-          h2.light.text-center {{person.displayName}}
-          img.face(
-            ng-style="vm.imgAsBg(person.face)"
-            )
+    div.hero-a.content
+      div.hero-wrap.has-mask-reverse
+        div.hero-toolbar.icon-bar.condensed(ng-show="view.show=='profile'")
+          i.button.button-clear.positive.ion-heart.larger.ink
+          i.button.button-clear.positive.ion-ios-upload.larger.ink
+        div.hero-bg.blur(bg-image="{{person.face}}")
+      div.text-center.padding.content
+        h2.light.text-center {{person.displayName}}
+        img.face(
+          bg-image="{{person.face}}"
+        )
+
     div(ng-switch="view.show" ng-show="view.show")
       div#description.content.row.responsive-sm(ng-switch-when="signin")
         div.col.col-offset-25.col-50

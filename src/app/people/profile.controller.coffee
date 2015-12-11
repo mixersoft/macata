@@ -1,7 +1,8 @@
 'use strict'
 
 ProfileCtrl = (
-  $scope, $rootScope, $location, $state, $stateParams, $ionicScrollDelegate
+  $scope, $rootScope, $q, $location, $state, $stateParams, $timeout
+  $ionicScrollDelegate
   AAAHelpers, UsersResource
   $log, toastr
   utils, devConfig, exportDebug
@@ -114,7 +115,8 @@ ProfileCtrl = (
 
 
 ProfileCtrl.$inject = [
-  '$scope', '$rootScope', '$location', '$state', '$stateParams', '$ionicScrollDelegate'
+  '$scope', '$rootScope', '$q', '$location', '$state', '$stateParams', '$timeout'
+  '$ionicScrollDelegate'
   'AAAHelpers', 'UsersResource'
   '$log', 'toastr'
   'utils', 'devConfig', 'exportDebug'
