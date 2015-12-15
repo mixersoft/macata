@@ -1,7 +1,7 @@
 # placeholder.direcctive.coffee
 'use strict'
 
-PlaceholderDirective = ($http, $compile)->
+PlaceholderDataDirective = ($http, $compile)->
 
   ready = $http.get('https://unsplash.it/list')
   .then (result)->
@@ -41,14 +41,16 @@ PlaceholderDirective = ($http, $compile)->
             offset ?= Math.random()*100
             index = attrs['index'] || attrs['key']
             index ?= Date.now()
-            switch attrs['placeholder']
+            switch attrs['placeholderData']
               when 'img', 'image'
                 # console.log ['placeholderImg', offset, index]
                 src = getImgSrc(index , offset, list)
                 element.attr('src', src)
-              when 'bg-img', 'bg-image'
+              when 'bg-src', 'bgSrc'
                 # console.log ['bg-img', offset, index]
-                src = getImgSrc(index , offset, list)
+                scope.model?['bgSrc'] = getImgSrc(index , offset, list)
+              when 'bg-image'
+                # element.attr('bg-image', src)
                 element.addClass('bg-image')
                   .css('background-image', "url({src})".replace('{src}', src) )
               when 'name'
@@ -62,7 +64,7 @@ PlaceholderDirective = ($http, $compile)->
       }
   }
 
-PlaceholderDirective.$inject = ['$http', '$compile']
+PlaceholderDataDirective.$inject = ['$http', '$compile']
 
 angular.module 'blocks.components'
-  .directive 'placeholder', PlaceholderDirective
+  .directive 'placeholderData', PlaceholderDataDirective

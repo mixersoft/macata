@@ -33,11 +33,15 @@ ion-view(view-title="{{vm.title}}")
         )
 
           img.ink(
-            placeholder="img" group="face" index="{{$item.id}}"
+            placeholder-data="img" group="face" index="{{$item.id}}"
             ng-click="dbg.faceClick($event, 'slide-under')"
           )
-          div(placeholder="bg-img" class="mask" group="tile" index="{{$item.id}}")
-          div.light(placeholder="name" group="tile" index="{{$item.id}}" model="$item" ng-bind="$item.name")
+          div(placeholder-data="bgSrc" class="mask" group="tile" index="{{$item.id}}" 
+          model="$item" bg-image="{{$item.bgSrc}}"
+          )
+          div.light(placeholder-data="name" group="tile" index="{{$item.id}}" 
+          model="$item" ng-bind="$item.name"
+          )
           div.console(ng-bind="{{$item.id}}")
 
       list-item-detail 
