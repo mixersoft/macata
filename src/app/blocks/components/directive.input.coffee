@@ -25,13 +25,14 @@ InputDirective = ($compile, $timeout)->
 
 
         btnTemplate = """
-        <i ng-show="enabled" ng-click="clear($event)" class="icon ion-close-circled pull-right"></i>
+        <i ng-show="enabled" ng-click="clear($event)" style="color:#666;" class="icon ion-close-circled pull-right"></i>
         """
         template = $compile( btnTemplate )(scope)
         element.after(template)
 
         scope.clear = (ev)->
           ev.stopImmediatePropagation()
+          ngModel.$setViewValue()
           ngModel.$render()
           scope.enabled = false
           $timeout ()->

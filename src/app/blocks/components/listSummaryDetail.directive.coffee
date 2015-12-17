@@ -16,6 +16,16 @@ ListItemContainerDirective = ()->
     controller: [
       '$scope', '$window', '$ionicScrollDelegate', '$timeout'
       ($scope, $window, $ionicScrollDelegate, $timeout)->
+
+        _styleEl = """
+          <style class="item-style">
+          .list-item-summary .list-item-wrap > .item,
+          .list-item-summary .list-item-wrap .item,
+          .list-item-summary .item.item-complex > .item-content {
+            min-height: 160px; }
+        </style>
+        """
+
         vm = this
         vm.collection = $scope.collection
         vm.itemHeight ?= 160
@@ -24,7 +34,7 @@ ListItemContainerDirective = ()->
         vm.$detailEl = null   # set in postLink
         vm.selected = (item, $el)->
           if item?
-            console.log ["setSelected", item.name]
+            console.log ["setSelected", item.id || item.name || item.title]
             vm._selected = angular.copy item
             if $el?
               vm._selected['$el'] = $el
@@ -50,7 +60,12 @@ ListItemContainerDirective = ()->
           return angular.element all
 
         vm.layout = (type, $selectedElContainer)->
-          # console.log ionic.DomUtil.getPositionInParent($selectedElContainer[0])
+          if not vm['$summaryEl']?.length or not vm['$detailEl']?.length
+            return throw new Error(
+              """
+              Missing: directive <list-item-container> requires both <list-item-summary> and <list-item-detail> child nodes
+              """
+            )
           switch type
             when 'summary'
               if $scope.showDetailInline == false
@@ -69,6 +84,7 @@ ListItemContainerDirective = ()->
                   .addClass(vm.getColWidth())
                 vm.$summaryEl
                   .append(vm.$detailEl)
+                vm.$detailEl.addClass 'hide'
 
                 # vm.$summaryEl.children().removeClass('hide') # optional
                 # _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
@@ -77,9 +93,9 @@ ListItemContainerDirective = ()->
                   left: 0
                   top: ionic.DomUtil.getPositionInParent($selectedElContainer[0]).top
                 }
-                _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
+                # _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, false)
                 return
-              ,300
+              ,350
 
 
 
@@ -129,11 +145,12 @@ ListItemContainerDirective = ()->
         vm.setItemHeight = ($container, h)->
           h ?= vm.itemHeight
           styleEl = $container[0].querySelector('style')
+          if !styleEl
+            $container.prepend( _styleEl )
+            styleEl = $container[0].querySelector('style')
           styleEl.innerHTML = styleEl.innerHTML
             .replace(/(min-height:.)(\d+)(px)/, "$1"+h+"$3").trim()
           return
-
-
 
         # use _.memoize to cache value, clear cache when window.innerWidth changes
         vm.calcColWidth = (minW, maxW)->
@@ -192,9 +209,12 @@ ListItemContainerDirective = ()->
           'select' : (event, $item, $index)->
             if not $item
               return vm.$listItemDelegate.closeDetail(event)
+
             event.stopImmediatePropagation()
-            target = angular.element event.currentTarget
-            $selectedElContainer = target.parent()  # .list-item-wrap
+            target = ionic.DomUtil.getParentOrSelfWithClass(event.currentTarget, 'list-item-wrap')
+            throw new Error ["warning: cant find .list-item-wrap", event.currentTarget] if !target
+            $selectedElContainer =  angular.element target # .list-item-wrap
+            # console.log $selectedElContainer
             if $selectedElContainer.hasClass('selected')
               vm.selected( null )
               vm.layout('summary', $selectedElContainer)
@@ -227,8 +247,7 @@ ListItemContainerDirective = ()->
         vm['$listItemDelegate']['setItemHeight'] = (h)->
           controller.setItemHeight(element, h)
           return
-        vm['$summaryEl'] = _findByName(element.children(), 'list-summary-wrap')
-        vm['$detailEl']  = _findByName(element.children(), 'list-detail-wrap')
+
         if attrs.itemHeight?
           scope.$watch 'itemHeight', (newV, oldV)->
             vm.setItemHeight(element, newV) if newV?
@@ -263,8 +282,9 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
       collection:"="
     }
     link:
-      # pre: (scope, element, attrs, controller, transclude) ->
-      #   return
+      pre: (scope, element, attrs, controller, transclude) ->
+        controller['$summaryEl'] = element
+        return
       post: (scope, element, attrs, controller, transclude) ->
         scope.$listItemDelegate = controller['$listItemDelegate']
 
@@ -314,8 +334,9 @@ ListDetailDirective = ()->
       """
     scope: {}
     link:
-      # pre: (scope, element, attrs, controller, transclude) ->
-      #   return
+      pre: (scope, element, attrs, controller, transclude) ->
+        controller['$detailEl'] = element
+        return
       post: (scope, element, attrs, controller, transclude) ->
         scope.$listItemDelegate = controller['$listItemDelegate']
         scope.dbg = {

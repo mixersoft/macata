@@ -91,19 +91,17 @@ list-item-container {
   }
   .list-item-detail {
     &.motion {
-      .item {
-        max-height: auto;
-        -webkit-backface-visibility: hidden !important;
-        backface-visibility: hidden !important;
-        -webkit-transition: all 0.3s ease-out !important;
-        transition: all 0.3s ease-out !important;
-        transform: translate3d(0, 0, 0) !important;
-        /*overflow: hidden;*/
-      }
-      &.slide-under .item {
-        max-height: 0  !important;
-        padding-top: 0  !important;
-        padding-bottom: 0  !important;
+      display: inline-block;
+      width: 100%;
+      max-height: 500px;
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+      -webkit-transition: max-height 300ms ease-out !important;
+      transition: max-height 300ms ease-out !important;
+      transform: translate3d(0, 0, 0) !important;
+      overflow: hidden;
+      &.slide-under{
+        max-height: 0px;
       }
     }
   }
