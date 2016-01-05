@@ -5,6 +5,7 @@ ion-view(view-title="{{vm.title}}")
   ion-content(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
+    overflow-scroll="false"
   )
 
     list-item-container.content.condensed(
@@ -47,12 +48,12 @@ ion-view(view-title="{{vm.title}}")
       list-item-detail 
         //- $item == $listItemDelegate.selected(), e.g. selected model
         ion-item.in.done(ng-controller="ItemDetailCtrl as dvm")
-          label.item-input.ink
-            span.input-label.text-right
+          ion-input.item-input.ink
+            ion-label.text-right
               i.icon.ion-person.padding-horizontal
             input.capitalize(type="text" ng-model="$item.name" readonly)
-          label.item-input.ink
-            span.input-label.text-right
+          ion-input.item-input.ink
+            ion-label.text-right
               i.icon.ion-email.padding-horizontal
             input.capitalize(type="text" ng-model="$item.color" readonly)
           div.button-bar

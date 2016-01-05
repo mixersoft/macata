@@ -28,16 +28,16 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
       div#profile.content.row.responsive-sm(ng-switch-when="profile")
         div.col.col-offset-25.col-50
             div.list
-              label.item-input {{ fullname=[person.firstname, person.lastname].join(' ') + ' (' + person.username + ')';'' }}
-                span.input-label.text-right
+              ion-input.item-input {{ fullname=[person.firstname, person.lastname].join(' ') + ' (' + person.username + ')';'' }}
+                ion-label.text-right
                   i.icon.ion-person.padding-horizontal
                 input.capitalize(type="text" ng-model="fullname" readonly)
-              label.item-input
-                span.input-label.text-right
+              ion-input.item-input
+                ion-label.text-right
                   i.icon.ion-email.padding-horizontal
                 input(type="text" ng-model="person.email" readonly)  
-              label.item-input
-                span.input-label.text-right
+              ion-input.item-input
+                ion-label.text-right
                   i.icon.ion-quote.padding-horizontal
                 input(type="text" ng-model="person.about" readonly)
             div.text-center.padding

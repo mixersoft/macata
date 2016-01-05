@@ -2,16 +2,18 @@
   "name": "ionic-tabs-starter-sass-jade-coffee",
   "private": "true",
   "devDependencies": {
-    "ionic": "driftyco/ionic-bower#1.1.1",
+    "ionic": "driftyco/ionic-bower#1.2.1",
     "angular-toastr": "~1.4.1",
     "robotodraft": "~1.1.0",
     "lodash": "~3.10.1",
     "moment": "~2.10.6",
+    "ionic-scroll-sista": "~1.0.7",
     "angular-moment": "~0.10.2"
   },
   "resolutions": {
     "angular": "1.4.3",
     "angular-animate": "1.4.3",
-    "angular-sanitize": "1.4.3"
+    "angular-sanitize": "1.4.3",
+    "ionic": "1.2.1"
   }
 }
