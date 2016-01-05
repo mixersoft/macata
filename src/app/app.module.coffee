@@ -12,6 +12,7 @@ angular
   .module 'starter', [
     # Shared modules
     'ionic'
+    'angular-meteor'
     'starter.core'
     'starter.layout'
     # Feature areas

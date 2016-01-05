@@ -12,7 +12,9 @@ html
         script(src='cordova.js')
         script(src='lib/ionic/js/ionic.bundle.js')  // load angular first
         script(src="lib/moment/min/moment.min.js")  // load before angularMoment
-
+        // load meteor before angular-meteor
+        script(src="lib/meteor-client-side/meteor-runtime-config.js")
+        script(src="lib/meteor-client-side/dist/meteor-client-side.bundle.js")
         // inject:js
         // endinject
 

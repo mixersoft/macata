@@ -7,12 +7,15 @@
     "robotodraft": "~1.1.0",
     "lodash": "~3.10.1",
     "moment": "~2.10.6",
+    "meteor-client-side": "~1.2.0",
+    "angular-meteor": "~1.3.0",
     "ionic-scroll-sista": "~1.0.7",
     "angular-moment": "~0.10.2"
   },
   "resolutions": {
     "angular": "1.4.3",
     "angular-animate": "1.4.3",
+    "meteor-client-side": "~0.2.2",
     "angular-sanitize": "1.4.3",
     "ionic": "1.2.1"
   }
