@@ -1,0 +1,41 @@
+//- placeholder.tile.html
+//- transclude using ng-repeat="$item in collection"
+//- NOTE: ion-item(ui-sref="") doesn't work with 
+//-   ionicMaterial CSS.  use div.item instead
+
+list-item-summary.animate-fade-slide-in-right(
+  opt-collection="vm.rows"
+)
+  div.tile.recipe.item.item-avatar.content.ink(
+    ng-class="[$item.color,'bg'].join('-')"
+    ng-click="$listItemDelegate.select($event, $item, $index)"
+  )
+
+    img.ink(
+      placeholder-data="img" group="face" index="{{$item.id}}"
+      ng-click="dbg.faceClick($event, 'slide-under')"
+    )
+    div.feature.image.mask-top(
+      bg-image="{{$item['og:image']}}"
+    )
+    div.light.padding-right
+      div.title.line-clamp.line-clamp-2 {{$item['og:title']}}
+      div {{$item['og:site_name']}}
+
+list-item-detail 
+  //- $item == $listItemDelegate.selected(), e.g. selected model
+  ion-item.in.done(ng-controller="ItemDetailCtrl as dvm")
+
+    div.item-body {{$item['og:description']}}
+
+    div.button-bar
+      button.button.button-flat.button-energized(
+        ng-click=""
+      ) Edit
+      button.button.button-flat.button-dark(
+        ng-click="$listItemDelegate.select($event, null)"
+      ) Close
+      a.button.button-flat.button-balanced(
+        href="{{$item['og:url']}}"
+        target="_blank"
+      ) Open

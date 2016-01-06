@@ -1,0 +1,50 @@
+// recipe/recipe.jade
+ion-view(view-title="{{vm.title}}")
+  ion-nav-buttons(side="primary")
+    button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
+  ion-nav-buttons(side="secondary")
+    button.button.button-icon.button-clear.ion-plus(
+    ng-click="vm.newCtrl.new()"
+      )
+
+  div.bar.bar-subheader.item-input-inset(
+    ng-show="vm.newCtrl.show"
+  )
+    div.item-input-wrapper
+      i.icon.ion-link.larger
+      input(
+      auto-input
+      ng-model="vm.newCtrl.data.url"
+      on-blur="vm.newCtrl.createNew($event)"
+      return-close="true"
+      type="text" 
+      placeholder="Enter url" 
+      )
+    button.button.button-dark.button-clear Go 
+
+  ion-content(
+    delegate-handle="list-item-scroll"
+    scroll-sista="header-subheader"
+    overflow-scroll="false" 
+  ) 
+ 
+    list-item-container.content.condensed(
+      collection="vm.rows"
+      scroll-handle="list-item-scroll"
+      summary-min-width="320"
+      detail-max-width="720"
+      show-detail-inline="true"
+      item-height="160"
+      todo-use-collection-repeat="true"
+    )
+
+      ng-include(src="'recipe/recipe.fb-tile.html'" )
+
+
+
+
+
+
+
+
+

@@ -23,4 +23,5 @@ angular
     'starter.home'
     'starter.profile'
     'starter.grid'
+    'starter.recipe'
   ]

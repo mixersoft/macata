@@ -29,6 +29,73 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   float:right;
 }
 
+.no-padding {
+  padding: 0 !important;
+}
+
+/* Begin required CSS., see: http://codepen.io/siiron/details/jfBhy  */
+.line-clamp
+{
+  display            : block;
+  display            : -webkit-box;
+  -webkit-box-orient : vertical;
+  position           : relative;
+
+  line-height        : 1.2;
+  overflow           : hidden;
+  text-overflow      : ellipsis !important;
+  padding            : 0 !important;
+  white-space: normal !important;
+}
+.line-clamp:after
+{
+  content    : '...';
+  text-align : right;
+  bottom     : 0;
+  right      : 0;
+  width      : 25%;
+  display    : block;
+  position   : absolute;
+  height     : calc(1em * 1.2);
+  background : linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 75%);
+}
+@supports (-webkit-line-clamp: 1)
+{
+  .line-clamp:after
+  {
+    display : none !important;
+  }
+}
+.line-clamp-1
+{
+  overflow           : hidden;
+  text-overflow      : ellipsis !important;
+  white-space: nowrap !important;
+  /*-webkit-line-clamp : 1;*/
+  /*height             : calc(1em * 1.2 * 1);*/
+
+}
+.line-clamp-2
+{
+  -webkit-line-clamp : 2;
+  height             : calc(1em * 1.2 * 2);
+}
+.line-clamp-3
+{
+  -webkit-line-clamp : 3;
+  height             : calc(1em * 1.2 * 3);
+}
+.line-clamp-4
+{
+  -webkit-line-clamp : 4;
+  height             : calc(1em * 1.2 * 4);
+}
+.line-clamp-5
+{
+  -webkit-line-clamp : 5;
+  height             : calc(1em * 1.2 * 5);
+}
+/* End required CSS. */
 
 /* 
  * placeholder.directive 
@@ -60,9 +127,11 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
       width: 100%;
     }
   }
-  &.mask-reverse:after {
-    @extend .has-mask:after;
-    background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
+  &.mask-top {
+    &:after {
+      @extend .bg-image.mask:after;
+      background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
+    }
   }  
 }
 .xxxbg-image:after {
@@ -224,8 +293,24 @@ $hero-wrap-bg-height: 170px;
   filter: blur(5px);
 }
 
-
  /* END app.profile */
+
+/* tiles - summary view */
+.strong {
+  font-weight: 500;
+}
+.tile {
+  &.recipe {
+    .body > * {
+      line-height: 1.2em;
+      margin-bottom: 2px;
+    }
+  }
+}
+
+.title {
+  @extend .strong;
+}
 
 
 /*  legacy  */
