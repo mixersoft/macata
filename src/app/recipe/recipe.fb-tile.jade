@@ -21,14 +21,14 @@ list-item-summary.animate-fade-slide-in-right(
 
 list-item-detail 
   //- $item == $listItemDelegate.selected(), e.g. selected model
-  ion-item.in.done(ng-controller="ItemDetailCtrl as dvm")
+  ion-item.in.done(ng-controller="RecipeDetailCtrl as dvm")
 
     div.item-body.no-padding
       p {{$item['og:description']}}
 
     div.button-bar.padding-top
       button.button.button-flat.button-energized(
-        ng-click=""
+        ng-click="dvm.on.edit($event, $item)"
       ) Edit
       button.button.button-flat.button-dark(
         ng-click="$listItemDelegate.select($event, null)"

@@ -146,6 +146,7 @@ RecipeCtrl.$inject = [
 
 RecipeDetailCtrl = (
   $scope, $rootScope, $q
+  tileHelpers, openGraphSvc
   $log, toastr
   ) ->
     vm = this
@@ -157,12 +158,18 @@ RecipeDetailCtrl = (
           document.querySelector('.list-item-detail')
         ).toggleClass('slide-under')
         return
+      'edit': (event, item)->
+        data = openGraphSvc.normalize(item)
+        tileHelpers.modal_showTileEditor(data)
+        console.log ["edit", data]
+        return
     }
     console.log ["RecipeDetailCtrl initialized scope.$id=", $scope.$id]
     return vm
 
 RecipeDetailCtrl.$inject = [
   '$scope', '$rootScope', '$q'
+  'tileHelpers', 'openGraphSvc'
   '$log', 'toastr'
 ]
 
