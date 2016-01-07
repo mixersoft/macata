@@ -78,7 +78,7 @@ TileHelpers.$inject = ['appModalSvc', '$q']
 ###
 # @description TileEditorCtrl used by TileHelpers.modal_showTileEditor modal
 ###
-TileEditorCtrl = (scope, $q)->
+TileEditorCtrl = (scope, $q, geocodeSvc)->
   this.id = 'TileEditorCtrl'
   mm = this
   mm.data = {
@@ -88,21 +88,40 @@ TileEditorCtrl = (scope, $q)->
     site_name: null
     image: null
     extras: null
+    address: null
+    latlon: null
   }
 
   mm.on = {
     cameraClick: (ev)->
       check = ev.currentTarget
       return
-    locationClick: (ev)->
-      check = ev.currentTarget
+
+    locationClick: (ev, option )->
+      switch option
+        when 'CURRENT'
+          console.log "Get Current Location"
+        else
+          return mm.on.geocodeAddress()
       return
+
+    geocodeAddress : (force)->
+      if mm.data.latlon && !force
+        console.log ['locationClick()', _.pick( mm.data, ['latlon','address'] ) ]
+        return $q.when mm.data
+      return geocodeSvc.getLatLon( mm.data.address )
+      .then (result)->
+        console.log ['locationClick()', result]
+        mm.data.latlon = result?.location
+        mm.data.address = result?.address
+        return mm.data
+
     done: (ev)->
       # post to $meteor
       mm.closeModal mm.data
   }
   return
-TileEditorCtrl.$inject = ['$scope', '$q']
+TileEditorCtrl.$inject = ['$scope', '$q', 'geocodeSvc']
 
 
 

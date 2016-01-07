@@ -4,7 +4,7 @@
     "ionic/fonts/*"
   ],
   "dev": [
-    "ionic/fonts/*", 
+    "ionic/fonts/*",
     "lodash/lodash.min.js",
     "angular-toastr/dist/angular-toastr.tpls.min.js",
     "angular-toastr/dist/angular-toastr.min.css",
@@ -12,6 +12,7 @@
     "ionic-material/dist/ionic.material.DEBUG.js",
     "robotodraft/fonts/**/*",
     "angular-meteor/dist/angular-meteor.bundle.js",
+    "angular-google-maps/dist/angular-google-maps.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [

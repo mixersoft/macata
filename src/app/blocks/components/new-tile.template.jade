@@ -48,7 +48,12 @@ ion-modal-view#new-tile-modal-view
         input(type="text" placeholder="Enter Url for Photo" ng-model="mm.data.image" )
       ion-input.item.item-input
         i.icon.ion-ios-location.positive.larger.padding-right
-        input(type="text" placeholder="Enter location" ng-model="mm.data.address" )
+        input(
+          ng-blur="mm.on.geocodeAddress()"
+          type="text" 
+          placeholder="Enter Location Address" 
+          ng-model="mm.data.address" 
+        )
       div.button-bar
         button.button(ng-click="mm.on.cameraClick($event)")
           i.icon.ion-camera.positive

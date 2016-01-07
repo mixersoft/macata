@@ -1,0 +1,103 @@
+//- blocks/components/address-map.template.jade
+style#address-lookup-style.
+  @media (min-width: 680px) {
+    #address-lookup-modal-view.modal { top: 10%; bottom: 10%;}
+  }
+  #address-lookup-search { min-width:32.5px; } 
+  #address-lookup-search svg {width: 26px; height: 26px; margin: 5px 0;}
+  #address-lookup-map .wrap {min-height: 200px;}
+  #address-lookup-map .angular-google-map-container {min-height: 200px;}
+  #address-lookup-modal input { width: 100%; }
+ion-modal-view#address-lookup-modal-view
+  ion-header-bar.bar-balanced 
+    h1.title Address Lookup
+  ion-content
+    div#address-lookup-modal.list.condensed
+      div.item
+        div.item-input-inset.no-padding
+          div.item-input-wrapper.no-padding
+            input(type="text" ng-model="vm.address0" 
+              placeholder="Enter Address" 
+              ng-attr-clear-field="vm.isBrowser"
+            )
+
+          button#address-lookup-search.button.button-balanced.button-small.no-padding(
+            ng-click="vm.updateGeocode(vm.address0)"
+          )
+            i.icon.ion-search(ng-hide="vm.loading")
+            ion-spinner.spinner-light(
+              ng-show="vm.loading"
+            )
+        div.error(ng-show="vm['error-address0']")
+          span.assertive {{vm['error-address0']}}
+        
+
+      label.item.item-floating-label
+        span.label Location
+        input(type="text" ng-model="vm.latlon" readonly)
+
+      label.item.item-floating-label
+        span.label Formatted Address
+        input(type="text" ng-model="vm.addressFormatted" readonly)
+
+      div.item.item-floating-label
+        span.label Display Address
+        div.item-input-inset.no-padding
+          div.item-input-wrapper.no-padding
+            input(type="text" ng-model="vm.addressDisplay"
+              ng-attr-clear-field="vm.isBrowser"
+            )
+        p.help
+          span.positive(
+            ng-show="vm.isValidMarker()"
+          ) {{vm.MESSAGE.VERIFY_LABEL}}
+      
+
+      div#address-lookup-map.item.item-complex
+        div.wrap(
+          ng-if="vm.map"
+        )
+          {{opt = vm.map.options;''}}
+          ui-gmap-google-map( 
+            center='vm.map.center' 
+            zoom='vm.map.zoom'
+            options='opt.map.options'
+          )
+            ui-gmap-circle(
+              ng-if="vm.map.type=='circle'"
+              center="opt.circle.center"
+              radius="opt.circle.radius"
+              stroke="opt.circle.stroke"
+              )
+            ui-gmap-marker(
+              ng-if="vm.isValidMarker()"
+              idKey="opt.oneMarker.idKey"
+              coords="opt.oneMarker.coords"
+              options="opt.oneMarker.options"
+              events="opt.oneMarker.events"
+              )
+            ui-gmap-markers(
+              ng-if="vm.map.type=='manyMarkers'"
+              fit="true"
+              idkey="id"
+              coords="'self'"
+              models="opt.manyMarkers.models"
+              options="opt.manyMarkers.options"
+              modelbyref="true"
+              xxclick="'opt.manyMarkers.events.click'"
+              events="opt.manyMarkers.events"
+              )
+        p.padding-horizontal 
+          span.padding-horizontal.positive(
+            ng-show="vm.isValidMarker()"
+          ) Drag the marker to change location
+          span.padding-horizontal.positive(
+            ng-show="vm.map.type=='manyMarkers'"
+          ) Multiple locations found, click Marker to select
+      div.item
+        div.button-bar
+          button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
+          button.button.button-balanced(
+          ng-click="closeModal(vm)"
+          ng-disabled="vm.isValidMarker()==false"
+          ) OK
