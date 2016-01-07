@@ -28,6 +28,9 @@ RecipeCtrl = (
       view:
         show: 'grid'
         'new': false
+      show:
+        newTile: false
+        newTileSpinner: false
     }
 
     vm.lookup = {
@@ -52,7 +55,7 @@ RecipeCtrl = (
           id: i
           color: vm.lookup.colors[i %% vm.lookup.colors.length]
         }
- 
+
     vm.on = {
       scrollTo: (anchor)->
         $location.hash(anchor)
@@ -64,42 +67,18 @@ RecipeCtrl = (
           next = if vm.settings.show == 'grid' then 'list' else 'grid'
           return vm.settings.view.show = next
         return vm.settings.view.show = value
-    }
 
-    vm.newCtrl = {
-      show: false
-      url: 'http://localhost:3333/methods/' + 'get-open-graph'
-      data:
-        url: null
-      new: (ev)->
-        vm.newCtrl.show = !vm.newCtrl.show 
-        # $ionicScrollDelegate.scrollTo(0,0)
-        # TODO: to animate bar into header
-        # see https://github.com/djett41/ionic-filter-bar/blob/master/dist/ionic.filter.bar.js
+      createNewTile: (value)->
+        vm.settings.show.newTile = !vm.settings.show.newTile
+        if vm.settings.show.newTile
+          document.querySelector('new-tile input').focus()
+          
 
-      done: ()->
-        self = this
-        self.data.url = null
-        self.show = false
-      createNew: (ev)->
-        self = this
-        $http.get(self.url, {
-          params: self.data
-        })
-        .then (resp)->
-          return $q.reject(resp) if resp.statusText != 'OK'
-          return $q.reject('NOT FOUND') if _.isEmpty resp.data
-          og = resp.data
-          self.createTile(og)
-          toastr.info og
-          self.done()
-          return og
-        .catch (err)->
-          toastr.warning err
-      createTile: (data)->
-        data['type'] = 'recipe'
-        console.log JSON.stringify data
-        vm.rows.unshift(data)
+      submitNewTile: (data)->
+        # new Tile has been submitted to $metor and should be added to collection
+        # ?:use a $on listener instead?
+        console.log ['submitNewTile', data]
+        vm.settings.show.newTile = false
     }
 
     initialize = ()->
@@ -190,10 +169,3 @@ RecipeDetailCtrl.$inject = [
 angular.module 'starter.recipe'
   .controller 'RecipeCtrl', RecipeCtrl
   .controller 'RecipeDetailCtrl', RecipeDetailCtrl
-
-
-
-
-
-
-

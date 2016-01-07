@@ -1,31 +1,43 @@
 // recipe/recipe.jade
-ion-view(view-title="{{vm.title}}")
+ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
-  ion-nav-buttons(side="secondary")
+    button.button.button-icon.button-clear(
+      ng-class="show.newTile ? 'ion-close': 'ion-plus'"
+      ng-click="vm.on.createNewTile()"
+    )
+  ion-nav-buttons(side="secondary") 
     button.button.button-icon.button-clear.ion-plus(
-    ng-click="vm.newCtrl.new()"
-      )
+      ng-class="show.newTile ? 'ion-close': 'ion-plus'"
+      ng-click="vm.on.createNewTile()"
+    )
 
-  div.bar.bar-subheader.item-input-inset(
-    ng-show="vm.newCtrl.show"
+  div(
+    ng-show="show.newTile"
   )
-    div.item-input-wrapper
-      i.icon.ion-link.larger
-      input(
-      auto-input
-      ng-model="vm.newCtrl.data.url"
-      on-blur="vm.newCtrl.createNew($event)"
-      return-close="true"
-      type="text" 
-      placeholder="Enter url" 
-      )
-    button.button.button-dark.button-clear Go 
+    div.bar.bar-subhead-wrap
+      div.item-input-inset.no-padding
+        div.item-input-wrapper
+          i.icon.ion-link.larger
+          new-tile(
+            style="width:100%;"
+            return-close="true"
+            is-fetching="show.newTileSpinner"
+            on-complete="vm.on.submitNewTile(result)"
+          )  
+        button.button.button-dark.button-clear
+          i.icon.ion-ios-arrow-forward(
+            ng-hide="show.newTileSpinner"
+          )
+          ion-spinner(
+            icon="ios-small"
+            ng-show="show.newTileSpinner"
+          )
+
 
   ion-content(
     delegate-handle="list-item-scroll"
     scroll-sista="header-subheader"
-    overflow-scroll="false" 
   ) 
  
     list-item-container.content.condensed(
@@ -39,12 +51,3 @@ ion-view(view-title="{{vm.title}}")
     )
 
       ng-include(src="'recipe/recipe.fb-tile.html'" )
-
-
-
-
-
-
-
-
-

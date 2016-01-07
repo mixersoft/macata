@@ -33,6 +33,13 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   padding: 0 !important;
 }
 
+.bar-subhead-wrap {
+  top: 44px;
+  min-height: 44px;
+  height: initial;
+  display: block;
+}
+
 /* Begin required CSS., see: http://codepen.io/siiron/details/jfBhy  */
 .line-clamp
 {

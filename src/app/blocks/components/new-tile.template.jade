@@ -1,0 +1,60 @@
+//- blocks/components/new-tile.template.html
+//
+style#new-tile-style.
+  #new-tile-modal-view .list {padding: 1px 3px 1px 5px;}
+  #new-tile-modal-view .patch-border {margin-right:1px;}
+  #new-tile-modal-view .item-stacked-label .input-label { font-size: smaller;color: darkgray;line-height: 17px;padding-top: 0;}
+  #new-tile-modal-view .preview {background-color: #444;}
+  #new-tile-modal-view .preview .tile {border:none; transform: scale3d(0.8,0.8,1);}
+ion-modal-view#new-tile-modal-view
+  ion-header-bar.bar-positive 
+    h1.title Create Tile
+    button.button.button-icon.button-clear.ion-close(
+      ng-click="closeModal('CANCELED')"
+    )
+  ion-content {{mm.data = data;''}}
+  
+    
+      
+    div.list
+      div.preview
+        div.tile.recipe.item.item-complex.content.ink
+          div.hero.content(style="height:160px;")
+            div.feature.image(
+              bg-image="{{mm.data.image}}"
+            )
+          div.body.padding
+            div.title.line-clamp-1 {{mm.data.title}}
+            p.description.line-clamp.line-clamp-2 {{mm.data.description}}
+            p {{mm.data.site_name}}
+          
+      ion-input.item.item-input.item-stacked-label
+        ion-label Title
+        input(type="text" placeholder="Title" ng-model="mm.data.title" )
+      ion-input.item.item-input.item-stacked-label.patch-border
+        ion-label Description
+        textarea.item-input-textarea(
+        rows="4" 
+        ng-model="mm.data.description" 
+        placeholder="Description" )
+      ion-input.item.item-input.item-stacked-label
+        ion-label Source
+        input(type="text" placeholder="Source" ng-model="mm.data.site_name" )
+      ion-input.item.item-input
+        i.icon.ion-share.positive.larger.padding-right
+        input(type="text" placeholder="Enter Link" ng-model="mm.data.url" )
+      ion-input.item.item-input
+        i.icon.ion-image.positive.larger.padding-right
+        input(type="text" placeholder="Enter Url for Photo" ng-model="mm.data.image" )
+      ion-input.item.item-input
+        i.icon.ion-ios-location.positive.larger.padding-right
+        input(type="text" placeholder="Enter location" ng-model="mm.data.address" )
+      div.button-bar
+        button.button(ng-click="mm.on.cameraClick($event)")
+          i.icon.ion-camera.positive
+        button.button(ng-click="mm.on.locationClick($event)")
+          i.icon.ion-ios-location.positive
+        button.button(ng-click="mm.on.locationClick($event,'CURRENT')")
+          i.icon.ion-ios-navigate.positive
+        button.button.positive(ng-click="mm.on.done($event)") Done
+  
