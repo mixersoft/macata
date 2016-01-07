@@ -69,29 +69,39 @@ NewTileCtrl = (scope, appModalSvc, $q, $http)->
     .then (og)->
       done_http(og)
       data = dm.normalizeOG(og)
+      # TODO?: merge with dm.data.field?
+      angular.extend dm.data, data
+      delete dm.data['field']
       return data
     , (err)->
       console.warn ['getOpenGraph()', err]
       return
     .then (data)->
-      options = {modalCallback: null}
-      return appModalSvc.show(
-        MARKUP.MODAL.newTileUrl
+      return dm.modal_showTileEditor(data)
+
+  dm.modal_showTileEditor = (data)->
+    options = {modalCallback: null}
+    return appModalSvc.show(
+      MARKUP.MODAL.newTileUrl
       , 'NewTileCtrl as mm'
-      , { data:data, onComplete: scope.onComplete}
+      , { data: data, onComplete: scope.onComplete}
       , options )
     .then (result)->
       # wait for closeModal()
       result ?= 'CANCELED'
-      console.log ['modal createTileFromUrl()', result]
+      console.log ['modal_showTileEditor()', result]
       if result == 'CANCELED'
         dm.data = {}
         return $q.reject('CANCELED')
       return $q.reject(result) if result?['isError']
-      return result
-    .finally (result)->
-      dm.reset()
+
       scope.onComplete({result: result})
+      return result
+    .catch (err)->
+      scope.onComplete({result: null})
+      console.warn ['modal_showTileEditor()', err]
+    .finally ()->
+      dm.reset()
 
   dm.reset = ()->
     dm.data = {}
@@ -170,6 +180,8 @@ NewTileDirective = ($compile, $timeout)->
               dm.createTileFromUrl dm.data.url
           else
             dm.data.title = dm.data.field
+            delete dm.data['field']
+            dm.modal_showTileEditor(dm.data)
           if attrs.onBlur
             $timeout ()->
               scope.onBlur()
