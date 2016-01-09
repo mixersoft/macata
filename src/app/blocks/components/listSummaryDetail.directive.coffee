@@ -11,6 +11,7 @@ ListItemContainerDirective = ()->
       detailMaxWidth: "="
       showDetailInline: "="
       scrollHandle: "@"
+      detailByReference: "@"
     }
     controllerAs: '$listItemDelegate'
     controller: [
@@ -35,7 +36,10 @@ ListItemContainerDirective = ()->
         vm.selected = (item, $el)->
           if item?
             console.log ["setSelected", item.id || item.name || item.title]
-            vm._selected = angular.copy item
+            vm._selected =
+              if $scope.detailByReference
+              then item
+              else angular.copy item
             if $el?
               vm._selected['$el'] = $el
           return vm._selected
@@ -119,7 +123,7 @@ ListItemContainerDirective = ()->
 
               vm.$detailEl
                 .removeClass('hide')
-              
+
               $timeout ()->
                 vm.$detailEl
                   .removeClass('slide-under')
@@ -184,7 +188,7 @@ ListItemContainerDirective = ()->
         # restore _ionScroll position, as necessary
         # TODO: move listItemDetail position in list and don't hide???
         _ionScroll = $ionicScrollDelegate.$getByHandle($scope.scrollHandle)
-        
+
 
         angular.element($window).bind 'resize', _handleWindowResize
 

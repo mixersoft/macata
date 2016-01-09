@@ -5,7 +5,6 @@ ion-view(view-title="{{vm.title}}")
   ion-content(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
-    overflow-scroll="false"
   )
 
     list-item-container.content.condensed(
@@ -68,11 +67,3 @@ ion-view(view-title="{{vm.title}}")
             button.button.button-flat.button-balanced(
               ng-click="dvm.on.click($event, $item)"
             ) .slide-under
-
-
-
-
-
-
-
-

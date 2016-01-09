@@ -64,10 +64,11 @@ list-item-detail
         )
         i.positive.ion-android-open.ink(
         )
-      button.button
-        i.positive.ion-heart.ink(
-        ng-class="$item.favorite && 'selected'"
+      button.button(
         ng-click="$item.favorite = !$item.favorite"
+        )
+        i.positive.ink(
+        ng-class=" $item.favorite ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
         )
       button.button
         i.positive.ion-map.ink(
