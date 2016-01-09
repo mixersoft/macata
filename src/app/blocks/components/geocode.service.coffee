@@ -236,6 +236,8 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         mathRound6 latlon[1]+offset.lon
       ]
 
+    mathRound6: mathRound6
+
     ###
     @description: get google Map object for angular-google-maps,
       configured map places marker or circle at location

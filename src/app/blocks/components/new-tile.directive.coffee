@@ -124,10 +124,14 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
           )
           return dfd.promise
           .then (result)->
-            mm.data.latlon = [result.coords.latitude, result.coords.longitude]
+            gMapPoint = _.chain result.coords
+              .pick ['latitude','longitude']
+              .each (v,k,o)-> return o[k]=geocodeSvc.mathRound6(v)
+              .value()
+            mm.data.latlon = [gMapPoint.latitude, gMapPoint.longitude]
             mm.data.address = [
-              'lat:', result.coords.latitude
-              'lon:', result.coords.longitude
+              'lat:', gMapPoint.latitude
+              'lon:', gMapPoint.longitude
             ].join(' ')
             console.log ['with location',mm.data]
           .catch (err)->

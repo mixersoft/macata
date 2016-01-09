@@ -322,17 +322,68 @@ $hero-wrap-bg-height: 170px;
 .strong {
   font-weight: 500;
 }
-.tile {
+.title {
+  @extend .strong;
+}
+
+
+.tile.recipe {
   &.recipe {
     .body > * {
       line-height: 1.2em;
       margin-bottom: 2px;
     }
   }
+  .selected & {
+    .body {
+      max-height:0;
+      padding-top: 0;
+      padding-bottom: 0;
+      -webkit-transition: max-height 300ms ease-out !important;
+      transition: max-height 300ms ease-out !important;
+    }
+  }
+}
+.tile.tile-detail {
+  border: 1px solid #ddd;
+  .item {
+    min-height: inherit;
+  }
 }
 
-.title {
-  @extend .strong;
+.button-bar.condensed {
+  @media(max-width: $grid-responsive-sm-break) {
+    $condensed-height: 28px;
+    & > .button {
+      // max-height: 30px;
+      min-height: $condensed-height;
+      line-height: $condensed-height;
+      .icon:before {
+        font-size: 16px;
+        line-height: 16px;
+        vertical-align: initial;
+      }
+    }
+  }
+}
+
+#new-tile-modal-view {
+  .list {
+    padding: 1px 3px 1px 5px;
+    .preview {
+      background-color: #444;
+      .tile {border:none; transform: scale3d(0.8,0.8,1);}
+    }
+    .body {
+      border: 1px solid #ddd;
+      .patch-border {margin-right:1px;}
+      .item-stacked-label .input-label {
+        font-size: smaller;
+        color: darkgray;
+        line-height: 17px;
+        padding-top: 0;}
+      }
+  }
 }
 
 

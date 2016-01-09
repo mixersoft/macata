@@ -21,7 +21,6 @@ ListItemContainerDirective = ()->
         _styleEl = """
           <style class="item-style">
           .list-item-summary .list-item-wrap > .item,
-          .list-item-summary .list-item-wrap .item,
           .list-item-summary .item.item-complex > .item-content {
             min-height: 160px; }
         </style>

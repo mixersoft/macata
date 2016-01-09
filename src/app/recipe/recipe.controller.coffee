@@ -48,6 +48,7 @@ RecipeCtrl = (
             id: i
             color: vm.lookup.colors[i %% vm.lookup.colors.length]
           }
+          sampleData = _.map sampleData, (o)-> return openGraphSvc.normalize(o)
           vm.rows = sampleData.concat(vm.rows)
           console.log "vm.rows set by $q"
           exportDebug.set('rows', vm.rows)
@@ -78,8 +79,7 @@ RecipeCtrl = (
           $timeout ()->document.querySelector('new-tile input').focus()
 
       forkTile: ($event, item)->
-        data = openGraphSvc.normalize(item)
-        data = _.pick data, ['url','title','description','image', 'site_name', 'extras']
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
         # from new-tile.directive fn:_showTileEditorAsModal
         return tileHelpers.modal_showTileEditor(data)
         .then (result)->
@@ -176,15 +176,14 @@ RecipeDetailCtrl = (
         ).toggleClass('slide-under')
         return
       'edit': (event, item)->
-        data = openGraphSvc.normalize(item)
+        data = angular.copy item # openGraphSvc.normalize(item)
         return tileHelpers.modal_showTileEditor(data)
         .then (result)->
           console.log ["edit", data]
           data.isOwner = true
           return
       'forkTile': ($event, item)->
-        data = openGraphSvc.normalize(item)
-        data = _.pick data, ['url','title','description','image', 'site_name', 'extras']
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
         # from new-tile.directive fn:_showTileEditorAsModal
         return tileHelpers.modal_showTileEditor(data)
         .then (result)->
