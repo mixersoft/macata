@@ -5,9 +5,15 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
   )
     div.hero-a.content
       div.hero-wrap.has-mask-reverse
-        div.hero-toolbar.icon-bar.condensed(ng-show="view.show=='profile'")
-          i.button.button-clear.positive.ion-heart.larger.ink
-          i.button.button-clear.positive.ion-ios-upload.larger.ink
+        div.icon-bar.condensed.bottom-toolbar.light(
+          ng-show="view.show=='profile'"
+          ng-click="$event.stopImmediatePropagation()"
+          )
+          i.button.button-clear.ion-heart.larger.ink(
+            ng-class="person.favorite && 'selected'"
+            ng-click="person.favorite = !person.favorite"
+            )
+          i.button.button-clear.ion-ios-upload.larger.ink
         div.hero-bg.blur(bg-image="{{person.face}}")
       div.text-center.padding.content
         h2.light.text-center {{person.displayName}}
@@ -44,5 +50,3 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
               button.button.button-assertive(
                 ng-click="vm.on.signOut()"
                 ) Sign out
-
-
