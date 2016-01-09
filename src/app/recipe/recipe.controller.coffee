@@ -1,10 +1,10 @@
 'use strict'
 
 RecipeCtrl = (
-  $scope, $rootScope, $q, $location, $window
+  $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate
   $log, toastr
-  appModalSvc, $http
+  appModalSvc, tileHelpers, openGraphSvc
   utils, devConfig, exportDebug
   )->
 
@@ -31,7 +31,8 @@ RecipeCtrl = (
         'new': false
       show:
         newTile: false
-        newTileSpinner: false
+        spinner:
+          newTile: false
     }
 
     vm.lookup = {
@@ -69,10 +70,25 @@ RecipeCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      createNewTile: (value)->
+      # activate <new-tile>
+      createNewTile: ()->
         vm.settings.show.newTile = !vm.settings.show.newTile
         if vm.settings.show.newTile
-          document.querySelector('new-tile input').focus()
+          # this isn't working
+          $timeout ()->document.querySelector('new-tile input').focus()
+
+      forkTile: ($event, item)->
+        data = openGraphSvc.normalize(item)
+        data = _.pick data, ['url','title','description','image', 'site_name', 'extras']
+        # from new-tile.directive fn:_showTileEditorAsModal
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          console.log ['forkTile',result]
+          return vm.on.submitNewTile(result)
+        .then ()->
+          item.isOwner = true
+        .catch (err)->
+          console.warn ['forkTile', err]
 
 
       submitNewTile: (result)->
@@ -80,6 +96,7 @@ RecipeCtrl = (
         # ?:use a $on listener instead?
         console.log ['submitNewTile', result]
         vm.settings.show.newTile = false
+
     }
 
     initialize = ()->
@@ -131,10 +148,10 @@ RecipeCtrl = (
 
 
 RecipeCtrl.$inject = [
-  '$scope', '$rootScope', '$q', '$location', '$window'
+  '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate'
   '$log', 'toastr'
-  'appModalSvc', '$http'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'utils', 'devConfig', 'exportDebug'
 ]
 
@@ -160,9 +177,24 @@ RecipeDetailCtrl = (
         return
       'edit': (event, item)->
         data = openGraphSvc.normalize(item)
-        tileHelpers.modal_showTileEditor(data)
-        console.log ["edit", data]
-        return
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          console.log ["edit", data]
+          data.isOwner = true
+          return
+      'forkTile': ($event, item)->
+        data = openGraphSvc.normalize(item)
+        data = _.pick data, ['url','title','description','image', 'site_name', 'extras']
+        # from new-tile.directive fn:_showTileEditorAsModal
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          console.log ['forkTile',result]
+          # return vm.on.submitNewTile(result)
+        .then ()->
+          item.isOwner = true
+        .catch (err)->
+          console.warn ['forkTile', err]
+
     }
     console.log ["RecipeDetailCtrl initialized scope.$id=", $scope.$id]
     return vm

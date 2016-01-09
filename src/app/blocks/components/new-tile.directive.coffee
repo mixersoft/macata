@@ -78,9 +78,24 @@ TileHelpers.$inject = ['appModalSvc', '$q']
 ###
 # @description TileEditorCtrl used by TileHelpers.modal_showTileEditor modal
 ###
-TileEditorCtrl = (scope, $q, geocodeSvc)->
+TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
   this.id = 'TileEditorCtrl'
   mm = this
+
+  mm.init = ()->
+    mm.setting.hasGeolocation = navigator.geolocation?
+    return
+
+
+  mm.setting = {
+    hasGeolocation: null
+    show:
+      spinner:
+        location: false
+  }
+
+
+
   mm.data = {
     url: null
     title: null
@@ -101,8 +116,32 @@ TileEditorCtrl = (scope, $q, geocodeSvc)->
       switch option
         when 'CURRENT'
           console.log "Get Current Location"
-        else
-          return mm.on.geocodeAddress()
+          dfd = $q.defer()
+          mm.setting.show.spinner.location = true
+          navigator.geolocation.getCurrentPosition(
+            (result)-> return dfd.resolve(result)
+          , (err)-> return dfd.reject(err)
+          )
+          return dfd.promise
+          .then (result)->
+            mm.data.latlon = [result.coords.latitude, result.coords.longitude]
+            mm.data.address = [
+              'lat:', result.coords.latitude
+              'lon:', result.coords.longitude
+            ].join(' ')
+            console.log ['with location',mm.data]
+          .catch (err)->
+            console.warn ['Err location', err]
+          .finally ()->
+            mm.setting.show.spinner.location = false
+        else # switch
+          if !mm.data.address
+            mm.data.address = ''  # show mm.data.location field
+            target = ev.currentTarget
+            $timeout ()->
+              target.scrollIntoView()
+          else
+            return mm.on.geocodeAddress()
       return
 
     geocodeAddress : (force)->
@@ -120,8 +159,13 @@ TileEditorCtrl = (scope, $q, geocodeSvc)->
       # post to $meteor
       mm.closeModal mm.data
   }
+
+  ionic.Platform.ready ->
+    mm.init()
+    return
+
   return
-TileEditorCtrl.$inject = ['$scope', '$q', 'geocodeSvc']
+TileEditorCtrl.$inject = ['$scope', '$q', 'geocodeSvc', '$timeout']
 
 
 

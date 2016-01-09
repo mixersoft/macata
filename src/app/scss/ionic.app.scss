@@ -104,8 +104,8 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
 }
 /* End required CSS. */
 
-/* 
- * placeholder.directive 
+/*
+ * placeholder.directive
  */
 .bg-image {
   background-image: url('');
@@ -139,7 +139,7 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
       @extend .bg-image.mask:after;
       background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
     }
-  }  
+  }
 }
 .xxxbg-image:after {
   content:"";
@@ -150,14 +150,14 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   bottom: 0;
   right: 0;
 }
-/* 
- * END: placeholder.directive 
+/*
+ * END: placeholder.directive
  */
 
 
 
-/* 
- * listSummaryDetail.directive 
+/*
+ * listSummaryDetail.directive
  */
 list-item-container {
   &.condensed {
@@ -210,7 +210,7 @@ body.platform-browser  {
       max-height: 320px;
       height: 320px;
     }
-  } 
+  }
 }
 .col-60 {
   -webkit-box-flex: 0;
@@ -219,7 +219,7 @@ body.platform-browser  {
   -moz-flex: 0 0 60%;
   -ms-flex: 0 0 60%;
   flex: 0 0 60%;
-  max-width: 60%; 
+  max-width: 60%;
 }
 .col-offset-25-right {
     margin-right: 25%;
@@ -229,8 +229,8 @@ body.platform-browser  {
 }
 
 
-/* 
- * END listSummaryDetail.directive 
+/*
+ * END listSummaryDetail.directive
  */
 
 
@@ -255,11 +255,11 @@ $hero-wrap-bg-height: 170px;
         height: 100%;
         z-index: -1;
       }
-    }
-    .hero-toolbar {
-      position: absolute;
-      bottom: 4px;
-      right: 0;
+      .icon-bar .button-clear {
+        &.selected, &.activated {
+          text-shadow: none;
+        }
+      }
     }
     .face {
       border-radius: 50%;
@@ -273,21 +273,37 @@ $hero-wrap-bg-height: 170px;
 }
 
 
-
 .icon-bar {
   z-index: 1;
+  background-color: rgba(16,16,16,0.3);
   &.condensed {
     @extend .no-padding;
-    .button {
-      padding: 0 6px;
-      height: 32px;
-      line-height: 32px;
-      min-height: 32px;
-      min-width: 32px;
-    }
-    .button.larger {
+  }
+  &.bottom-toolbar {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+  }
+  .button {
+    padding: 0 6px;
+    height: 32px;
+    line-height: 32px;
+    min-height: 32px;
+    min-width: 32px;
+    &.larger {
       font-size: 24px;
       padding: 0 6px;
+    }
+    &:hover {
+      background-color: rgba(16,16,16,0.3);
+    }
+    &.button-clear {
+      opacity: 0.7;
+      &.selected, &.activated {
+        color: inherit;
+        opacity: 1;
+        text-shadow: 0 0 10px $light;
+      }
     }
   }
 }
@@ -337,7 +353,3 @@ $hero-wrap-bg-height: 170px;
   @extend .has-mask:after;
   background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
 }
-
-
-
-
