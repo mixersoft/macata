@@ -170,7 +170,7 @@ ListItemContainerDirective = ()->
           return colSpec = 'col-25' if pct <= 0.25
           return colSpec = 'col-33' if pct <= 0.33
           return colSpec = 'col-50' if pct <= 0.50
-          return colSpec = null
+          return colSpec = 'col-full'
         vm.getColWidth = ()->
           return _getColWidth($scope.summaryMinWidth)
         _getColWidth = _.memoize vm.calcColWidth

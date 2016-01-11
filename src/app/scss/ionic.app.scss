@@ -200,8 +200,10 @@ body.platform-browser  {
 .ng-repeat-grid {
   &.row {
     flex-wrap: wrap;
+    .col.col-full, .col.col-100 {
+      flex: none; /* hack for safari flex-wrap bug */
+    }
     .col {
-      flex: none;
       margin-bottom: inherit;
     }
   }
