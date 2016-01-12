@@ -1,0 +1,43 @@
+//- blocks/components/address-map.template.jade
+ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
+  style#map-view-style.
+    #map-view-search { min-width:32.5px; } 
+    #map-view-search svg {width: 26px; height: 26px; margin: 5px 0;}
+    #map-view-map .wrap {min-height: 200px;}
+    #map-view-map .angular-google-map-container {min-height: 200px;}
+  ion-content#map-view
+    div.list.condensed
+      div#map-view-map.item.item-complex
+        div.wrap(
+          ng-if="vm.map"
+        )
+          {{opt = vm.map.options;''}}
+          ui-gmap-google-map( 
+            center='vm.map.center' 
+            zoom='vm.map.zoom'
+            options='opt.map.options'
+          )
+            ui-gmap-circle(
+              ng-if="vm.map.type=='circle'"
+              center="opt.circle.center"
+              radius="opt.circle.radius"
+              stroke="opt.circle.stroke"
+              )
+            ui-gmap-marker(
+              ng-if="vm.isValidMarker()"
+              idKey="opt.oneMarker.idKey"
+              coords="opt.oneMarker.coords"
+              options="opt.oneMarker.options"
+              events="opt.oneMarker.events"
+              )
+            ui-gmap-markers(
+              ng-if="vm.map.type=='manyMarkers'"
+              fit="false"
+              idkey="id"
+              coords="'self'"
+              models="opt.manyMarkers.models"
+              options="opt.manyMarkers.options"
+              modelbyref="true"
+              xxclick="'opt.manyMarkers.events.click'"
+              events="opt.manyMarkers.events"
+              )

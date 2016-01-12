@@ -25,4 +25,5 @@ angular
     'starter.profile'
     'starter.grid'
     'starter.recipe'
+    'starter.map'
   ]
