@@ -80,6 +80,8 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
 
     ###
     @description an Entry Point for this service, returns an object with a geocode location
+    @param address, accepts an address string, or
+          [lat,lon] as a string of 2 comma-separated floats
     @resolve object { address: location: place_id:(optional) } or null if canceled
     @reject ['ERROR', err]
     ###
@@ -135,11 +137,26 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
     # called by self.displayGeocode() and VerifyLookupCtrl.updateGeocode()
     geocode: (address)->
       return $q.reject("Geocoder JS lib not ready") if !GEOCODER.instance?
+
+      # check if address is a latlon
+      isLatLon = /^(\d+\.*\d*),(\d*\.*\d*)$/
+      if latlon = address.match(isLatLon)
+        # geocode a location
+        option = location:
+          lat: parseFloat(latlon[1])
+          lng: parseFloat(latlon[2])
+      else
+        # geocode an address
+        option = { "address": address }
+
       dfd = $q.defer()
-      # geocode address
-      GEOCODER.instance.geocode({ "address": address }, (result, status)->
+      GEOCODER.instance.geocode( option, (result, status)->
         switch status
           when 'OK'
+            if option.location
+              # filter out approximate results
+              result = _.filter result, (o)->
+                return true if o.geometry.location_type != 'APPROXIMATE'
             return dfd.resolve result
           when GEOCODER.STATUS.ZERO_RESULTS
             return dfd.resolve GEOCODER.STATUS.ZERO_RESULTS
