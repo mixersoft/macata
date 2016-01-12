@@ -18,16 +18,21 @@ InputDirective = ($compile, $timeout)->
     link:
       pre: (scope, element, attrs, ngModel) ->
         inputTypes = /text|search|tel|url|email|password/i
-        if element[0].nodeName != 'INPUT'
+        if  not ~['INPUT','TEXTAREA'].indexOf(element[0].nodeName)
           throw new Error "directive auto-input is limited to input elements"
-        if not inputTypes.test(attrs.type)
+        if attrs.type && not inputTypes.test(attrs.type)
           throw new Error "Invalid input type for directive auto-input" + attrs.type
 
 
         btnTemplate = """
-        <i ng-show="enabled" ng-click="clear($event)" style="color:#666;" class="icon ion-close-circled pull-right"></i>
+        <i ng-show="enabled" ng-click="clear($event)" style="color:#666;" class="auto-input icon ion-close-circled pull-right"></i>
         """
         template = $compile( btnTemplate )(scope)
+        if element[0].nodeName == 'TEXTAREA'
+          top = 7
+          top +=17 if element.parent().hasClass('item-stacked-label')
+          template.css('top', top+'px')
+
         element.after(template)
 
         scope.clear = (ev)->

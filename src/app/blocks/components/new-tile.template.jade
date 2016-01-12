@@ -25,22 +25,36 @@ ion-modal-view#new-tile-modal-view
       div.body
         ion-input.item.item-input.item-stacked-label
           ion-label Title
-          input(type="text" placeholder="Title" ng-model="mm.data.title" )
+          input(type="text" ng-model="mm.data.title" 
+            auto-input 
+            placeholder="Title" 
+            )
         ion-input.item.item-input.item-stacked-label.patch-border
           ion-label Description
           textarea.item-input-textarea(
           rows="4" 
-          ng-model="mm.data.description" 
+          ng-model="mm.data.description"
+          auto-input
           placeholder="Description" )
         ion-input.item.item-input.item-stacked-label
           ion-label Source
-          input(type="text" placeholder="Source" ng-model="mm.data.site_name" )
+          input(type="text" ng-model="mm.data.site_name" 
+            auto-input 
+            placeholder="Source"
+            )
         ion-input.item.item-input
           i.icon.ion-share.positive.larger.padding-right
-          input(type="text" placeholder="Enter Link" ng-model="mm.data.url" )
+          input(type="text" ng-model="mm.data.url" 
+            auto-input 
+            placeholder="Enter Link"
+            )
         ion-input.item.item-input
           i.icon.ion-image.positive.larger.padding-right
-          input(type="text" placeholder="Enter Url for Photo" ng-model="mm.data.image" )
+          input(type="text" ng-model="mm.data.image" 
+            auto-input 
+            placeholder="Enter Url for Photo" 
+            )
+          
         ion-input.item.item-input(ng-show="mm.data.address || mm.data.address===''")
           i.icon.ion-ios-location.positive.larger.padding-right
           input(

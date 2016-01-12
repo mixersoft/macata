@@ -154,7 +154,30 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
  * END: placeholder.directive
  */
 
-
+/*
+ * auto-input directive
+ */
+.item-input {
+  i.auto-input {
+    line-height: inherit;
+    position:absolute;
+    right: 4px;
+    bottom: 7px;
+    height: 34px;
+    padding: 8px 2px;
+  }
+  & > input, & > textarea {
+    padding-right:16px !important;
+  }
+}
+// ion-modal-view scrollbar hack
+//  native-scroll scroll-bar z-index is too low
+.modal .overflow-scroll .scroll .item-input {
+ padding-right: 8px;
+}
+/*
+ * end auto-input
+ */
 
 /*
  * listSummaryDetail.directive
@@ -378,7 +401,7 @@ $hero-wrap-bg-height: 170px;
     }
     .body {
       border: 1px solid #ddd;
-      .patch-border {margin-right:1px;}
+      .patch-border {margin-right:-1px;}
       .item-stacked-label .input-label {
         font-size: smaller;
         color: darkgray;
