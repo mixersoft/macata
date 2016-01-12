@@ -55,17 +55,17 @@ ion-modal-view#new-tile-modal-view
             placeholder="Enter Url for Photo" 
             )
           
-        ion-input.item.item-input.location(ng-show="mm.setting.show.location")
+        ion-input.item.item-input.location(ng-show="mm.geo.setting.show.location")
           div.current-location(
-            ng-show="mm.setting.hasGeolocation"
+            ng-show="mm.geo.setting.hasGeolocation"
             ng-click="mm.on.locationClick($event,'CURRENT')" 
           )
             i.icon.ion-pinpoint.positive.larger(
-              ng-hide="mm.setting.show.spinner.location"
+              ng-hide="mm.geo.setting.show.spinner.location"
             )
             ion-spinner(
               icon="ios-small"
-              ng-show="mm.setting.show.spinner.location"
+              ng-show="mm.geo.setting.show.spinner.location"
             )
           i.icon.ion-ios-location.positive.larger.padding-right
           div.auto-input-wrap
@@ -77,8 +77,8 @@ ion-modal-view#new-tile-modal-view
               ng-model="mm.data.address" 
             )
           i.icon.ion-ios-arrow-forward.positive.larger
-        div.error.padding-horizontal(ng-show="mm.errorMsg['location']")
-          span.assertive {{mm.errorMsg['location']}}
+        div.error.padding-horizontal(ng-show="mm.geo.errorMsg['location']")
+          span.assertive {{mm.geo.errorMsg['location']}}
 
             
   ion-footer-bar

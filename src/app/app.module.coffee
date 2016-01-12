@@ -12,6 +12,7 @@ angular
   .module 'starter', [
     # Shared modules
     'ionic'
+    'ngCordova'
     'angular-meteor'
     'starter.core'
     'starter.layout'
