@@ -96,8 +96,6 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
       location: false
   }
 
-
-
   mm.data = {
     url: null
     title: null
@@ -109,12 +107,36 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
     latlon: null
   }
 
+  mm.errorMsg = {
+    location:  null
+  }
+
+  _handleGeolocationErr = (err)->
+    ERROR_CODES = {
+      1: 'PERMISSION_DENIED'
+      2: 'POSITION_UNAVAILABLE'
+      3: 'TIMEOUT'
+    }
+    switch ERROR_CODES[err.code]
+      when 'PERMISSION_DENIED'
+        mm.errorMsg.location = """
+        Permission Denied. Please check your privacy settings and try again.
+        """
+      when 'POSITION_UNAVAILABLE'
+        mm.errorMsg.location = "Warning: Position unavailable."
+      else
+        console.warn ['Err location', err]
+    return
+
+
+
   mm.on = {
     cameraClick: (ev)->
       check = ev.currentTarget
       return
 
     locationClick: (ev, option )->
+      mm.errorMsg.location = null
       switch option
         when 'CURRENT'
           console.log "Get Current Location"
@@ -138,7 +160,8 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
             ].join(' ')
             console.log ['with location',mm.data]
           .catch (err)->
-            console.warn ['Err location', err]
+            _handleGeolocationErr(err)
+            return
           .finally ()->
             mm.setting.show.spinner.location = false
           .then ()->

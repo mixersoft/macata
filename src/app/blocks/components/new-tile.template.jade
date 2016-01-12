@@ -77,6 +77,8 @@ ion-modal-view#new-tile-modal-view
               ng-model="mm.data.address" 
             )
           i.icon.ion-ios-arrow-forward.positive.larger
+        div.error.padding-horizontal(ng-show="mm.errorMsg['location']")
+          span.assertive {{mm.errorMsg['location']}}
 
             
   ion-footer-bar

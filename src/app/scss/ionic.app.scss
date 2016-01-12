@@ -425,6 +425,12 @@ $hero-wrap-bg-height: 170px;
           right: -6px;
         }
       }
+      .error {
+        padding: 0 10px;
+        border-top-color: red;
+        border-top-width: 2px;
+        border-top-style: solid;
+      }
     }
   }
 }
