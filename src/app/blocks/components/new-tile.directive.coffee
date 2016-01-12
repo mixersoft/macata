@@ -84,6 +84,7 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
 
   mm.init = ()->
     mm.setting.hasGeolocation = navigator.geolocation?
+    mm.setting.show.location = !!mm.data.address
     return
 
 
@@ -92,6 +93,7 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
     show:
       spinner:
         location: false
+      location: false
   }
 
 
@@ -126,9 +128,10 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
           .then (result)->
             gMapPoint = _.chain result.coords
               .pick ['latitude','longitude']
-              .each (v,k,o)-> return o[k]=geocodeSvc.mathRound6(v)
+              # .each (v,k,o)-> return o[k]=geocodeSvc.mathRound6(v)
               .value()
             mm.data.latlon = [gMapPoint.latitude, gMapPoint.longitude]
+            mm.data.isCurrentLocation = true
             mm.data.address = [
               'lat:', gMapPoint.latitude
               'lon:', gMapPoint.longitude
@@ -138,21 +141,38 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout)->
             console.warn ['Err location', err]
           .finally ()->
             mm.setting.show.spinner.location = false
+          .then ()->
+            # now verify current location
+            mm.on.geocodeAddress('force')
         else # switch
-          if !mm.data.address
-            mm.data.address = ''  # show mm.data.location field
-            target = ev.currentTarget
-            $timeout ()->
-              target.scrollIntoView()
-          else
+          if mm.data.latlon && mm.data.address
+            # what to do? update address? or replace latlon?
+            if mm.data.isCurrentLocation
+              return  # keep current latlon, & just update address field
+            else
+              # repeat: geocode current address
+              return mm.on.geocodeAddress('force')
+          if mm.data.address && !mm.data.latlon
             return mm.on.geocodeAddress()
+
+          if !mm.data.address
+            mm.setting.show.location = true
+            target = ev.currentTarget
+            selector = '#new-tile-modal-view ion-input.location'
+            $timeout ()->
+              document.querySelector(selector).scrollIntoView()
+
       return
 
     geocodeAddress : (force)->
+      if mm.data.latlon && mm.data.isCurrentLocation && force
+        location = mm.data.latlon.join(',')
       if mm.data.latlon && !force
         console.log ['locationClick()', _.pick( mm.data, ['latlon','address'] ) ]
         return $q.when mm.data
-      return geocodeSvc.getLatLon( mm.data.address )
+      location ?= mm.data.address
+      return if !location
+      return geocodeSvc.getLatLon( location )
       .then (result)->
         console.log ['locationClick()', result]
         mm.data.latlon = result?.location

@@ -176,7 +176,7 @@ RecipeDetailCtrl = (
         ).toggleClass('slide-under')
         return
       'edit': (event, item)->
-        data = angular.copy item # openGraphSvc.normalize(item)
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
         return tileHelpers.modal_showTileEditor(data)
         .then (result)->
           console.log ["edit", data]

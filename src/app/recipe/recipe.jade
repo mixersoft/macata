@@ -27,7 +27,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           )  
         button.button.button-dark.button-clear
           i.icon.ion-ios-arrow-forward(
-            ng-show="show.spinner.newTile"
+            ng-show="!show.spinner.newTile"
           )
           ion-spinner(
             icon="ios-small"

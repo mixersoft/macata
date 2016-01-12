@@ -94,10 +94,10 @@ ion-modal-view#address-lookup-modal-view
           span.padding-horizontal.positive(
             ng-show="vm.map.type=='manyMarkers'"
           ) Multiple locations found, click Marker to select
-      div.item
-        div.button-bar
-          button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
-          button.button.button-balanced(
-          ng-click="closeModal(vm)"
-          ng-disabled="vm.isValidMarker()==false"
-          ) OK
+  ion-footer-bar
+    div.button-bar
+      button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
+      button.button.button-balanced(
+      ng-click="closeModal(vm)"
+      ng-disabled="vm.isValidMarker()==false"
+      ) OK

@@ -55,15 +55,9 @@ ion-modal-view#new-tile-modal-view
             placeholder="Enter Url for Photo" 
             )
           
-        ion-input.item.item-input(ng-show="mm.data.address || mm.data.address===''")
-          i.icon.ion-ios-location.positive.larger.padding-right
-          input(
-            ng-blur="mm.on.geocodeAddress()"
-            type="text" 
-            placeholder="Enter an Address to Set Location" 
-            ng-model="mm.data.address" 
-          )
-          button.button.button-positive.button-clear(
+        ion-input.item.item-input.location(ng-show="mm.setting.show.location")
+          div.padding(
+            style="position:relative;left:-10px;"
             ng-show="mm.setting.hasGeolocation"
             ng-click="mm.on.locationClick($event,'CURRENT')" 
           )
@@ -74,10 +68,21 @@ ion-modal-view#new-tile-modal-view
               icon="ios-small"
               ng-show="mm.setting.show.spinner.location"
             )
-        div.button-bar.condensed.positive
-          button.button(ng-click="mm.on.cameraClick($event)")
-            i.icon.ion-camera.positive
-          button.button(ng-click="mm.on.locationClick($event)")
-            i.icon.ion-ios-location.positive
-          button.button.positive(ng-click="mm.on.done($event)") Done
+          i.icon.ion-ios-location.positive.larger.padding-right
+          input(
+            ng-blur="mm.on.locationClick($event)"
+            type="text"
+            auto-input
+            placeholder="Enter an Address to Set Location" 
+            ng-model="mm.data.address" 
+          )
+
+            
+  ion-footer-bar
+    div.button-bar.condensed.positive
+      button.button(ng-click="mm.on.cameraClick($event)")
+        i.icon.ion-camera.positive
+      button.button(ng-click="mm.on.locationClick($event)")
+        i.icon.ion-ios-location.positive
+      button.button.positive(ng-click="mm.on.done($event)") Done
   
