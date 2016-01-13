@@ -1,0 +1,73 @@
+//- placeholder.tile.html
+//- transclude using ng-repeat="$item in collection"
+//- NOTE: ion-item(ui-sref="") doesn't work with 
+//-   ionicMaterial CSS.  use div.item instead
+
+list-item-summary.animate-fade-slide-in-right(
+  opt-collection="vm.rows"
+) {{vm=$parent.$parent.vm;''}}
+  div.tile.recipe.item.item-complex.content.ink(
+    ng-class="[$item.color,'bg'].join('-')"
+    ng-click="$listItemDelegate.select($event, $item, $index)"
+  )
+    div.hero.content(style="height:160px;")
+      div.icon-bar.bottom-toolbar.condensed.light(
+        ng-show="$item['title']"
+        ng-click="$event.stopImmediatePropagation()"
+        )
+        i.button.button-clear.larger.ion-heart.ink(
+          ng-class="$item.favorite && 'selected'"
+          ng-click="$item.favorite = !$item.favorite"
+          )
+        i.button.button-clear.larger.ion-map.ink(
+          )
+        i.button.button-clear.larger.ink(
+          ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
+          ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+          )         
+        i.button.button-clear.ion-ios-upload.larger.ink(
+          )
+      div.feature.image(
+        bg-image="{{$item['image']}}"
+      )
+    div.body.padding
+      div.title.line-clamp-1 {{$item['title']}}
+      p.description.line-clamp.line-clamp-2 {{$item['description']}}
+      p. {{$item['site_name']}}
+
+list-item-detail 
+  //- $item == $listItemDelegate.selected(), e.g. selected model
+  div.tile.tile-detail(ng-controller="RecipeDetailCtrl as dvm")
+    ion-item.item-complex.in.done
+      div.item-body.padding
+        div.title {{$item['title']}}
+        p(style="margin-top:0;") {{$item['description']}}
+      
+    div.button-bar.condensed.positive(
+      ng-show="true"
+      ng-click="$event.stopImmediatePropagation()"
+      )
+      a.button(
+        href="{{$item['url']}}"
+        target="_blank"
+        )
+        i.icon.positive.ion-android-open.ink(
+        )
+      button.button(
+        ng-click="$item.favorite = !$item.favorite"
+        )
+        i.icon.positive.ink(
+        ng-class=" $item.favorite ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
+        )
+      button.button
+        i.icon.positive.ion-map.ink(
+        )
+      button.button(
+        ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; dvm.on[action]($event, $item); "
+        )
+        i.icon.positive.ink(
+        ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
+        )
+      button.button
+        i.icon.positive.ion-ios-upload.larger.ink(
+        )

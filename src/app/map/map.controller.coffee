@@ -4,21 +4,28 @@ MapCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate
   $log, toastr
-  appModalSvc, tileHelpers, geocodeSvc
+  uiGmapGoogleMapApi, openGraphSvc, geocodeSvc
   utils, devConfig, exportDebug
   )->
 
     # coffeelint: disable=max_line_length
-    sampleData = [
-      {"lat":42.6700528,"lon":23.314167099999963},
-      {"lat":42.6737483,"lon":23.325192799999968},
-      {"lat":42.6977082,"lon":23.321867500000053},
-      {"lat":42.6599319,"lon":23.31657610000002},
-      {"lat":42.6743583,"lon":23.32824210000001},
-      {"lat":42.7570109,"lon":23.45046830000001},
-      {"lat":42.7570109,"lon":23.45046830000001},
-      {"lat":42.733883,"lon":25.485829999999964}
-    ]
+    sampleData = {
+      item: [
+        {"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","og:site_name":"Yummly","og:url":"http://www.yummly.com/recipe/Thomas-Keller_s-Roast-Chicken-1286231","og:title":"Thomas Keller's Roast Chicken Recipe","og:image":"http://lh3.googleusercontent.com/h9IttHblN8tuFyHG-A4cDhqzYPNB-yM4jyT2fIgLFxg6lcxKdKCSqPyCz_c5pk0eCS3JLUPXjo2M7CU4pVsWog=s730-e365","yummlyfood:course":"Main Dishes","yummlyfood:ingredients":"butter","yummlyfood:time":"1 hr 30 min","yummlyfood:source":"TLC","og:description":"Thomas Keller's Roast Chicken Recipe Main Dishes with chicken, ground black pepper, salt, orange, lemon, carrots, onions, celery ribs, shallots, bay leaves, thyme sprigs, butter"}
+        {"og:locale":"en_US","og:title":"Daniel Boulud's Short Ribs Braised in Red Wine with Celery Duo","og:type":"website","og:url":"http://www.epicurious.com/recipes/food/views/daniel-bouluds-short-ribs-braised-in-red-wine-with-celery-duo-106671","og:description":"Chef Boulud says that the success of this dish rests on browning the short ribs well at the beginning of cooking the dish to get the best flavors into the sauce. The Celery Duo starts with a celery root puree and ends with the braised ribs that top the beef. This recipe also can be found in the Café Boulud Cookbook, by Daniel Boulud and Dorie Greenspan.","og:image":"http://www.epicurious.com/static/img/misc/epicurious-social-logo.png","og:site_name":"Epicurious","fb:app_id":"1636080783276430","fb:admins":"14601235","type":"recipe"}
+        {"og:locale":"en_US","og:type":"recipe","og:title":"Red Wine-Braised Short Ribs Recipe - Bon Appétit","og:description":"These Red Wine-Braised Short Ribs are even better when they're allowed to sit overnight.","og:url":"http://www.bonappetit.com/recipe/red-wine-braised-short-ribs","og:site_name":"Bon Appétit","article:publisher":"https://www.facebook.com/bonappetitmag","article:tag":"Beef,Dinner,Meat,Ribs","article:section":"Recipes","og:image":"http://www.bonappetit.com/wp-content/uploads/2011/08/red-wine-braised-short-ribs-940x560.jpg","type":"recipe"}
+      ]
+      location: [
+        {"lat":42.6700528,"lon":23.314167099999963},
+        {"lat":42.6737483,"lon":23.325192799999968},
+        {"lat":42.6977082,"lon":23.321867500000053},
+        {"lat":42.6599319,"lon":23.31657610000002},
+        {"lat":42.6743583,"lon":23.32824210000001},
+        {"lat":42.7570109,"lon":23.45046830000001},
+        {"lat":42.7570109,"lon":23.45046830000001},
+        {"lat":42.733883,"lon":25.485829999999964}
+      ]
+    }
     # coffeelint: enable=max_line_length
 
     MAP_VIEW = {
@@ -60,17 +67,16 @@ MapCtrl = (
     _getAsGeocodeResult = (rows)->
       rows ?= vm.rows
       return _.map rows, (o, i, rows)->
-        return {
-          formatted_address: o.address
-          geometry:
-            location:
-              lat: ()->return o.lat
-              lng: ()->return o.lon
+        o.geometry = {
+          location:
+            lat: ()->return o.location.lat
+            lng: ()->return o.location.lon
         }
+        o.formatted_address = o.address
+        return o
 
     setMapHeight = ()->
       # calculate mapHeight
-
       contentH =
         # same as @media(max-width: 680)
         if $window.innerWidth <= MAP_VIEW.GRID_RESPONSIVE_SM_BREAK
@@ -82,11 +88,16 @@ MapCtrl = (
       mapH = Math.max( MAP_VIEW.MAP_MIN_HEIGHT , mapH)
       # console.log ["height=",$window.innerHeight , contentH,mapH]
 
+
       styleH = """
         #map-view-map .wrap {height: %height%px;}
         #map-view-map .angular-google-map-container {height: %height%px;}
       """
       styleH = styleH.replace(/%height%/g, mapH)
+      # .has-header offset
+      mapBot = mapH + 44
+      styleH += "#map-view-list {top: %top%px;}".replace('%top%', mapBot)
+
       angular.element(document.getElementById('map-view-style')).append(styleH)
       return mapH
 
@@ -94,33 +105,60 @@ MapCtrl = (
     setupMap = (rows)->
       rows ?= vm.rows
       markerCount = rows.length
+      return uiGmapGoogleMapApi
+      .then ()->
 
-      if markerCount == 0
-        return
+        if markerCount == 0
+          return
 
-      if markerCount == 1
-        selectedLocation = rows[0]
-        mapOptions = {
-          type: 'oneMarker'
-          location: [selectedLocation.lat, selectedLocation.lon]
-          draggableMarker: false
-          dragendMarker: (marker, eventName, args)->
-            return
-        }
+        if markerCount == 1
+          selectedLocation = rows[0]
+          mapOptions = {
+            type: 'oneMarker'
+            location: [selectedLocation.lat, selectedLocation.lon]
+            draggableMarker: false
+            dragendMarker: (marker, eventName, args)->
+              return
+          }
 
-      if markerCount > 1
-        mapOptions = {
-          type: 'manyMarkers'
-          draggableMarker: true     # BUG? click event doesn't work unless true
-          markers: _getAsGeocodeResult(rows)
-          clickMarker: (marker, eventName, model)->
-            index = model.id
-            console.log ["clicked", vm.rows[index]]
-        }
+        if markerCount > 1
+          try
+            $el = angular.element(document.querySelector('.list-item-wrap'))
+            $listItemDelegate = $el.scope().$parent.$listItemDelegate
+          catch err
+            console.error "Unable to find reference to $listItemDelegate"
 
-      mapConfig = geocodeSvc.getMapConfig mapOptions
-      mapConfig.zoom = 11
-      return mapConfig
+          mapOptions = {
+            type: 'manyMarkers'
+            draggableMarker: true     # BUG? click event doesn't work unless true
+            markers: _getAsGeocodeResult(rows)
+            options:
+              xxxcolor: 'green'
+              icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+              labelStyle:
+                color: 'black'
+              labelClass: 'my-marker-label-class'
+              labelContent: 'title'
+            control: {}
+            clickMarker: (marker, eventName, model, skip, silent)->
+              index = marker.model.id
+              console.log ["clicked, i="+index, vm.rows[index]]
+              marker.set('labelContent', marker.model.title[0...20])
+              marker.set('labelStyle', {color: 'blue'})
+              marker.resetIcon = marker.getIcon()
+              markers = mapOptions.control.getGMarkers()
+              _.each markers, (m)->
+                m.setIcon(m.resetIcon) if m.resetIcon?
+                return
+              marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
+              return if silent
+              $listItemDelegate.select(null, vm.rows[index], index, 'silent')
+
+          }
+
+        mapConfig = geocodeSvc.getMapConfig mapOptions
+        # mapConfig.zoom = 11
+        return mapConfig
 
 
     showMap = ()->
@@ -130,14 +168,22 @@ MapCtrl = (
           return vm.rows
         return getData()
       .then (rows)->
-        vm['map'] = setupMap(vm.rows)
+        setupMap(vm.rows)
+      .then (config)->
+        vm['map'] = config
+        exportDebug.set 'mapConfig', config
         return
 
     getData = ()->
       if usePromise = true
         vm.rows = []
         return $q.when().then ()->
-          vm.rows = sampleData
+          # add location to recipes
+          data = _.map sampleData.item, (o,i,l)->
+            merged = openGraphSvc.normalize o
+            merged.location = sampleData.location[i]
+            return merged
+          vm.rows = data
           console.log "vm.rows set by $q"
           exportDebug.set('rows', vm.rows)
           return vm.rows
@@ -194,6 +240,16 @@ MapCtrl = (
         .removeClass('in')
         .removeClass('done')
 
+    $rootScope.$on '$listItemDelegate:selected', (ev, args) ->
+      console.log ["selected", args.$index, args.$item]
+      config = vm['map'].options.manyMarkers
+      markers = config.control.getGMarkers()
+      marker = markers[args.$index]
+      config.events.click marker, null, null, null, 'silent'
+      return
+
+
+
     $scope.$on '$ionicView.leave', (e) ->
       resetMaterialMotion('fadeSlideInRight')
 
@@ -212,7 +268,7 @@ MapCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'geocodeSvc'
+  'uiGmapGoogleMapApi', 'openGraphSvc', 'geocodeSvc'
   'utils', 'devConfig', 'exportDebug'
 ]
 
