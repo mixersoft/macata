@@ -209,14 +209,25 @@ ListItemContainerDirective = ()->
             #note: $item should already be visible in scope of transclude nodes
             $item = vm.selected()
             return $item
-          'select' : (event, $item, $index)->
+          ###
+          # @description select a summaryEl
+          # @param event or null, if event? then use event.currentTarget to find selected El
+          #     if null, then use $index
+          # @param silent, do NOT $emit '$listItemDelegate:selected' event
+          ###
+          'select' : (event, $item, $index, silent)->
             if not $item
               return vm.$listItemDelegate.closeDetail(event)
 
-            event.stopImmediatePropagation()
-            target = ionic.DomUtil.getParentOrSelfWithClass(event.currentTarget, 'list-item-wrap')
-            throw new Error ["warning: cant find .list-item-wrap", event.currentTarget] if !target
-            $selectedElContainer =  angular.element target # .list-item-wrap
+            if event
+              event.stopImmediatePropagation()
+              target = ionic.DomUtil.getParentOrSelfWithClass(event.currentTarget, 'list-item-wrap')
+              throw new Error ["warning: cant find .list-item-wrap", event.currentTarget] if !target
+              $selectedElContainer =  angular.element target # .list-item-wrap
+            else
+              target = vm.$summaryEl[0].querySelectorAll('.list-item-wrap')[$index]
+              $selectedElContainer =  angular.element target # .list-item-wrap
+
             # console.log $selectedElContainer
             if $selectedElContainer.hasClass('selected')
               vm.selected( null )
@@ -224,6 +235,8 @@ ListItemContainerDirective = ()->
             else
               vm.selected( $item, $selectedElContainer )
               vm.layout('detail', $selectedElContainer)
+            return if silent
+            $scope.$emit '$listItemDelegate:selected', {$item: $item, $index: $index}
             return
           'closeDetail' : (event)->
             event.stopImmediatePropagation()
