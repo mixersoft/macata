@@ -327,18 +327,21 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         when 'manyMarkers'
           markers = _.map options.markers, (result, i, l)->
             point = result['geometry']['location']
-            return {
+            return _.defaults {
               'id': i
               'latitude': mathRound6 point.lat()
               'longitude': mathRound6 point.lng()
               'formatted_address': result.formatted_address
-            }
+            }, result
+
           mapConfigOptions['manyMarkers'] = {
             models: markers
-            options:
+            options: _.extend options.options, {
               draggable: options.draggableMarker
+            }
             events:
               'click': options.clickMarker
+            control: options.control
           }
           if options.draggableMarker
             mapConfigOptions['manyMarkers']['events']['dragend'] = options.dragendMarker
