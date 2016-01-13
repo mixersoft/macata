@@ -133,25 +133,53 @@ MapCtrl = (
             draggableMarker: true     # BUG? click event doesn't work unless true
             markers: _getAsGeocodeResult(rows)
             options:
-              xxxcolor: 'green'
               icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-              labelStyle:
-                color: 'black'
-              labelClass: 'my-marker-label-class'
-              labelContent: 'title'
+              labelClass: 'map-marker-label-class'
+              labelVisible: false
+              # labelStyle:
+              #   color: 'white'
+              # labelContent: 'title'
             control: {}
             clickMarker: (marker, eventName, model, skip, silent)->
-              index = marker.model.id
-              console.log ["clicked, i="+index, vm.rows[index]]
-              marker.set('labelContent', marker.model.title[0...20])
-              marker.set('labelStyle', {color: 'blue'})
-              marker.resetIcon = marker.getIcon()
+              # console.log ["clicked, i="+index, vm.rows[index]]
+              # reset markers
               markers = mapOptions.control.getGMarkers()
               _.each markers, (m)->
-                m.setIcon(m.resetIcon) if m.resetIcon?
+                if m.resetIcon?
+                  m.setIcon(m.resetIcon)
+                  # m.set('labelContent', ' ' )
+                  m.set('labelVisible', false)
+                  delete m.resetIcon
                 return
+              # set selected marker
+              index = marker.model.id
+              label = marker.model.title[0...20]
+              label += '...' if marker.model.title.length>20
+              marker.set('labelContent', label )
+              marker.set('labelVisible', true)
+              # marker.set('labelStyle', {color: 'white'})
+              marker.resetIcon = marker.getIcon()
               marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
-              return if silent
+
+              # silent if called by list-summary-detail: $listItemDelegate.selected()
+              if silent
+                # scrollIntoView if out of bounds
+                _setMapBounds = (map, markers)->
+                  latlngbounds = new google.maps.LatLngBounds()
+                  markers.forEach (m)->
+                    latlngbounds.extend(m.getPosition())
+                    return
+                  map.fitBounds(latlngbounds)
+                  return
+
+                map = vm.map.control.getGMap()
+                markerPosition = marker.getPosition()
+                if not map.getBounds().contains markerPosition
+                  _setMapBounds(map, markers)
+                # map.panTo(markerPosition)
+                return
+
+              # select matching item in list-summary-detail
               $listItemDelegate.select(null, vm.rows[index], index, 'silent')
 
           }

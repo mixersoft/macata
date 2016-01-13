@@ -12,9 +12,10 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
       )
         {{opt = vm.map.options;''}}
         ui-gmap-google-map( 
-          center='vm.map.center' 
+          center='vm.map.center'
           zoom='vm.map.zoom'
           options='opt.map.options'
+          control='vm.map.control'
         )
           ui-gmap-circle(
             ng-if="vm.map.type=='circle'"
@@ -31,7 +32,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
             )
           ui-gmap-markers(
             ng-if="vm.map.type=='manyMarkers'"
-            fit="false"
+            fit="true"
             idkey="id"
             coords="'self'"
             models="opt.manyMarkers.models"
