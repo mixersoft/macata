@@ -8,15 +8,6 @@ RecipeCtrl = (
   utils, devConfig, exportDebug
   )->
 
-    # coffeelint: disable=max_line_length
-    sampleData = [
-      {"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","og:site_name":"Yummly","og:url":"http://www.yummly.com/recipe/Thomas-Keller_s-Roast-Chicken-1286231","og:title":"Thomas Keller's Roast Chicken Recipe","og:image":"http://lh3.googleusercontent.com/h9IttHblN8tuFyHG-A4cDhqzYPNB-yM4jyT2fIgLFxg6lcxKdKCSqPyCz_c5pk0eCS3JLUPXjo2M7CU4pVsWog=s730-e365","yummlyfood:course":"Main Dishes","yummlyfood:ingredients":"butter","yummlyfood:time":"1 hr 30 min","yummlyfood:source":"TLC","og:description":"Thomas Keller's Roast Chicken Recipe Main Dishes with chicken, ground black pepper, salt, orange, lemon, carrots, onions, celery ribs, shallots, bay leaves, thyme sprigs, butter"}
-      {"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","og:site_name":"Yummly","og:url":"http://www.yummly.com/recipe/Pan-roasted-brussel-sprouts-316203","og:title":"Pan Roasted Brussel Sprouts Recipe","og:image":"http://lh3.ggpht.com/__CrxYT6M2LxtItnVSkYQ7u2k-p59E8zryHmLFioy4d5oZj04pkSc88aVpLcjey19YaWUwnnM-TfhtoK4U3jXFQ=s730-e365","yummlyfood:course":"Side Dishes","yummlyfood:ingredients":"extra-virgin olive oil","yummlyfood:time":"35 min","yummlyfood:source":"Food52","og:description":"Pan Roasted Brussel Sprouts Recipe Side Dishes with brussels sprouts, olive oil, garlic cloves, white wine, cracked black pepper, sea salt, extra-virgin olive oil"}
-      {"og:locale":"en_US","og:title":"Daniel Boulud's Short Ribs Braised in Red Wine with Celery Duo","og:type":"website","og:url":"http://www.epicurious.com/recipes/food/views/daniel-bouluds-short-ribs-braised-in-red-wine-with-celery-duo-106671","og:description":"Chef Boulud says that the success of this dish rests on browning the short ribs well at the beginning of cooking the dish to get the best flavors into the sauce. The Celery Duo starts with a celery root puree and ends with the braised ribs that top the beef. This recipe also can be found in the Café Boulud Cookbook, by Daniel Boulud and Dorie Greenspan.","og:image":"http://www.epicurious.com/static/img/misc/epicurious-social-logo.png","og:site_name":"Epicurious","fb:app_id":"1636080783276430","fb:admins":"14601235","type":"recipe"}
-      {"og:locale":"en_US","og:type":"recipe","og:title":"Red Wine-Braised Short Ribs Recipe - Bon Appétit","og:description":"These Red Wine-Braised Short Ribs are even better when they're allowed to sit overnight.","og:url":"http://www.bonappetit.com/recipe/red-wine-braised-short-ribs","og:site_name":"Bon Appétit","article:publisher":"https://www.facebook.com/bonappetitmag","article:tag":"Beef,Dinner,Meat,Ribs","article:section":"Recipes","og:image":"http://www.bonappetit.com/wp-content/uploads/2011/08/red-wine-braised-short-ribs-940x560.jpg","type":"recipe"}
-    ]
-    # coffeelint: enable=max_line_length
-
     vm = this
     vm.title = "Recipes"
     vm.me = null      # current user, set in initialize()
@@ -42,23 +33,12 @@ RecipeCtrl = (
 
 
     getData = ()->
-      if usePromise = true
-        vm.rows = []
-        $q.when().then ()->
-          vm.rows = _.map [0...3], (i)-> return {
-            id: i
-            color: vm.lookup.colors[i %% vm.lookup.colors.length]
-          }
-          sampleData = _.map sampleData, (o)-> return openGraphSvc.normalize(o)
-          vm.rows = sampleData.concat(vm.rows)
-          console.log "vm.rows set by $q"
-          exportDebug.set('rows', vm.rows)
-          return vm.rows
-      else
-        vm.rows = _.map [0...50], (i)-> return {
-          id: i
-          color: vm.lookup.colors[i %% vm.lookup.colors.length]
-        }
+      vm.rows = []
+      return devConfig.getData()
+      .then (data)->
+        vm.rows = data
+        exportDebug.set('rows', vm.rows)
+        return vm.rows
 
     vm.on = {
       scrollTo: (anchor)->
