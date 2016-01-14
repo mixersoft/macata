@@ -183,7 +183,11 @@ MapCtrl = (
               $listItemDelegate.select(null, vm.rows[index], index, 'silent')
 
           }
-
+        mapOptions = _.extend mapOptions, {
+          'control' : {}
+          'mapReady' : (map, eventName)->
+            $scope.$broadcast 'map-ready', map
+        }
         mapConfig = geocodeSvc.getMapConfig mapOptions
         # mapConfig.zoom = 11
         return mapConfig

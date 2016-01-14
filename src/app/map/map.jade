@@ -16,6 +16,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           zoom='vm.map.zoom'
           options='opt.map.options'
           control='vm.map.control'
+          events='vm.map.events'
         )
           ui-gmap-circle(
             ng-if="vm.map.type=='circle'"

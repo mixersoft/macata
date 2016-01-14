@@ -354,6 +354,9 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         zoom: 14
         scrollwheel: false
         control: {}
+        events: {
+          'tilesloaded': options.mapReady
+        }
         # event.map.options
         options: mapConfigOptions
       }
