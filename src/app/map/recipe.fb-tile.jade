@@ -20,6 +20,7 @@ list-item-summary.animate-fade-slide-in-right(
           ng-click="$item.favorite = !$item.favorite"
           )
         i.button.button-clear.larger.ion-map.ink(
+          ng-click="$listItemDelegate.select($event, $item, $index)"
           )
         i.button.button-clear.larger.ink(
           ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
@@ -59,7 +60,9 @@ list-item-detail
         i.icon.positive.ink(
         ng-class=" $item.favorite ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
         )
-      button.button
+      button.button(
+        ng-click="$event.stopImmediatePropagation()"
+        )
         i.icon.positive.ion-map.ink(
         )
       button.button(

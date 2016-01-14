@@ -7,7 +7,7 @@ getStates = ->
   [
     state: 'app.map'
     config:
-      url: '/map'
+      url: '/map?selected'
       views:
         'menuContent':
           templateUrl: 'map/map.html'
