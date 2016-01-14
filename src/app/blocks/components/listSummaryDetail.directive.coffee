@@ -260,6 +260,7 @@ ListItemContainerDirective = ()->
           return angular.element(found)
 
         vm = controller
+        scope.$parent.$listItemDelegate = vm['$listItemDelegate']
         vm['$listItemDelegate']['setItemHeight'] = (h)->
           controller.setItemHeight(element, h)
           return
@@ -368,7 +369,22 @@ ListDetailDirective = ()->
   }
 ListDetailDirective.$inject = []
 
-
+ListItemDelegate = ()->
+  this.getByHandle = (handle)->
+    parents = document.getElementsByTagName('LIST-ITEM-CONTAINER')
+    found = _.find parents, (parentEl)->
+      return parentEl if parentEl.getAttribute('handle') == handle
+      return parentEl if parentEl.getAttribute('scroll-handle') == handle
+      return
+    return angular.element(found).scope?().$listItemDelegate
+  this.getByChildEl = (child)->
+    parents = document.getElementsByTagName('LIST-ITEM-CONTAINER')
+    child = child[0] if child.scope?
+    found = _.find parents, (parentEl)->
+      return parentEl if parentEl.contains child
+    return angular.element(found).scope?().$listItemDelegate
+  return
+ListItemDelegate.$inject = []
 
 
 # see: https://github.com/angular/angular.js/issues/7874#issuecomment-53450394
@@ -422,3 +438,4 @@ angular.module 'blocks.components'
   .directive 'listItemContainer', ListItemContainerDirective
   .directive 'listItemSummary', ListSummaryDirective
   .directive 'listItemDetail', ListDetailDirective
+  .service '$listItemDelegate', ListItemDelegate
