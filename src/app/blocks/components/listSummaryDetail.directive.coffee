@@ -236,7 +236,11 @@ ListItemContainerDirective = ()->
               vm.selected( $item, $selectedElContainer )
               vm.layout('detail', $selectedElContainer)
             return if silent
-            $scope.$emit '$listItemDelegate:selected', {$item: $item, $index: $index}
+            $scope.$emit '$listItemDelegate:selected', {
+              $item: $item,
+              $index: $index
+              $listItemDelegate: vm.$listItemDelegate
+            }
             return
           'closeDetail' : (event)->
             event.stopImmediatePropagation()

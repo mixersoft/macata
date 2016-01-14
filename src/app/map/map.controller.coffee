@@ -24,6 +24,7 @@ MapCtrl = (
     vm = this
     vm.title = "Map View"
     vm.me = null      # current user, set in initialize()
+    vm.listItemDelegate = null
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -249,8 +250,11 @@ MapCtrl = (
         .removeClass('done')
 
     $rootScope.$on '$listItemDelegate:selected', (ev, args) ->
+      return if args.$listItemDelegate != vm.listItemDelegate
       console.log ["selected", args.$index, args.$item]
       config = vm['map'].options.manyMarkers
+      if _.isEmpty config.control
+        return console.warn ["markers.control NOT AVAILABLE yet"]
       markers = config.control.getGMarkers()
       marker = markers[args.$index]
       config.events.click marker, null, null, null, 'silent'
