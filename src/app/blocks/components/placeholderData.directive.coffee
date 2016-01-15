@@ -7,15 +7,28 @@ PlaceholderDataDirective = ($http, $compile)->
   .then (result)->
     console.log ['dir:Tile data[0]', result.data[0] , result.data.length]
     return result.data
+  .catch (err)->
+    console.err ['Unsplash.it NOT AVAILABLE',err]
+    throw err
 
   hashKey = (index, offset, list)->
     index = str2Int( index )
     return hash = ((index * 11 + offset ) %% list.length)
 
-  getImgSrc = (index, offset, list)->
+  getImgSrc = (index, offset, list, options)->
+    options = _.extend {
+      width: 320
+      height: 240
+    }, options
     hash = hashKey(index,offset,list)
     id = list[ hash ].id
-    ['https://unsplash.it/320/240?image', id].join('=')
+    [
+      'https://unsplash.it/'
+      options.width + '/'
+      options.height + '/'
+      '?image='
+      id
+    ].join('')
 
   str2Int = (key)->
     return parseInt key if not _.isNaN parseInt( key )
@@ -29,12 +42,24 @@ PlaceholderDataDirective = ($http, $compile)->
     restrict: 'A'
     scope: {
       model: '='
+      width: '@'
+      height: '@'
+      size: '@'
     }
     compile: (tElement, tAttrs, transclude)->
       return {
         pre: (scope, element, attrs, ngModel) ->
           return
         post: (scope, element, attrs, ngModel) ->
+          options = {}
+          options.height = scope.height if attrs.height
+          options.width = scope.width if attrs.width
+          if attrs.size
+            options = {
+              width: scope.size
+              height: scope.size
+            }
+
           return ready
           .then (list)->
             offset = str2Int attrs['group']
@@ -44,11 +69,11 @@ PlaceholderDataDirective = ($http, $compile)->
             switch attrs['placeholderData']
               when 'img', 'image'
                 # console.log ['placeholderImg', offset, index]
-                src = getImgSrc(index , offset, list)
+                src = getImgSrc(index , offset, list, options)
                 element.attr('src', src)
               when 'bg-src', 'bgSrc'
                 # console.log ['bg-img', offset, index]
-                scope.model?['bgSrc'] = getImgSrc(index , offset, list)
+                scope.model?['bgSrc'] = getImgSrc(index , offset, list, options)
               when 'bg-image'
                 # element.attr('bg-image', src)
                 element.addClass('bg-image')
