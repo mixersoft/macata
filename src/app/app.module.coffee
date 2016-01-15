@@ -26,4 +26,5 @@ angular
     'starter.grid'
     'starter.recipe'
     'starter.map'
+    'starter.events'
   ]

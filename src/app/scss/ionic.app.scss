@@ -39,6 +39,50 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   height: initial;
   display: block;
 }
+// nested .list .item
+.list .item  .list {
+  padding: 0;
+  .item {
+    border: none;
+    margin: auto -16px;
+  }
+}
+
+.list.has-icon-avatar {
+  // shrink .item-avatar padding, but keep avatar normal size
+  .item-avatar {
+    padding-left: 54px;
+    min-height: 54px;
+    > img:first-child, .item-image {
+      top: 6px;
+      left: 6px;
+    }
+  }
+  &.condensed {
+    // shrink .item-avatar to icon size
+    .item-avatar {
+      >img:first-child, .item-image {
+        width: 32px;
+        height: 32px;
+        top: 11px;
+        left: 11px;
+      }
+    }
+  }
+}
+
+.item.item-avatar-list {
+  min-height: 72px;
+  .avatar-wrap {
+    display: inline;
+    margin-right: 10px;
+    .item-image {
+      max-width: 40px;
+      max-height: 40px;
+      border-radius: 50%;
+    }
+  }
+}
 
 /* Begin required CSS., see: http://codepen.io/siiron/details/jfBhy  */
 .line-clamp
@@ -465,4 +509,34 @@ $hero-wrap-bg-height: 170px;
 .has-mask-reverse:after {
   @extend .has-mask:after;
   background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, transparent 80%);
+}
+
+
+/*
+eventDetail View
+ */
+
+.event-detail {
+  .menu-items {
+    .hero {
+      height: 100px;
+    }
+  }
+  .event-details {
+    .icon-inline-right {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 54px;
+      padding: 11px 0;
+      .item-icon-right {
+        padding-right: initial;
+        .icon {
+          right: 0;
+          display: inline-flex;
+          position: static;
+        }
+      }
+    }
+  }
 }
