@@ -12,6 +12,7 @@ ListItemContainerDirective = ()->
       showDetailInline: "="
       scrollHandle: "@"
       detailByReference: "@"
+      onSelect: '&'
     }
     controllerAs: '$listItemDelegate'
     controller: [
@@ -232,9 +233,19 @@ ListItemContainerDirective = ()->
             if $selectedElContainer.hasClass('selected')
               vm.selected( null )
               vm.layout('summary', $selectedElContainer)
+              $scope.onSelect?({
+                $item: null
+                $index: null
+                silent: silent
+              })
             else
               vm.selected( $item, $selectedElContainer )
               vm.layout('detail', $selectedElContainer)
+              $scope.onSelect?({
+                $item: $item
+                $index: $index
+                silent: silent
+              })
             return if silent
             $scope.$emit '$listItemDelegate:selected', {
               $item: $item,

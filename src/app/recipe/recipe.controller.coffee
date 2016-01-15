@@ -2,15 +2,18 @@
 
 RecipeCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
-  $ionicScrollDelegate
+  $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
   utils, devConfig, exportDebug
   )->
 
+    viewLoaded = null   # promise
+
     vm = this
     vm.title = "Recipes"
     vm.me = null      # current user, set in initialize()
+    vm.listItemDelegate = null
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -30,8 +33,7 @@ RecipeCtrl = (
     vm.lookup = {
       colors: ['positive', 'calm', 'balanced', 'energized', 'assertive', 'royal', 'dark', 'stable']
     }
-
-
+    
     getData = ()->
       vm.rows = []
       return devConfig.getData()
@@ -51,6 +53,15 @@ RecipeCtrl = (
           next = if vm.settings.show == 'grid' then 'list' else 'grid'
           return vm.settings.view.show = next
         return vm.settings.view.show = value
+
+      #  list-item-container[on-select]
+      select: ($item, $index, silent)->
+        # update history url
+        $state.transitionTo($state.current.name
+        , {id: $item && $item.id || $index || null}
+        , {notify:false}
+        )
+        return if silent
 
       # activate <new-tile>
       createNewTile: ()->
@@ -81,20 +92,25 @@ RecipeCtrl = (
     }
 
     initialize = ()->
-      # return
-      if $rootScope.user?
-        vm.me = $rootScope.user
-      else
-        DEV_USER_ID = '0'
-        devConfig.loginUser( DEV_USER_ID ).then (user)->
-          # loginUser() sets $rootScope.user
+      return viewLoaded = $q.when()
+      .then ()->
+        if $rootScope.user?
           vm.me = $rootScope.user
-          toastr.info "Login as userId=0"
-          return vm.me
-      getData()
-      return
+        else
+          DEV_USER_ID = '0'
+          devConfig.loginUser( DEV_USER_ID ).then (user)->
+            # loginUser() sets $rootScope.user
+            vm.me = $rootScope.user
+            toastr.info "Login as userId=0"
+            return vm.me
+      .then ()->
+        vm.listItemDelegate = $listItemDelegate.getByHandle('recipe-list-scroll')
+      .then ()->
+        return getData()
 
     activate = ()->
+      if index = $stateParams.id
+        vm.listItemDelegate.select(null, vm.rows[index], index)
       # // Set Ink
       ionic.material?.ink.displayEffect()
       ionic.material?.motion.fadeSlideInRight({
@@ -122,15 +138,16 @@ RecipeCtrl = (
       initialize()
 
     $scope.$on '$ionicView.enter', (e)->
-      # $log.info "viewEnter for RecipeCtrl"
-      activate()
+      $log.info "viewEnter for RecipeCtrl"
+      return viewLoaded.finally ()->
+        activate()
 
     return vm  # end RecipeCtrl
 
 
 RecipeCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
-  '$ionicScrollDelegate'
+  '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'utils', 'devConfig', 'exportDebug'

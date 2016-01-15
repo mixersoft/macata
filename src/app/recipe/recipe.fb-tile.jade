@@ -20,7 +20,7 @@ list-item-summary.animate-fade-slide-in-right(
           ng-click="$item.favorite = !$item.favorite"
           )
         i.button.button-clear.larger.ion-map.ink(
-          ui-sref="app.map({'selected':{{$index}}})"
+          ui-sref="app.map({'id':{{$index}}})"
           )
         i.button.button-clear.larger.ink(
           ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"

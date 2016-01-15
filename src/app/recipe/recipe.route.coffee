@@ -7,7 +7,7 @@ getStates = ->
   [
     state: 'app.recipe'
     config:
-      url: '/recipe'
+      url: '/recipe?id'
       views:
         'menuContent':
           templateUrl: 'recipe/recipe.html'

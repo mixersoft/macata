@@ -56,5 +56,6 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
       item-height="160"
       todo-use-collection-repeat="true"
       detail-by-reference="true"
+      on-select="vm.on.select($item,$index,silent)"
     )
-      ng-include(src="'map/recipe.fb-tile.html'" )
+      ng-include(src="'map/map.fb-tile.html'" )

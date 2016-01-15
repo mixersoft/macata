@@ -36,19 +36,20 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
 
 
   ion-content(
-    delegate-handle="list-item-scroll"
+    delegate-handle="recipe-list-scroll"
     scroll-sista="header-subheader"
   ) 
  
     list-item-container.content.condensed(
       collection="vm.rows"
-      scroll-handle="list-item-scroll"
+      scroll-handle="recipe-list-scroll"
       summary-min-width="320"
       detail-max-width="720"
       show-detail-inline="true"
       item-height="160"
       todo-use-collection-repeat="true"
       detail-by-reference="true"
+      on-select="vm.on.select($item,$index,silent)"
     )
 
       ng-include(src="'recipe/recipe.fb-tile.html'" )
