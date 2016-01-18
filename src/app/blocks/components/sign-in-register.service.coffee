@@ -36,32 +36,6 @@ signInRegisterSvcConfig.$inject = []
 ###
 SignInRegister = ($q, appModalSvc)->
 
-  init = ()->
-    stop = $scope.$on 'modal.afterShow', (ev)->
-      h = setModalHeight()
-      stop?()
-      return
-    return
-
-  setModalHeight = ()->
-    # calculate modalHeight and set margin-top/bottom
-
-    contentH =
-      if $window.innerWidth <= MODAL_VIEW.GRID_RESPONSIVE_SM_BREAK  # same as @media(max-width: 680)
-      then $window.innerHeight
-      else Math.max( MODAL_VIEW.CONTENT_HEIGHT, $window.innerHeight)
-
-    marginH = ($window.innerHeight - contentH)/2
-    modalH = Math.max( MODAL_VIEW.MAP_MIN_HEIGHT , modalH)
-    # console.log ["height=",$window.innerHeight , contentH,modalH]
-
-    styleH = """
-      #sign-in-register-modal-view.modal {top:%marginH%px; bottom:%marginH%px; height:%modalH%px}
-    """
-    styleH = styleH.replace(/%marginH%/g, marginH).replace(/%modalH%/g, modalH)
-    angular.element(document.getElementById('address-lookup-style')).append(styleH)
-    return modalH
-
   self = {
 
     # entry point for this service
@@ -146,7 +120,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         if err == 'NOT FOUND'
           vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
         return $q.reject(err)
-        
+
     register: (data={}, fnComplete)->
       vm['error'] = {}
       return $q.when()
@@ -176,7 +150,33 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
       return CALLBACKS.notImplemented(value)
   }
 
+  init = ()->
+    stop = $scope.$on 'modal.afterShow', (ev)->
+      h = setModalHeight()
+      stop?()
+      return
+    return
 
+  setModalHeight = ()->
+    # calculate modalHeight and set margin-top/bottom
+
+    contentH =
+      if $window.innerWidth <= MODAL_VIEW.GRID_RESPONSIVE_SM_BREAK  # same as @media(max-width: 680)
+      then $window.innerHeight
+      else Math.max( MODAL_VIEW.CONTENT_HEIGHT, $window.innerHeight)
+
+    marginH = ($window.innerHeight - contentH)/2
+    modalH = Math.max( MODAL_VIEW.MAP_MIN_HEIGHT , modalH)
+    # console.log ["height=",$window.innerHeight , contentH,modalH]
+
+    styleH = """
+      #sign-in-register-modal-view.modal {top:%marginH%px; bottom:%marginH%px; height:%modalH%px}
+    """
+    styleH = styleH.replace(/%marginH%/g, marginH).replace(/%modalH%/g, modalH)
+    angular.element(document.getElementById('address-lookup-style')).append(styleH)
+    return modalH
+
+  init()
   return vm
 
 SignInRegisterCtrl.$inject = ['$scope', 'parameters', '$q', '$timeout', '$window']
@@ -187,4 +187,3 @@ angular.module 'blocks.components'
   .factory 'signInRegisterSvc', SignInRegister
   # .directive 'clearField', ClearFieldDirective
   .controller 'SignInRegisterCtrl', SignInRegisterCtrl
-

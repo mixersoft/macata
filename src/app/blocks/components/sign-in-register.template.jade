@@ -46,10 +46,11 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
                 div.button-bar
                   button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
                   button.button.button-balanced(type="submit") Sign up
-              div.item.positive
-                div.text-right 
-                  a(ng-click="vm.slideCtrl.setSlide('signin')"). 
-                    Have an account? Sign in #[i.icon.ion-android-arrow-forward.padding-right]
+          div.padding-horizontal
+            div.item.positive
+              div.text-right 
+                a(ng-click="vm.slideCtrl.setSlide('signin')"). 
+                  Have an account? Sign in #[i.icon.ion-android-arrow-forward.padding-right]
     ion-slide.sign-in
       ion-scroll
         div.list
@@ -73,9 +74,9 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
                 div.button-bar
                   button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
                   button.button.button-balanced(type="submit") Sign in
-              div.item.positive.text-left
-                div.pull-right
-                  a(ng-click="vm.on.notImplemented('password recovery')") Forgot Password?
-                a(ng-click="vm.slideCtrl.setSlide('signup')").
-                  #[i.icon.ion-android-arrow-back.padding-left] Sign up
-
+          div.padding-horizontal
+            div.item.positive.text-left
+              div.pull-right
+                a(ng-click="vm.on.notImplemented('password recovery')") Forgot Password?
+              a(ng-click="vm.slideCtrl.setSlide('signup')").
+                #[i.icon.ion-android-arrow-back.padding-left] Sign up
