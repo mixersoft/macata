@@ -3,7 +3,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
 
-  ion-content.has-header.has-footer(
+  ion-content.event-detail.has-header.has-footer(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
   )
@@ -19,53 +19,63 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
     //-   todo-use-collection-repeat="true"
     //-   detail-by-reference="true"
     //- )
-    ion-list.event-detail
+    ion-list.menu-items
       {{ event=vm.event;''}}
       {{ host=vm.me;''}}
       {{ show=vm.settings.show;''}}
       ion-item.item-divider
         p menu
-      div.menu-items(
-        ng-repeat="$item in event.menuItems track by $item.id"
+      ion-item.item-complex
+        list-item-container.content.condensed(
+          collection="event.menuItems"
+          summary-min-width="320"
+          item-height="100"
+          xx-scroll-handle="event-menu-item-list-scroll"
+          xx-on-select="vm.on.select($item,$index,silent)"
         )
-        div.tile.recipe.item.item-complex.content.ink(
-          ng-click="$event.stopImmediatePropagation()"
-          ui-sref="app.recipe({id:{{$item.id}}})"
-        )
-          div.hero.content
-            div.item-avatar-right.ink(
-              ng-click=""
-            )
-              img.ink(
-                placeholder-data="img" group="face" size="160" index="{{$index}}"
-                ng-click="$event.stopImmediatePropagation()"
-                ui-sref="app.profile({'id':{{$index}}})"
-              )
-            
-            div.icon-bar.bottom-toolbar.condensed.light(
-              ng-show="$item['title']"
+          list-item-summary {{vm=$parent.$parent.vm;''}}
+            div.tile.recipe.item.item-complex.content.ink(
               ng-click="$event.stopImmediatePropagation()"
-              )
-              i.button.button-clear.larger.ion-heart.ink(
-                ng-class="$item.favorite && 'selected'"
-                ng-click="$item.favorite = !$item.favorite"
-                )
-              i.button.button-clear.larger.ion-map.ink(
-                ui-sref="app.map({'id':{{$index}} })"
-                )
-              i.button.button-clear.larger.ink(
-                ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
-                ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
-                )         
-              i.button.button-clear.ion-ios-upload.larger.ink(
-                )
-            div.feature.image(
-              bg-image="{{$item['image']}}"
+              ui-sref="app.recipe({id:{{$item.id}}})"
             )
-    
-      div.event-details.list.has-icon-avatar.condensed
-        ion-item.item-divider
-          p event details
+              //- TODO: event-detail-hero.template.html
+              div.hero.content
+                div.item-avatar-right.ink(
+                  ng-click=""
+                )
+                  img.ink(
+                    placeholder-data="img" group="face" size="160" index="{{$index}}"
+                    ng-click="$event.stopImmediatePropagation()"
+                    ui-sref="app.profile({'id':{{$index}}})"
+                  )
+                
+                div.icon-bar.bottom-toolbar.condensed.light(
+                  ng-show="$item['title']"
+                  ng-click="$event.stopImmediatePropagation()"
+                  )
+                  i.button.button-clear.larger.ion-heart.ink(
+                    ng-class="$item.favorite && 'selected'"
+                    ng-click="$item.favorite = !$item.favorite"
+                    )
+                  i.button.button-clear.larger.ion-map.ink(
+                    ui-sref="app.map({'id':{{$index}} })"
+                    )
+                  i.button.button-clear.larger.ink(
+                    ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
+                    ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+                    )         
+                  i.button.button-clear.ion-ios-upload.larger.ink(
+                    )
+                div.feature.image(
+                  bg-image="{{$item['image']}}"
+                )
+            
+    ion-list.details.list.has-icon-avatar.condensed
+      ion-item.item-divider
+        p event details
+      ng-repeat-grid(
+        min-width="260"
+        )
         ion-item.item-avatar
           img.item-image.ink(
             ng-src="{{host.face}}"
@@ -73,31 +83,55 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
             ui-sref="app.profile({id: '{{host.id}}' })"
           )
           span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || item.ownerId }}]
-          span.icon-inline-right(
-            ng-click="show.expandEventDetails = !show.expandEventDetails"
-            ng-hide="show.expandEventDetails"
-            )
-            span.item-icon-right(ng-repeat="iconClass in ['ion-ios-calendar-outline','ion-ios-clock-outline','ion-ios-location']")
-              i.icon.inline(ng-class="iconClass")
-        div(
-          ng-show="show.expandEventDetails"
-          )
-          ion-item.item-icon-left
-            i.icon.ion-ios-calendar-outline
-            {{ $item.startTime | amDateFormat:'ddd, MMM Do' }} 
-            span.nowrap ( {{ $item.summary.countdown}} )
-          ion-item.item-icon-left
-            i.icon.ion-ios-clock-outline
-            span. 
-              at {{ $item.startTime | amDateFormat:'h:mm a'}} for
-              {{ $item.duration | amDurationFormat:'milliseconds' }}
-          ion-item.item-icon-left(
-            ng-click="vm.on.scrollTo('map')"
-          )
-            i.icon.ion-ios-location
-            //- feastly: Exact addr will be shared upon purchase
-            //- eatwith: exact location provided upon booking
-            span {{ $item['visibleAddress']}} &nbsp;
+        ion-item.item-icon-left
+          i.icon.ion-ios-calendar-outline
+          {{ $item.startTime | amDateFormat:'ddd, MMM Do' }} 
+          span.nowrap ( {{ $item.summary.countdown}} )
+        ion-item.item-icon-left
+          i.icon.ion-ios-clock-outline
+          span. 
+            at {{ $item.startTime | amDateFormat:'h:mm a'}} for
+            {{ $item.duration | amDurationFormat:'milliseconds' }}
+        ion-item.item-icon-left(
+          ng-click="vm.on.scrollTo('map')"
+        )
+          i.icon.ion-ios-location
+          //- feastly: Exact addr will be shared upon purchase
+          //- eatwith: exact location provided upon booking
+          span {{ $item['visibleAddress']}} &nbsp;
+            
+      //- ion-item.item-avatar
+      //-   img.item-image.ink(
+      //-     ng-src="{{host.face}}"
+      //-     ng-click="$event.stopImmediatePropagation()"
+      //-     ui-sref="app.profile({id: '{{host.id}}' })"
+      //-   )
+      //-   span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || item.ownerId }}]
+      //-   span.icon-inline-right(
+      //-     ng-click="show.expandEventDetails = !show.expandEventDetails"
+      //-     ng-hide="show.expandEventDetails"
+      //-     )
+      //-     span.item-icon-right(ng-repeat="iconClass in ['ion-ios-calendar-outline','ion-ios-clock-outline','ion-ios-location']")
+      //-       i.icon.inline(ng-class="iconClass")
+      //- div(
+      //-   ng-show="show.expandEventDetails"
+      //-   )
+      //-   ion-item.item-icon-left
+      //-     i.icon.ion-ios-calendar-outline
+      //-     {{ $item.startTime | amDateFormat:'ddd, MMM Do' }} 
+      //-     span.nowrap ( {{ $item.summary.countdown}} )
+      //-   ion-item.item-icon-left
+      //-     i.icon.ion-ios-clock-outline
+      //-     span. 
+      //-       at {{ $item.startTime | amDateFormat:'h:mm a'}} for
+      //-       {{ $item.duration | amDurationFormat:'milliseconds' }}
+      //-   ion-item.item-icon-left(
+      //-     ng-click="vm.on.scrollTo('map')"
+      //-   )
+      //-     i.icon.ion-ios-location
+      //-     //- feastly: Exact addr will be shared upon purchase
+      //-     //- eatwith: exact location provided upon booking
+      //-     span {{ $item['visibleAddress']}} &nbsp;
             
     ion-list.participants
       ion-item.item-divider

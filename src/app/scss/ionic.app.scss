@@ -71,6 +71,7 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   }
 }
 
+// used by .event-detail .participants to show inline list of avatars
 .item.item-avatar-list {
   min-height: 72px;
   .avatar-wrap {
@@ -518,11 +519,16 @@ eventDetail View
 
 .event-detail {
   .menu-items {
+    .list-item-summary {
+      .col {
+        padding: 0;
+      }
+    }
     .hero {
       height: 100px;
     }
   }
-  .event-details {
+  .details {
     .icon-inline-right {
       position: absolute;
       top: 0;
