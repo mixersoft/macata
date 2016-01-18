@@ -72,7 +72,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
             
     ion-list.details.list.has-icon-avatar.condensed
       ion-item.item-divider
-        p event details
+        p details
       ng-repeat-grid(
         min-width="260"
         )
@@ -82,76 +82,50 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
             ng-click="$event.stopImmediatePropagation()"
             ui-sref="app.profile({id: '{{host.id}}' })"
           )
-          span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || item.ownerId }}]
+          span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || event.ownerId }}]
         ion-item.item-icon-left
           i.icon.ion-ios-calendar-outline
-          {{ $item.startTime | amDateFormat:'ddd, MMM Do' }} 
-          span.nowrap ( {{ $item.summary.countdown}} )
+          {{ event.startTime | amDateFormat:'ddd, MMM Do' }} 
+          span.nowrap ( {{ event.summary.countdown}} )
         ion-item.item-icon-left
           i.icon.ion-ios-clock-outline
           span. 
-            at {{ $item.startTime | amDateFormat:'h:mm a'}} for
-            {{ $item.duration | amDurationFormat:'milliseconds' }}
+            at {{ event.startTime | amDateFormat:'h:mm a'}} for
+            {{ event.duration | amDurationFormat:'milliseconds' }}
         ion-item.item-icon-left(
           ng-click="vm.on.scrollTo('map')"
         )
           i.icon.ion-ios-location
           //- feastly: Exact addr will be shared upon purchase
           //- eatwith: exact location provided upon booking
-          span {{ $item['visibleAddress']}} &nbsp;
-            
-      //- ion-item.item-avatar
-      //-   img.item-image.ink(
-      //-     ng-src="{{host.face}}"
-      //-     ng-click="$event.stopImmediatePropagation()"
-      //-     ui-sref="app.profile({id: '{{host.id}}' })"
-      //-   )
-      //-   span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || item.ownerId }}]
-      //-   span.icon-inline-right(
-      //-     ng-click="show.expandEventDetails = !show.expandEventDetails"
-      //-     ng-hide="show.expandEventDetails"
-      //-     )
-      //-     span.item-icon-right(ng-repeat="iconClass in ['ion-ios-calendar-outline','ion-ios-clock-outline','ion-ios-location']")
-      //-       i.icon.inline(ng-class="iconClass")
-      //- div(
-      //-   ng-show="show.expandEventDetails"
-      //-   )
-      //-   ion-item.item-icon-left
-      //-     i.icon.ion-ios-calendar-outline
-      //-     {{ $item.startTime | amDateFormat:'ddd, MMM Do' }} 
-      //-     span.nowrap ( {{ $item.summary.countdown}} )
-      //-   ion-item.item-icon-left
-      //-     i.icon.ion-ios-clock-outline
-      //-     span. 
-      //-       at {{ $item.startTime | amDateFormat:'h:mm a'}} for
-      //-       {{ $item.duration | amDurationFormat:'milliseconds' }}
-      //-   ion-item.item-icon-left(
-      //-     ng-click="vm.on.scrollTo('map')"
-      //-   )
-      //-     i.icon.ion-ios-location
-      //-     //- feastly: Exact addr will be shared upon purchase
-      //-     //- eatwith: exact location provided upon booking
-      //-     span {{ $item['visibleAddress']}} &nbsp;
+          span {{ event['visibleAddress']}} &nbsp;
             
     ion-list.participants
       ion-item.item-divider
         p participants
-      ion-item.participants.item-avatar-list
+      ion-item.participants.item-avatar-list.item-text-wrap
         div.avatar-wrap
           img.item-image.ink(
             ng-src="{{host.face}}"
             ng-click="$event.stopImmediatePropagation()"
             ui-sref="app.profile({id: '{{host.id}}' })"
+            width="40"
           )
         div.avatar-wrap(ng-repeat="personId in [1,2]")
           img.item-image.ink(
             placeholder-data="img" group="face" size="160" index="{{personId}}"
             ng-click="$event.stopImmediatePropagation()"
             ui-sref="app.profile({id: '{{personId}}' })"
+            width="40"
+          )
+        div.avatar-wrap(ng-repeat="personId in [3,4,5,6,7]")
+          img.item-image.empty.ink(
+            ng-src="img/ion-person-add.png"
+            ng-click="vm.on.join($event)"
           ) 
     ion-list.invitations
       ion-item.item-divider
-        p invitations
+        p invitations (participants can view invitations)
         
     ion-list.feed
       ion-item.item-divider
@@ -161,8 +135,8 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
       ion-item.item-divider
         p control panel
                   
-  ion-footer-bar.bar-positive
+  ion-footer-bar.bar-positive.no-padding
     div.button-bar
-      button.button.button-icon.ion-camera(ng-click="mm.on.cameraClick($event)")
-      button.button.button-icon.ion-ios-location(ng-click="mm.on.locationClick($event)")
-      button.button.positive(ng-click="mm.on.done($event)") Done
+      button.button.button-icon.ion-pizza(ng-click="")
+      button.button(ng-click="vm.on.join($event)") Join
+      button.button(ng-click="mm.on.done($event)") Done

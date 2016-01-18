@@ -2,9 +2,10 @@
 
 EventDetailCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
-  $ionicScrollDelegate
+  $ionicScrollDelegate, $state, $stateParams,
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
+  EventsResource
   utils, devConfig, exportDebug
   )->
 
@@ -35,9 +36,18 @@ EventDetailCtrl = (
 
     getData = ()->
       vm.event.menuItems = []
-      return devConfig.getData()
+      $q.when()
+      .then ()->
+        return EventsResource.query()
+        .then (events)->
+          # events = sortEvents(events, vm.filter)
+          vm.events = events
+          # toastr.info JSON.stringify( events)[0...50]
+          return events
+      .then ()->
+        return devConfig.getData()
       .then (data)->
-        vm.event.menuItems = _.chain data
+        vm.lookup.menuItems = _.chain data
           .reduce (result, o, i)->
             if ~[0,1,4].indexOf(i)
               o.id = i
@@ -77,6 +87,9 @@ EventDetailCtrl = (
         getData()
 
     activate = ()->
+      if index = $stateParams.id
+        vm.event = vm.events[index]
+        vm.event.menuItems = vm.lookup.menuItems
       # // Set Ink
       ionic.material?.ink.displayEffect()
       ionic.material?.motion.fadeSlideInRight({
@@ -105,16 +118,18 @@ EventDetailCtrl = (
 
     $scope.$on '$ionicView.enter', (e)->
       # $log.info "viewEnter for EventDetailCtrl"
-      activate()
+      return viewLoaded.finally ()->
+        activate()
 
     return vm  # end EventDetailCtrl
 
 
 EventDetailCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
-  '$ionicScrollDelegate'
+  '$ionicScrollDelegate', '$state', '$stateParams'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
+  'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 

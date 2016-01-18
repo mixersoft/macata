@@ -85,6 +85,8 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   }
 }
 
+
+
 /* Begin required CSS., see: http://codepen.io/siiron/details/jfBhy  */
 .line-clamp
 {
@@ -543,6 +545,11 @@ eventDetail View
           position: static;
         }
       }
+    }
+  }
+  .participants {
+    .avatar-wrap .item-image.empty {
+      border: 1px solid $dark;
     }
   }
 }
