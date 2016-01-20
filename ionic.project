@@ -1,5 +1,5 @@
 {
-  "name": "layout",
+  "name": "openmaca",
   "app_id": "",
   "gulpStartupTasks": [
     "sass",

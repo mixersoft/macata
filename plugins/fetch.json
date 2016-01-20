@@ -1,12 +1,4 @@
 {
-    "cordova-plugin-device": {
-        "source": {
-            "type": "registry",
-            "id": "cordova-plugin-device"
-        },
-        "is_top_level": true,
-        "variables": {}
-    },
     "cordova-plugin-console": {
         "source": {
             "type": "registry",
@@ -15,10 +7,18 @@
         "is_top_level": true,
         "variables": {}
     },
-    "cordova-plugin-whitelist": {
+    "com.ionic.keyboard": {
         "source": {
             "type": "registry",
-            "id": "cordova-plugin-whitelist"
+            "id": "com.ionic.keyboard"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-device": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-device"
         },
         "is_top_level": true,
         "variables": {}
@@ -31,10 +31,10 @@
         "is_top_level": true,
         "variables": {}
     },
-    "com.ionic.keyboard": {
+    "cordova-plugin-geolocation": {
         "source": {
             "type": "registry",
-            "id": "com.ionic.keyboard"
+            "id": "cordova-plugin-geolocation"
         },
         "is_top_level": true,
         "variables": {}

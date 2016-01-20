@@ -1,11 +1,11 @@
 {
-  "name": "layout",
-  "version": "1.0.0",
-  "description": "prototype different ionic layouts",
+  "name": "openmaca",
+  "version": "0.1.0",
+  "description": "An app for elevating community meals around the world.",
   "author": "Michael Lin <michael@snaphappi.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mixersoft/grid"
+    "url": "https://github.com/mixersoft/openmaca"
   },
   "dependencies": {
     "coffee-script": "^1.9.3"
@@ -41,5 +41,7 @@
     "cordova-plugin-splashscreen",
     "cordova-plugin-geolocation"
   ],
-  "cordovaPlatforms": []
+  "cordovaPlatforms": [
+    "ios"
+  ]
 }

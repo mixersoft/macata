@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<widget id="com.snaphappi.layout" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>layout</name>
+<widget id="com.snaphappi.openmaca" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>openmaca</name>
   <description>
-      Ionic project for prototyping different layout/views with ionicMaterial
+      An app for elevating community meals around the world.
     </description>
   <author email="michael@snaphappi.com" href="http://snaphappi.com/">
       Michael Lin
