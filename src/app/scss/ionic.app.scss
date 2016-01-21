@@ -82,6 +82,17 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
       max-height: 40px;
       border-radius: 50%;
     }
+    .icon.item-image {
+      font-size: 32px;
+      background-color: white;
+      border-width: 1px;
+      box-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+      width: 40px;
+      height: 40px;
+      display: inline-block;
+      line-height: 40px;
+      vertical-align: top;
+    }
   }
 }
 

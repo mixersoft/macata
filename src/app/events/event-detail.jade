@@ -8,17 +8,6 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
     scroll-sista="header"
   )
   
- 
-    //- list-item-container.content.condensed(
-    //-   collection="vm.rows"
-    //-   scroll-handle="list-item-scroll"
-    //-   summary-min-width="320"
-    //-   detail-max-width="720"
-    //-   show-detail-inline="true"
-    //-   item-height="160"
-    //-   todo-use-collection-repeat="true"
-    //-   detail-by-reference="true"
-    //- )
     ion-list.menu-items
       {{ event=vm.event;''}}
       {{ host=vm.me;''}}
@@ -119,10 +108,9 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
             width="40"
           )
         div.avatar-wrap(ng-repeat="personId in [3,4,5,6,7]")
-          img.item-image.empty.ink(
-            ng-src="img/ion-person-add.png"
+          button.item-image.icon.ion-person-add(
             ng-click="vm.on.join($event)"
-          ) 
+            )
     ion-list.invitations
       ion-item.item-divider
         p invitations (participants can view invitations)
