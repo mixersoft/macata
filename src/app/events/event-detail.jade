@@ -109,7 +109,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           )
         div.avatar-wrap(ng-repeat="personId in [3,4,5,6,7]")
           button.item-image.icon.ion-person-add(
-            ng-click="vm.on.join($event)"
+            ng-click="vm.on.beginBooking($event)"
             )
     ion-list.invitations
       ion-item.item-divider
@@ -126,5 +126,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
   ion-footer-bar.bar-positive.no-padding
     div.button-bar
       button.button.button-icon.ion-pizza(ng-click="")
-      button.button(ng-click="vm.on.join($event)") Join
+      button.button(
+        ng-click="vm.on.beginBooking($event)"
+        ) Join
       button.button(ng-click="mm.on.done($event)") Done

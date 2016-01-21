@@ -2,10 +2,10 @@
 
 EventDetailCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
-  $ionicScrollDelegate, $state, $stateParams,
+  $ionicScrollDelegate, $state, $stateParams
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
-  EventsResource
+  EventsResource, EventActionHelpers
   utils, devConfig, exportDebug
   )->
 
@@ -69,6 +69,9 @@ EventDetailCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
+      'beginBooking': (person, event)->
+        return EventActionHelpers.beginBooking.apply(vm, arguments)
+
     }
 
     initialize = ()->
@@ -129,7 +132,7 @@ EventDetailCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
-  'EventsResource'
+  'EventsResource', 'EventActionHelpers'
   'utils', 'devConfig', 'exportDebug'
 ]
 
