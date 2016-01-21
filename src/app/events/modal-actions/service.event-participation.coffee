@@ -3,10 +3,11 @@
 # helper functions for managing user actions on events
 EventActionHelpers = ($rootScope, $q, $timeout
   $location, $state, $stateParams, $ionicPopup
-  TokensResource, ParticipationsResource, ContributionsResource, MenuItemsResource
+  $log, toastr
+  # TokensResource, ParticipationsResource, ContributionsResource, MenuItemsResource
   AAAHelpers
-  appModalSvc, $meteor, utils
-  $log, toastr)->
+  appModalSvc, utils
+  )->
 
     passcodePopup = {
       template: '<input type="password" ng-model="passcode">',
@@ -355,9 +356,10 @@ EventActionHelpers = ($rootScope, $q, $timeout
         options = {}
         return $q.when()
         .then ()->
+          return 'skip'
           return self.isInvitationValid(event)
         .then ()->
-          utils.ga_PageView('/booking', '.booking', 'append')
+          # utils.ga_PageView('/booking', '.booking', 'append')
 
           if event.setting['denyRsvpFriends']
             options['maxSeats'] = 1
@@ -366,56 +368,24 @@ EventActionHelpers = ($rootScope, $q, $timeout
             options['maxSeats'] = Math.min event.seatsOpen, event.setting['rsvpFriendsLimit']
             options['defaultSeats'] = 0
           # modalAfterShow()
-          return appModalSvc.show('events/booking.modal.html', vm, {
-            mm:   # mm == "modal model" instead of view model
-              seats:
-                max: options['maxSeats']
-              isValidated: (booking)->
-                return false if AAAHelpers.isAnonymous()
-                return false if booking.seats < 1
-                return true
-              signInRegister: (action, person)->
-                # update booking user after sign in/register
-                return self.showSignIn.call(vm, action)
-                .then (result)->
-                  _.extend person, result
-                  return
-              submitBooking: (booking, onSuccess)->
-                # some sanity checks
-                if vm.event.id != booking.event.id
-                  toastr.warning("You are booking for a different event. title=" +
-                    booking.event.title)
-                if vm.me.id != booking.person.id
-                  toastr.warning("You are booking for a different person. name=" +
-                    booking.person.displayName)
-
-                self.createBooking.call(vm, booking)
-                .then (result)->
-                  utils.ga_Send('send', 'event', 'participation'
-                    , 'event-booking', 'Yes', 10)
-                  onSuccess?(result)
-                  return result
-                .catch (err)->
-                  if err=="DUPLICATE KEY"
-                    toastr.info "You are already participating in the event."
-                    # vm.activate()
-                    $timeout ()-> vm.on.scrollTo('cp-participant')
-                    return onSuccess?()
-                  $q.reject err
-
-                return
-
-            myBooking :
+          return appModalSvc.show('events/modal-actions/booking.modal.html'
+          , 'EventBookingCtrl as mm'
+          , {
+            copyToModalViewModal :
+              host: vm.lookup['host']
               person: person
               event: event
               booking:
                 userId: person.id
                 seats: options['defaultSeats']
+                maxSeats: options['maxSeats']
                 comment: null
+            vm: vm
+            createBooking: self.createBooking
           }
           ,modalOptions_ShowInkEffect)
         .then (result)->
-          $log.info "Bookin Modal resolved, result=" + JSON.stringify result
+          $log.info "Booking Modal resolved, result=" + JSON.stringify result
 
       ###
       # @description check event.setting to determine if invitation is required to join Event
@@ -444,34 +414,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
-      createBooking: (options, vm)->
-        vm = this if !vm
-        booking = options.booking
-        person = options.person
-
-        # add booking as participant to event
-        # clean up data
-        particip = {
-          eventId: options.event.id
-          participantId: options.person.id + ''
-          response: 'Yes'
-          seats: parseInt booking.seats
-          comment: booking.comment
-        }
-        # check for existing participation
-        participantIds = _.pluck vm.lookup['Participations'], 'participantId'
-        if ~participantIds.indexOf(person.id)
-          return $q.reject("DUPLICATE KEY")
-
-
-        # booking by definition is a new response
-        maxSeats =
-          if options.event.setting['denyRsvpFriends']
-          then 1
-          else options.event.setting['rsvpFriendsLimit']
-        return $q.reject('RSVP FRIENDS LIMIT') if particip['seats'] > maxSeats
-
-
+      createBooking: (particip)->
+        return $log.warn "TODO: create participation from booking"
         return ParticipationsResource.post(particip)
         .then (result)->
           # update lookups
@@ -519,7 +463,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
               promise = $q.when contribution
             promise.then (contribution)->
               self.createContribution.call(vm, contribution).then (result)->
-                utils.ga_Send('send', 'event', 'participation', 'contribution', 'Yes', 10)
+                # utils.ga_Send('send', 'event', 'participation', 'contribution', 'Yes', 10)
                 onSuccess?(result)
                 return result
             return
@@ -539,7 +483,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
         }
         if `mitem==null`
-          utils.ga_PageView($location.path() + '/contribute/new' , 'app.event-detail.contribute')
+          # utils.ga_PageView($location.path() + '/contribute/new' , 'app.event-detail.contribute')
           # modalAfterShow()
           return appModalSvc.show('events/contribute-new.modal.html', vm, {
           mm: modalModel
@@ -698,10 +642,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
 EventActionHelpers.$inject = ['$rootScope', '$q', '$timeout'
 '$location', '$state', '$stateParams', '$ionicPopup'
-'TokensResource', 'ParticipationsResource', 'ContributionsResource', 'MenuItemsResource'
+'$log', 'toastr'
+# 'TokensResource', 'ParticipationsResource', 'ContributionsResource', 'MenuItemsResource'
 'AAAHelpers'
-'appModalSvc', '$meteor', 'utils'
-'$log', 'toastr']
+'appModalSvc', 'utils'
+]
 
 
 angular.module 'starter.events'

@@ -7,6 +7,11 @@ AAAHelpers = ($rootScope, $q, $location, $stateParams
   signInRegisterSvc
   devConfig, $log, toastr)->
     self = {
+
+      isAnonymous: ()->
+        return true if _.isEmpty $rootScope.user
+        return false
+        
       signIn: (person)->
         return $q.when()
         .then ()->
@@ -55,7 +60,7 @@ AAAHelpers = ($rootScope, $q, $location, $stateParams
           console.log ['SignInRegisterSvc', person]
           return devConfig.loginUser( person.id , true)
     }
-    
+
     return self # AAAHelpers
 
 
