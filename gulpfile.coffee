@@ -10,7 +10,8 @@ gulp        = require 'gulp'
 gutil       = require 'gulp-util'
 inject      = require 'gulp-inject'
 jade        = require 'gulp-jade'
-minifyCss   = require 'gulp-minify-css'
+# minifyCss   = require 'gulp-minify-css'
+cssnano     = require 'gulp-cssnano'
 path        = require 'path'
 runSequence = require 'run-sequence'
 sass        = require 'gulp-sass'
@@ -53,7 +54,8 @@ gulp.task 'sass', ->
     .pipe cache 'sass'
     # .pipe scssLint customReport: scssStylish
     .pipe sass errLogToConsole: true
-    .pipe if argv.production then minifyCss() else gutil.noop()
+    # .pipe if argv.production then minifyCss() else gutil.noop()
+    .pipe if argv.production then cssnano() else gutil.noop()
     .pipe gulp.dest(paths.dest)
 
 gulp.task 'jade', ->
