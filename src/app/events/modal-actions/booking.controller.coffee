@@ -8,7 +8,7 @@ EventBookingCtrl = (
   $log, toastr
   ) ->
     mm = this
-    # mm.myBooking = {
+    # mm = {
     #   person: person
     #   event: event
     #   booking:
@@ -25,6 +25,9 @@ EventBookingCtrl = (
         confirmEventId: $scope.vm.event.id
         confirmCurrentUserId: $scope.vm.me.id
       }
+
+    mm.isAnonymous = ()->
+      return AAAHelpers.isAnonymous()
 
     mm.isValidated = (booking)->
       return false if AAAHelpers.isAnonymous()
@@ -54,6 +57,13 @@ EventBookingCtrl = (
 
       return $q.when(particip)
 
+    mm.settings = {
+      show:
+        newTile: false
+        spinner:
+          newTile: false
+    }
+
     mm.on = {
       signInRegister : (action, person)->
         # update booking user after sign in/register
@@ -61,6 +71,20 @@ EventBookingCtrl = (
         .then (result)->
           _.extend person, result
           return
+
+      searchTiles : (value, set)->
+        # return $scope.vm.on?searchTiles(value)
+        mm.autocomplete ?= {
+          options: []
+          set: set
+        }
+        return $q.when()
+        .then ()->
+          _fakeFilter = (value)->
+            return _.unique( value?.split(' ') )
+          mm.autocomplete.options = _fakeFilter(value)
+          return mm.autocomplete
+
       submitBooking : (person, event, booking, onSuccess)->
         # some sanity checks
         if mm.confirmEventId != event.id

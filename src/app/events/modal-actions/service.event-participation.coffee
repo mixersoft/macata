@@ -351,8 +351,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
       # @description show booking/join event modal and handle response
       # called by EventDetailCtrl:button.JoinEvent
       ###
-      beginBooking: (person, event)->
-        vm = this
+      beginBooking: (templateName, person, event, vm)->
+        vm ?= this
+        templateName ?= 'booking.modal.html'
+        template = 'events/modal-actions/' + templateName
+
         options = {}
         return $q.when()
         .then ()->
@@ -368,7 +371,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
             options['maxSeats'] = Math.min event.seatsOpen, event.setting['rsvpFriendsLimit']
             options['defaultSeats'] = 0
           # modalAfterShow()
-          return appModalSvc.show('events/modal-actions/booking.modal.html'
+          return appModalSvc.show( template
           , 'EventBookingCtrl as mm'
           , {
             copyToModalViewModal :

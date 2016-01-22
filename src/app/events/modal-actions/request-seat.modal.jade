@@ -1,0 +1,107 @@
+//- events/modal-actions/event-booking.modal.jade
+ion-modal-view {{item=mm.event; me=mm.person; show=mm.settings.show;''}}
+  ion-header-bar.bar-balanced
+    h1.title Join the Table
+  ion-content
+    div.dark-bg.content.padding
+      div.list.condensed {{host=mm.host;''}}
+        div.item.item-divider.item-positive
+          div.light.larger {{item.title}}
+        div.item.item-avatar
+          img(ng-src="{{host.face}}" ui-sref="app.profile({id:'{{host.id}}'})")
+          span.face-overlay(ng-if="!host.face" ng-bind="host.firstname[0]")
+          h2 Hosted by 
+            b {{ host.displayName }}
+          p {{ item.startTime | amCalendar }} 
+            span.dark(
+              am-time-ago="item.startTime"
+              ) 
+        div.item.item-text-wrap
+          p 
+            b {{item.title}} 
+            {{ item.description }}
+        div.item.item-icon-left 
+          i.icon.ion-ios-people
+          {{ item.seatsTotal }} seats / {{ item.seatsOpen }} open
+
+
+    form(name="bookingForm" novalidate="" ng-submit="mm.on.submitBooking(mm.person, mm.event, mm.booking, closeModal)")
+
+      div.list {{ booking = mm.booking;'' }}
+        div.item.item-avatar(ng-if="mm.isAnonymous()==false")
+          img(ng-src="{{me.face}}")
+          span.face-overlay(ng-if="!me.face" ng-bind="me.firstname[0]")
+          b {{me.displayName }} - You are requesting a seat(s) for this Table
+
+        ion-input.item-input.text-and-range
+          ion-label Number of Seats
+          div.item-input-wrapper
+            input(type="text" name="seats" min="0" max="{{booking.maxSeats}}" size="2" ng-model="booking.seats")
+            div.range.range-positive
+              i.icon.ion-ios-person.positive
+              input(type="range" name="seats" min="0" max="{{booking.maxSeats}}" ng-model="booking.seats")
+              i.icon.ion-ios-people.positive
+        ion-input.item-input.item-stacked-label
+          ion-label Message
+          textarea(ng-model="booking.comment" 
+          placeholder="Send a message to the Table. Tell them what you bring to the party." 
+          maxlength="165")
+        div.item-input.item-stacked-label
+          ion-label Attach a Tile
+          div.bar-subhead-wrap
+            div.item-input-inset.no-padding
+              div.autocomplete-wrapper
+                div.item-input-wrapper
+                  i.icon.ion-link.larger
+                  new-tile(
+                    placeholder-text="Search for Dishes or enter a link"
+                    style="width:100%;"
+                    return-close="false"
+                    is-fetching="show.spinner.newTile"
+                    on-complete="mm.on.submitNewTile(result)"
+                    on-key-down="mm.on.searchTiles(value, set)"
+                    cancel-blur="!!mm.autocomplete.options.length"
+                  )
+                div.list.autocomplete-list.padding-right(ng-show="mm.autocomplete.options.length")
+                  ion-item(
+                    ng-repeat="choice in mm.autocomplete.options"
+                    ng-click="mm.autocomplete.set(choice); mm.autocomplete.options=[] "
+                    )
+                    span {{choice.slice(0,20)}}
+              button.button.button-dark.button-clear
+                i.icon.ion-ios-arrow-forward(
+                  ng-show="!show.spinner.newTile"
+                )
+                ion-spinner(
+                  icon="ios-small"
+                  ng-show="show.spinner.newTile"
+                )
+            
+              
+        
+
+        div(ng-show="mm.isAnonymous()")  
+          //- sign-in register joining
+          div.list.card.condensed.anonymous-response-card
+            div.item.item-divided.item-positive.
+              How You'll Appear
+            div.item.item-text-wrap.text-left.
+              You must sign-in or sign-up first. 
+              This will allow us to send notifications & messages.
+            div.item.positive.text-left.sign-in-sign-up
+              a.pull-right(ng-click="mm.on.signInRegister('signin', me)"). 
+                Have an account? Sign in
+              a(ng-click="mm.on.signInRegister('signup', me)").
+                Sign up
+            div.last-row
+
+  ion-footer-bar
+    div.button-bar.condensed.positive
+      button.button.button-outline.button-stable.button-flat.ink-dark(
+      ng-click="closeModal('CANCELED')"
+      ) 
+        span.dark Cancel
+      button.button.button-balanced.button-flat.ink(
+      ng-click="mm.on.submitBooking(mm.person, mm.event, mm.booking, closeModal)"
+      ng-class="{disabled:mm.isValidated(mm.booking)==false}"
+      ) Join

@@ -70,7 +70,8 @@ EventDetailCtrl = (
         return vm.settings.view.show = value
 
       'beginBooking': (person, event)->
-        return EventActionHelpers.beginBooking.apply(vm, arguments)
+        templateName = "request-seat.modal.html"
+        return EventActionHelpers.beginBooking(templateName, person, event, vm)
 
     }
 

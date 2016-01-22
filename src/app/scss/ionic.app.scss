@@ -33,12 +33,55 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   padding: 0 !important;
 }
 
+ // used by <new-tile>
 .bar-subhead-wrap {
   top: 44px;
   min-height: 44px;
   height: initial;
   display: block;
+  .item-input-inset {
+    @extend .no-padding;
+    button.button:last-child {
+      min-width: initial;
+    }
+  }
 }
+.item-stacked-label .input-label {
+  width: 100%;
+}
+.item-input.text-and-range {
+  @extend .padding-right;
+  .item-input-wrapper {
+    display: inline-flex;
+    height: 34px;
+    input {
+      width: initial;
+      padding-right: 0;
+    }
+    .range {
+      height: 34px;
+      padding-left: 0;
+    }
+  }
+}
+
+
+.autocomplete-wrapper {
+  $condensed-height: 28px;
+  width: 100%;
+  position:relative;
+  .autocomplete-list {
+    position:relative;;
+    top:0;
+    width: 100%;
+    .item {
+      height: $condensed-height;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+}
+
 // nested .list .item
 .list .item  .list {
   padding: 0;

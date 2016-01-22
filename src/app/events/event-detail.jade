@@ -122,8 +122,8 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
                   
   ion-footer-bar.bar-positive.no-padding {{ event=vm.event;'' }}
     div.button-bar
-      button.button.button-icon.ion-pizza(ng-click="")
       button.button(
         ng-click="vm.on.beginBooking(vm.me, event)"
         ) Join
+      button.button.button-icon.ion-pizza(ng-click="")
       button.button(ng-click="mm.on.done($event)") Done
