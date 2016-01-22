@@ -228,12 +228,15 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
     # require: ['ngModel', 'newTile']
     # require: ['newTile'] # same as directive name
     scope: {
+      'placeholderText': '@'
       'returnClose': '='
       'isFetching': '='
       'onReturn': '&'
       'onFocus': '&'
       'onBlur': '&'
+      'onKeyDown': '&'
       'onComplete': '&'
+      'cancelBlur': '='
     }
     link:
       pre: (scope, element, attrs, controllers) ->
@@ -276,6 +279,8 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
 
         # input element, can be either url or title
         $field = $compile( MARKUP.INPUT )(scope)
+        if scope.placeholderText
+          $field.attr('placeholder', scope.placeholderText)
         element.append($field)
 
         scope.clear = (ev)->
@@ -295,6 +300,7 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
 
         $field.bind 'blur', (e)->
           return if !dm.field
+          return if scope.cancelBlur
           matched = openGraphSvc.matchUrl(dm.field)
           if matched
             if dm.data.url != matched
@@ -329,6 +335,15 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
                 return _showTileEditorAsModal(data)
             else
               console.log "keydown: end in space but no match"
+          if attrs.onKeyDown
+            $timeout ()->
+              scope.onKeyDown({
+                value: dm.field
+                set: (value)->
+                  # hack: how can we let autocomplete set value properly?
+                  dm.field = value
+              })
+              return
           dm.enabled = !dm.field
           scope.$apply()
           return
