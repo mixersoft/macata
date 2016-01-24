@@ -56,27 +56,36 @@ ion-modal-view#new-tile-modal-view
             )
           
         ion-input.item.item-input.location(ng-show="mm.geo.setting.show.location")
-          div.current-location(
-            ng-show="mm.geo.setting.hasGeolocation"
-            ng-click="mm.on.locationClick($event,'CURRENT')" 
-          )
-            i.icon.ion-pinpoint.positive.larger(
-              ng-hide="mm.geo.setting.show.spinner.location"
+          div.item-input-inset.flex-icon-bar
+            div.current-location.spinner-wrap.padding-right(
+              ng-show="mm.geo.setting.hasGeolocation"
+              ng-click="mm.on.locationClick($event,'CURRENT')" 
             )
-            ion-spinner(
-              icon="ios-small"
-              ng-show="mm.geo.setting.show.spinner.location"
-            )
-          i.icon.ion-ios-location.positive.larger.padding-right
-          div.auto-input-wrap
-            input(
-              ng-blur="mm.on.locationClick($event)"
-              type="text"
-              auto-input
-              placeholder="Enter an Address to Set Location" 
-              ng-model="mm.data.address" 
-            )
-          i.icon.ion-ios-arrow-forward.positive.larger
+              i.icon.ion-pinpoint.positive(
+                ng-hide="mm.geo.setting.show.spinner.location"
+              )
+              ion-spinner(
+                icon="ios-small"
+                ng-show="mm.geo.setting.show.spinner.location"
+              )
+              
+            div.item-input-wrapper
+              i.icon.ion-ios-location.positive.padding-right
+              input(
+                ng-blur="mm.on.locationClick($event)"
+                type="text"
+                auto-input
+                placeholder="Enter an Address to Set Location" 
+                ng-model="mm.data.address" 
+              )
+            div.spinner-wrap
+              i.icon.ion-ios-arrow-forward.positive(
+                ng-show="!show.spinner.newTile"
+              )
+              ion-spinner(
+                icon="ios-small"
+                ng-show="show.spinner.newTile"
+              )
         div.error.padding-horizontal(ng-show="mm.geo.errorMsg['location']")
           span.assertive {{mm.geo.errorMsg['location']}}
 

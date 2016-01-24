@@ -34,20 +34,29 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
 }
 
  // used by <new-tile>
-.bar-subhead-wrap {
-  top: 44px;
-  min-height: 44px;
+.bar-inset-wrap {
   height: initial;
   display: block;
   .item-input-inset {
-    @extend .no-padding;
+    padding-left: 0;
+    @extend .padding-right;
     button.button:last-child {
       min-width: initial;
     }
   }
+  &.bar-subheader {
+    top: 44px;
+    min-height: 44px;
+    .item-input-inset {
+      @extend .no-padding;
+    }
+  }
 }
 .item-stacked-label .input-label {
+  @extend .padding-right;
+  max-width: 100%;
   width: 100%;
+
 }
 .item-input.text-and-range {
   @extend .padding-right;
@@ -64,6 +73,24 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
     }
   }
 }
+ion-input {
+  .item-input-inset.flex-icon-bar {
+    width:100%;
+    padding: 0;
+    > *:first-child {
+      margin-left: -$content-padding;
+    }
+    > * {
+      padding: $content-padding;
+      margin-top: -$content-padding;
+      margin-bottom: -$content-padding;
+    }
+    input {
+      padding-right: 0;
+    }
+  }
+}
+
 
 
 .autocomplete-wrapper {
@@ -510,21 +537,7 @@ $hero-wrap-bg-height: 170px;
         padding-top: 0;
       }
       ion-input.location {
-        .current-location {
-          position:relative;
-          left:-10px;
-          padding: 10px;
-        }
-        .auto-input-wrap {
-          position:relative;
-          line-height:33px;
-          width: 100%;
-        }
-        .icon.ion-ios-arrow-forward {
-          position: relative;
-          padding: 10px 4px;
-          right: -6px;
-        }
+
       }
       .error {
         padding: 0 10px;
