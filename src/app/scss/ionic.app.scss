@@ -73,6 +73,22 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
     }
   }
 }
+.item-input.message-composer {
+  textarea {
+    height: 70px;
+  }
+  .button-bar {
+    @extend .padding-right;
+  }
+  .bar-subhead-wrap {
+    background-color: #e5e5e5;
+    .item-input-inset {
+      padding: 0;
+      @extend .padding-right;
+      height:29px;
+    }
+  }
+}
 ion-input {
   .item-input-inset.flex-icon-bar {
     width:100%;
@@ -435,6 +451,11 @@ $hero-wrap-bg-height: 170px;
   &.bottom-toolbar {
     position: absolute;
     bottom: 0;
+    right: 0;
+  }
+  &.top-right-toolbar {
+    position: absolute;
+    top: 0;
     right: 0;
   }
   .button {

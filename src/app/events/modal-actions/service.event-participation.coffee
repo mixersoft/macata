@@ -383,6 +383,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
                 seats: options['defaultSeats']
                 maxSeats: options['maxSeats']
                 comment: null
+                attachment: null
             vm: vm
             createBooking: self.createBooking
           }

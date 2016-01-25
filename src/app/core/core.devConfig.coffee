@@ -26,6 +26,10 @@ DevConfig = ($rootScope, UsersResource, $q, $log, openGraphSvc)->
   }
   # coffeelint: enable=max_line_length
 
+  CACHE = {
+    'null': []
+  }
+
   self = {
     loginUser : (id, force=true)->
       # manually set current user for testing
@@ -41,15 +45,29 @@ DevConfig = ($rootScope, UsersResource, $q, $log, openGraphSvc)->
         $rootScope['user'] = user
         $rootScope.$emit 'user:sign-in', $rootScope['user']
         return $rootScope['user']
-    getData : ()->
+
+    getData : (key='null')->
+      return CACHE[key] if not _.isEmpty CACHE[key]
       return $q.when()
       .then ()->
         # add location to recipes
         data = _.map sampleData.item, (o,i,l)->
           merged = openGraphSvc.normalize o
+          merged.id = i
           merged.location = sampleData.location[i]
           return merged
+        CACHE[key] = data
         return data
+
+    setData: (obj, key='null')->
+      found = CACHE[key].indexOf obj
+      if ~found
+        obj.id = found
+        return CACHE[key][found] = obj
+
+      CACHE[key].push obj if obj?
+      obj.id = CACHE[key].length - 1
+      return obj
   }
 
   return self # DevConfig
