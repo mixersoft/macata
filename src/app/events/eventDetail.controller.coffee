@@ -55,7 +55,7 @@ EventDetailCtrl = (
             return result
           , []
           .value()
-        return vm.event.menuItems
+        return data
 
     vm.on = {
       scrollTo: (anchor)->
@@ -72,6 +72,10 @@ EventDetailCtrl = (
       'beginBooking': (person, event)->
         templateName = "request-seat.modal.html"
         return EventActionHelpers.beginBooking(templateName, person, event, vm)
+        .then (result)->
+          return if !result
+          participation = result
+          return EventActionHelpers.createBooking(participation, event)
 
     }
 

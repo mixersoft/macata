@@ -33,7 +33,7 @@ RecipeCtrl = (
     vm.lookup = {
       colors: ['positive', 'calm', 'balanced', 'energized', 'assertive', 'royal', 'dark', 'stable']
     }
-    
+
     getData = ()->
       vm.rows = []
       return devConfig.getData()
@@ -88,6 +88,7 @@ RecipeCtrl = (
         # ?:use a $on listener instead?
         console.log ['submitNewTile', result]
         vm.settings.show.newTile = false
+        vm.rows = devConfig.setData(result)
 
     }
 
@@ -203,6 +204,78 @@ RecipeDetailCtrl.$inject = [
 ]
 
 
+###
+# @description  RecipeSearchCtrl, controller for search/filter recipe modal
+###
+
+RecipeSearchCtrl = (
+  $scope, $rootScope, $q
+  tileHelpers, $listItemDelegate, devConfig
+  $log, toastr
+  ) ->
+    mm = this
+    mm.name = "RecipeSearchCtrl"
+    mm.selectedItem = null
+    mm.afterModalShow = (modal)->
+      # params from appModalSvc.show( template , controllerAs , params, options) available
+      # mm = copyToModalViewModal = {
+      #   rows: vm.rows
+      # }
+      angular.extend mm, $scope.copyToModalViewModal
+
+      # other init methods
+      mm.listItemDelegate = $listItemDelegate.getByHandle('recipe-search-list-scroll')
+      mm.listItemDelegate.favorite = mm.on.favorite
+    mm.on = {
+      'use': ()->
+        selected = mm.listItemDelegate.selected()
+        mm.closeModal selected
+      'favorite': (event, item)->
+        event.stopImmediatePropagation()
+        item.favorite = !item.favorite
+        $log.info ['RecipeSearchCtrl.on.favorite', item.title]
+        return
+      'select': (item, index, silent)->
+        event.stopImmediatePropagation()
+        $log.info ['RecipeSearchCtrl.on.select', item.title]
+        return
+      'edit': (event, item)->
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          console.log ["edit", data]
+          data.isOwner = true
+          return
+      'forkTile': ($event, item)->
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+        # from new-tile.directive fn:_showTileEditorAsModal
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          console.log ['forkTile',result]
+          # return mm.on.submitNewTile(result)
+        .then ()->
+          item.isOwner = true
+        .catch (err)->
+          console.warn ['forkTile', err]
+
+    }
+
+    once = $scope.$on 'modal.afterShow', (ev, modal)->
+      once?()
+      if modal == $scope.modal
+        mm.afterModalShow()
+      return
+
+    console.log ["RecipeSearchCtrl initialized scope.$id=", $scope.$id]
+    return mm
+
+RecipeSearchCtrl.$inject = [
+  '$scope', '$rootScope', '$q'
+  'tileHelpers', '$listItemDelegate', 'devConfig'
+  '$log', 'toastr'
+]
+
 angular.module 'starter.recipe'
   .controller 'RecipeCtrl', RecipeCtrl
   .controller 'RecipeDetailCtrl', RecipeDetailCtrl
+  .controller 'RecipeSearchCtrl', RecipeSearchCtrl

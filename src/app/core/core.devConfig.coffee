@@ -47,7 +47,7 @@ DevConfig = ($rootScope, UsersResource, $q, $log, openGraphSvc)->
         return $rootScope['user']
 
     getData : (key='null')->
-      return CACHE[key] if not _.isEmpty CACHE[key]
+      return $q.when CACHE[key] if not _.isEmpty CACHE[key]
       return $q.when()
       .then ()->
         # add location to recipes

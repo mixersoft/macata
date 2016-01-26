@@ -4,10 +4,11 @@
 
 EventBookingCtrl = (
   $scope, $rootScope, $q, $timeout
-  AAAHelpers, tileHelpers
+  AAAHelpers, tileHelpers, appModalSvc
   $log, toastr, devConfig
   ) ->
     mm = this
+    mm.name = "EventBookingCtrl"
     mm.afterModalShow = ()->
       # params from appModalSvc.show( template , controllerAs , params, options) available
       # mm = copyToModalViewModal = {
@@ -20,26 +21,25 @@ EventBookingCtrl = (
       #     comment: null
       #     attachment: null
       # }
-      angular.extend mm, angular.copy($scope.copyToModalViewModal), {
-        isAnonymous: $scope.vm.acl.isAnonymous
-        confirmEventId: $scope.vm.event.id
-        confirmCurrentUserId: $scope.vm.me.id
+      angular.extend mm, $scope.copyToModalViewModal
+      angular.extend mm , {
+        confirmEventId: mm.event?.id
+        confirmCurrentUserId: mm.person?.id
       }
 
       # other init methods
-      $scope['attachmentContainer'] = document.querySelector('#request-seat-modal .attachment-container')
+      $scope['attachmentContainer'] =
+        document.querySelector('#request-seat-modal .attachment-container')
 
       mm.geo.setting.hasGeolocation = navigator.geolocation?
       mm.geo.setting.show.location = false
       return
 
-
-
     mm.isAnonymous = ()->
-      return AAAHelpers.isAnonymous()
+      return not (mm.person?.id)
 
     mm.isValidated = (booking)->
-      return false if AAAHelpers.isAnonymous()
+      return false if mm.isAnonymous()
       return false if booking?.seats < 1
       return true
 
@@ -52,6 +52,7 @@ EventBookingCtrl = (
         response: 'Yes'
         seats: parseInt booking.seats
         comment: booking.comment
+        attachment: booking.attachment
       }
       # check for existing participation
       if ~participantIds?.indexOf(person.id)
@@ -107,7 +108,6 @@ EventBookingCtrl = (
           return
 
       searchTiles : (value, set)->
-        # return $scope.vm.on?searchTiles(value)
         mm.autocomplete ?= {
           options: []
           set: set
@@ -119,7 +119,12 @@ EventBookingCtrl = (
           mm.autocomplete.options = _fakeFilter(value)
           return mm.autocomplete
 
-      submitBooking : (person, event, booking, onSuccess)->
+      validateBooking : (person, event, booking, onSuccess)->
+        # clean data
+        booking.attachment =
+          _.pick booking.attachment, ['id', 'url','title','description','image', 'site_name', 'extras']
+        booking.seats = parseInt booking.seats
+
         # some sanity checks
         if mm.confirmEventId != event.id
           toastr.warning("You are booking for a different event. title=" +
@@ -128,20 +133,17 @@ EventBookingCtrl = (
           toastr.warning("You are booking for a different person. name=" +
             person.displayName)
 
-        participantIds = _.pluck $scope.vm.lookup['Participations'], 'participantId'
+        participantIds = _.pluck $scope.vm?.lookup['Participations'], 'participantId'
+        console.warn "TODO: submitBooking() should checking for DUPLICATE participantIds  "
         return mm.createParticipation(person, event, booking, participantIds)
         .then (participation)->
-          return $scope.createBooking(participation)
-        .then (result)->
           # utils.ga_Send('send', 'event', 'participation'
           #   , 'event-booking', 'Yes', 10)
-          onSuccess?(result)
-          return result
+          onSuccess?(participation)
+          return participation
         .catch (err)->
           if err=="DUPLICATE KEY"
             toastr.info "You are already participating in the event."
-            # $scope.vm.activate()
-            $timeout ()-> $scope.vm.on.scrollTo('cp-participant')
             return onSuccess?()
           $q.reject err
         return
@@ -174,6 +176,38 @@ EventBookingCtrl = (
           result = devConfig.setData(result) if result
           return $q.when result
 
+      ### Recipe Methods ###
+      RECIPE:
+        search: ()->
+          return devConfig.getData()
+          .then (data)->
+            mm.rows = data
+            return mm.on.RECIPE.modal_showSearchRecipeTile(mm.rows)
+        modal_showSearchRecipeTile : (data)->
+          options = {modalCallback: null} # see RecipeSearchCtrl
+          return appModalSvc.show(
+            'events/modal-actions/search-recipe.modal.html'
+            , 'RecipeSearchCtrl as mm'
+            , {
+              copyToModalViewModal :
+                rows: data
+                booking: angular.copy _.omit( $scope.mm.booking, 'attachment')
+                # EventBookingCtrl: $scope.mm
+              vm: $scope.vm
+            }
+            , options )
+          .then (result)->
+            # wait for closeModal()
+            result ?= 'CANCELED'
+            console.log ['modal_showSearchRecipeTile()', result]
+            if result == 'CANCELED'
+              return $q.reject('CANCELED')
+            return $q.reject(result) if result?['isError']
+
+            return result
+          .then (result)->
+            mm.booking.attachment = mm.attachment = result
+
 
     }
 
@@ -188,7 +222,7 @@ EventBookingCtrl = (
 
 EventBookingCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$timeout'
-  'AAAHelpers', 'tileHelpers'
+  'AAAHelpers', 'tileHelpers', 'appModalSvc'
   '$log', 'toastr', 'devConfig'
 ]
 

@@ -1,0 +1,107 @@
+//- blocks/components/message-composer.template.html
+ion-input.item-input.item-stacked-label.message-composer(
+  style="border:1px solid red;"
+  ) {{show=$mc.settings.show;''}}
+  ion-label Message
+  textarea(
+    ng-model="$mc.scope.message" 
+    placeholder="{{placeholderText}}" 
+    maxlength="165"
+    )
+    
+  div.attachment-container.padding-right(ng-show="$mc.scope.attachment")
+    //- TODO: make a directive
+    div.tile.recipe.item.item-complex.content.ink(
+    )
+      div.hero.content(style="height:120px;")
+        div.icon-bar.top-right-toolbar.condensed.light(
+          ng-show="$mc.scope.attachment"
+          ng-click="$event.stopImmediatePropagation()"
+          )
+          i.button.button-clear.ion-edit.ink(
+            ng-click="$mc.TILE.editTile($mc.scope.attachment)"
+            )
+          i.button.button-clear.ion-close.ink(
+            ng-click="$mc.TILE.detachTile($mc.scope.attachment)"
+            )
+        div.feature.image(
+          bg-image="{{$mc.scope.attachment['image']}}"
+        )
+      div.body.padding
+        div.title.line-clamp-1 {{$mc.scope.attachment['title']}}
+        p.description.line-clamp.line-clamp-2 {{$mc.scope.attachment['description']}}
+        p. {{$mc.scope.attachment['site_name']}}
+        
+  div.button-bar.condensed.positive(
+    ng-click="$event.preventDefault();$event.stopImmediatePropagation();"
+    )
+    button.button(
+      ng-click="$mc.RECIPE.search()"
+      )
+      i.icon.positive.ion-pizza.ink
+    button.button(
+      ng-click="$mc.on.toggleShow(show, 'newTile', '.new-tile')"
+      )
+      i.icon.positive.ion-link.ink
+    button.button
+      i.icon.positive.ion-camera.ink(
+      )
+    button.button(
+      ng-click="$mc.on.toggleShow(show, 'location', '.location')"
+      )
+      i.icon.positive.ion-location.ink(
+      )
+      
+  div.padding-vertical.new-tile(ng-show="show.newTile")
+    div.item-input-inset.flex-icon-bar
+      div.item-input-wrapper(
+        style="margin-left:0;"
+        )
+        i.icon.ion-link.positive
+        new-tile(
+          placeholder-text="Enter a link"
+          style="width:100%;"
+          return-close="true"
+          is-fetching="show.spinner.newTile"
+          on-complete="$mc.TILE.attachTile(result)"
+        )
+      div.spinner-wrap
+        i.icon.ion-ios-arrow-forward.positive(
+          ng-show="!show.spinner.newTile"
+        )
+        ion-spinner(
+          icon="ios-small"
+          ng-show="show.spinner.newTile"
+        )
+        
+  div.padding-vertical.location(ng-show="show.location")
+    div.item-input-inset.flex-icon-bar
+      div.current-location.padding-right(
+        ng-show="$mc.geo.setting.hasGeolocation"
+        ng-click="$mc.on.locationClick($event,'CURRENT')" 
+      )
+        i.icon.ion-pinpoint.positive.larger(
+          ng-hide="$mc.geo.setting.show.spinner.location"
+        )
+        ion-spinner(
+          icon="ios-small"
+          ng-show="$mc.geo.setting.show.spinner.location"
+        )
+        
+      div.item-input-wrapper
+        i.icon.ion-ios-location.positive.larger.padding-right
+        input(
+          ng-blur="$mc.on.locationClick($event)"
+          type="text"
+          auto-input
+          placeholder="Enter an Address to Set Location" 
+          ng-model="$mc.scope.address" 
+        )
+      div.spinner-wrap
+        i.icon.ion-ios-arrow-forward.positive(
+          ng-show="!show.spinner.newTile"
+        )
+        ion-spinner(
+          icon="ios-small"
+          ng-show="show.spinner.newTile"
+        )

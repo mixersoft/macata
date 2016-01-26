@@ -25,7 +25,7 @@ ion-modal-view {{item=mm.event; me=mm.person;''}}
           {{ item.seatsTotal }} seats / {{ item.seatsOpen }} open
 
 
-    form(name="bookingForm" novalidate="" ng-submit="mm.on.submitBooking(mm.person, mm.event, mm.booking, closeModal)")
+    form(name="bookingForm" novalidate="" ng-submit="mm.on.validateBooking(mm.person, mm.event, mm.booking, closeModal)")
 
       div.list {{ booking = mm.booking;'' }}
         div.item.item-avatar(ng-if="mm.isAnonymous()==false")
@@ -66,6 +66,6 @@ ion-modal-view {{item=mm.event; me=mm.person;''}}
       ) 
         span.dark Cancel
       button.button.button-balanced.button-flat.ink(
-      ng-click="mm.on.submitBooking(mm.person, mm.event, mm.booking, closeModal)"
+      ng-click="mm.on.validateBooking(mm.person, mm.event, mm.booking, closeModal)"
       ng-class="{disabled:mm.isValidated(mm.booking)==false}"
       ) Join

@@ -25,7 +25,7 @@ ion-modal-view#request-seat-modal {{item=mm.event; me=mm.person; show=mm.setting
           {{ item.seatsTotal }} seats / {{ item.seatsOpen }} open
 
 
-    form(name="bookingForm" novalidate="" ng-submit="mm.on.submitBooking(mm.person, mm.event, mm.booking, closeModal)")
+    form(name="bookingForm" novalidate="" ng-submit="mm.on.validateBooking(mm.person, mm.event, mm.booking, closeModal)")
 
       div.list {{ booking = mm.booking;'' }}
         div.item.item-avatar(ng-if="mm.isAnonymous()==false")
@@ -41,104 +41,115 @@ ion-modal-view#request-seat-modal {{item=mm.event; me=mm.person; show=mm.setting
               i.icon.ion-ios-person.positive
               input(type="range" name="seats" min="0" max="{{booking.maxSeats}}" ng-model="booking.seats")
               i.icon.ion-ios-people.positive
-        ion-input.item-input.item-stacked-label.message-composer.make-directive
-          ion-label Message
-          textarea(ng-model="booking.comment" 
-          placeholder="Send a message to the Table. Tell them what you bring to the party." 
-          maxlength="165")
-          div.attachment-container.padding-right(ng-show="mm.attachment")
-            //- TODO: make a directive
-            div.tile.recipe.item.item-complex.content.ink(
-            )  {{$attachment=mm.attachment;''}}
-              div.hero.content(style="height:160px;")
-                div.icon-bar.top-right-toolbar.condensed.light(
-                  ng-show="$attachment"
-                  ng-click="$event.stopImmediatePropagation()"
-                  )
-                  i.button.button-clear.ion-edit.ink(
-                    ng-click="mm.on.TILE.editTile($attachment)"
-                    )
-                  i.button.button-clear.ion-close.ink(
-                    ng-click="mm.on.TILE.detachTile($attachment)"
-                    )
-                div.feature.image(
-                  bg-image="{{$attachment['image']}}"
-                )
-              div.body.padding
-                div.title.line-clamp-1 {{$attachment['title']}}
-                p.description.line-clamp.line-clamp-2 {{$attachment['description']}}
-                p. {{$attachment['site_name']}}
-          div.button-bar.condensed.positive(
-            ng-show="true"
-            ng-click="$event.preventDefault();$event.stopImmediatePropagation();"
-            )
-            button.button(
-              )
-              i.icon.positive.ion-pizza.ink
-            button.button(
-              ng-click="mm.on.toggleShow(show, 'newTile', '.new-tile')"
-              )
-              i.icon.positive.ion-link.ink
-            button.button
-              i.icon.positive.ion-camera.ink(
-              )
-            button.button(
-              ng-click="mm.on.toggleShow(show, 'location', '.location')"
-              )
-              i.icon.positive.ion-location.ink(
-              )
-          div.padding-vertical.new-tile(ng-show="show.newTile")
-            div.item-input-inset.flex-icon-bar
-              div.item-input-wrapper(
-                style="margin-left:0;"
-                )
-                i.icon.ion-link.positive
-                new-tile(
-                  placeholder-text="Enter a link"
-                  style="width:100%;"
-                  return-close="true"
-                  is-fetching="show.spinner.newTile"
-                  on-complete="mm.on.TILE.attachTile(result)"
-                )
-              div.spinner-wrap
-                i.icon.ion-ios-arrow-forward.positive(
-                  ng-show="!show.spinner.newTile"
-                )
-                ion-spinner(
-                  icon="ios-small"
-                  ng-show="show.spinner.newTile"
-                )
-          div.padding-vertical.location(ng-show="show.location")
-            div.item-input-inset.flex-icon-bar
-              div.current-location.padding-right(
-                ng-show="mm.geo.setting.hasGeolocation"
-                ng-click="mm.on.locationClick($event,'CURRENT')" 
-              )
-                i.icon.ion-pinpoint.positive.larger(
-                  ng-hide="mm.geo.setting.show.spinner.location"
-                )
-                ion-spinner(
-                  icon="ios-small"
-                  ng-show="mm.geo.setting.show.spinner.location"
-                )
-                
-              div.item-input-wrapper
-                i.icon.ion-ios-location.positive.larger.padding-right
-                input(
-                  ng-blur="mm.on.locationClick($event)"
-                  type="text"
-                  auto-input
-                  placeholder="Enter an Address to Set Location" 
-                  ng-model="mm.data.address" 
-                )
-              div.spinner-wrap
-                i.icon.ion-ios-arrow-forward.positive(
-                  ng-show="!show.spinner.newTile"
-                )
-                ion-spinner(
-                  icon="ios-small"
-                  ng-show="show.spinner.newTile"
-                )
+              
+              
+        message-composer(
+          placeholder-text="Send a message to the Table. Tell them what you bring to the party."
+          message="booking.comment"
+          attachment="booking.attachment"
+          location="booking.location"
+          )     
+          
+        //-    
+        //- ion-input.item-input.item-stacked-label.message-composer.make-directive
+        //-   ion-label Message
+        //-   textarea(ng-model="booking.comment" 
+        //-   placeholder="Send a message to the Table. Tell them what you bring to the party." 
+        //-   maxlength="165")
+        //-   div.attachment-container.padding-right(ng-show="mm.attachment")
+        //-     //- TODO: make a directive
+        //-     div.tile.recipe.item.item-complex.content.ink(
+        //-     )  {{$attachment=mm.attachment;''}}
+        //-       div.hero.content(style="height:160px;")
+        //-         div.icon-bar.top-right-toolbar.condensed.light(
+        //-           ng-show="$attachment"
+        //-           ng-click="$event.stopImmediatePropagation()"
+        //-           )
+        //-           i.button.button-clear.ion-edit.ink(
+        //-             ng-click="mm.on.TILE.editTile($attachment)"
+        //-             )
+        //-           i.button.button-clear.ion-close.ink(
+        //-             ng-click="mm.on.TILE.detachTile($attachment)"
+        //-             )
+        //-         div.feature.image(
+        //-           bg-image="{{$attachment['image']}}"
+        //-         )
+        //-       div.body.padding
+        //-         div.title.line-clamp-1 {{$attachment['title']}}
+        //-         p.description.line-clamp.line-clamp-2 {{$attachment['description']}}
+        //-         p. {{$attachment['site_name']}}
+        //-   div.button-bar.condensed.positive(
+        //-     ng-show="true"
+        //-     ng-click="$event.preventDefault();$event.stopImmediatePropagation();"
+        //-     )
+        //-     button.button(
+        //-       ng-click="mm.on.RECIPE.search()"
+        //-       )
+        //-       i.icon.positive.ion-pizza.ink
+        //-     button.button(
+        //-       ng-click="mm.on.toggleShow(show, 'newTile', '.new-tile')"
+        //-       )
+        //-       i.icon.positive.ion-link.ink
+        //-     button.button
+        //-       i.icon.positive.ion-camera.ink(
+        //-       )
+        //-     button.button(
+        //-       ng-click="mm.on.toggleShow(show, 'location', '.location')"
+        //-       )
+        //-       i.icon.positive.ion-location.ink(
+        //-       )
+        //-   div.padding-vertical.new-tile(ng-show="show.newTile")
+        //-     div.item-input-inset.flex-icon-bar
+        //-       div.item-input-wrapper(
+        //-         style="margin-left:0;"
+        //-         )
+        //-         i.icon.ion-link.positive
+        //-         new-tile(
+        //-           placeholder-text="Enter a link"
+        //-           style="width:100%;"
+        //-           return-close="true"
+        //-           is-fetching="show.spinner.newTile"
+        //-           on-complete="mm.on.TILE.attachTile(result)"
+        //-         )
+        //-       div.spinner-wrap
+        //-         i.icon.ion-ios-arrow-forward.positive(
+        //-           ng-show="!show.spinner.newTile"
+        //-         )
+        //-         ion-spinner(
+        //-           icon="ios-small"
+        //-           ng-show="show.spinner.newTile"
+        //-         )
+        //-   div.padding-vertical.location(ng-show="show.location")
+        //-     div.item-input-inset.flex-icon-bar
+        //-       div.current-location.padding-right(
+        //-         ng-show="mm.geo.setting.hasGeolocation"
+        //-         ng-click="mm.on.locationClick($event,'CURRENT')" 
+        //-       )
+        //-         i.icon.ion-pinpoint.positive.larger(
+        //-           ng-hide="mm.geo.setting.show.spinner.location"
+        //-         )
+        //-         ion-spinner(
+        //-           icon="ios-small"
+        //-           ng-show="mm.geo.setting.show.spinner.location"
+        //-         )
+        //-         
+        //-       div.item-input-wrapper
+        //-         i.icon.ion-ios-location.positive.larger.padding-right
+        //-         input(
+        //-           ng-blur="mm.on.locationClick($event)"
+        //-           type="text"
+        //-           auto-input
+        //-           placeholder="Enter an Address to Set Location" 
+        //-           ng-model="mm.data.address" 
+        //-         )
+        //-       div.spinner-wrap
+        //-         i.icon.ion-ios-arrow-forward.positive(
+        //-           ng-show="!show.spinner.newTile"
+        //-         )
+        //-         ion-spinner(
+        //-           icon="ios-small"
+        //-           ng-show="show.spinner.newTile"
+        //-         )
                 
         //- AutoComplete field (sample)
         ion-input.item-input.item-stacked-label.item-input-inset(
@@ -166,8 +177,6 @@ ion-modal-view#request-seat-modal {{item=mm.event; me=mm.person; show=mm.setting
 
             
               
-        
-
         div(ng-show="mm.isAnonymous()")  
           //- sign-in register joining
           div.list.card.condensed.anonymous-response-card
@@ -190,6 +199,6 @@ ion-modal-view#request-seat-modal {{item=mm.event; me=mm.person; show=mm.setting
       ) 
         span.dark Cancel
       button.button.button-balanced.button-flat.ink(
-      ng-click="mm.on.submitBooking(mm.person, mm.event, mm.booking, closeModal)"
+      ng-click="mm.on.validateBooking(mm.person, mm.event, mm.booking, closeModal)"
       ng-class="{disabled:mm.isValidated(mm.booking)==false}"
       ) Join

@@ -127,7 +127,20 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
                   left: 0
                   top: ionic.DomUtil.getPositionInParent($selectedElContainer[0]).top
                 }
-                _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
+                # NOTE: $ionicScrollDelegate normally does not work with <ion-modal-view>
+                # because $$filterFn = ()-> $ionicHistory.isActiveScope($scope)
+                #
+                isModalView = ionic.DomUtil.getParentWithClass( vm.$summaryEl[0], 'modal')
+                if isModalView
+                  _ionScroll._instances.forEach (instance)->
+                    console.warn "HACK: $ionScroll.scrollTo() inside <ion-modal-view>"
+                    if _ionScroll.handle == instance.$$delegateHandle
+                      return instance['scrollTo']
+                        .call(instance, vm.scrollPos.left, vm.scrollPos.top, true)
+                    return
+                else
+                  _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
+
                 return
               , 300
           return

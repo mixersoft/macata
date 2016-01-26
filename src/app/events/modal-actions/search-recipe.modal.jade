@@ -1,0 +1,65 @@
+// events/modal-actions/search-recipe.html
+ion-modal-view#search-recipe-modal {{ show=mm.settings.show;'' }}
+  ion-header-bar.bar-balanced
+    button.button.button-icon.button-clear.ion-search(
+      ng-click="mm.on.toggleShow(show, 'filter', '.search')"
+    )
+    button.button.button-icon.button-clear.ion-plus(
+      ng-class="show.newTile ? 'ion-close': 'ion-plus'"
+      ng-click="mm.on.createNewTile()"
+    )
+    h1.title Search Recipe Tiles
+    button.button.button-icon.button-clear.ion-close(
+      ng-click="mm.closeModal('CANCELED')"
+    )
+  div(
+    ng-show="show.newTile"
+  )
+    div.bar.has-header.bar-inset-wrap.bar-subheader
+      div.item-input-inset.no-padding
+        div.item-input-wrapper
+          i.icon.ion-link.larger
+          new-tile(
+            style="width:100%;"
+            return-close="true"
+            is-fetching="show.spinner.newTile"
+            on-complete="mm.on.submitNewTile(result)"
+          )  
+        button.button.button-dark.button-clear
+          i.icon.ion-ios-arrow-forward(
+            ng-show="!show.spinner.newTile"
+          )
+          ion-spinner(
+            icon="ios-small"
+            ng-show="show.spinner.newTile"
+          )
+
+
+  ion-content(
+    delegate-handle="recipe-search-list-scroll"
+    scroll-sista="header-subheader"
+  ) 
+ 
+    list-item-container.content.condensed(
+      collection="mm.rows"
+      scroll-handle="recipe-search-list-scroll"
+      summary-min-width="320"
+      detail-max-width="720"
+      show-detail-inline="true"
+      item-height="120"
+      detail-by-reference="true"
+      on-select="mm.on.select($item,$index,silent)"
+    )
+
+      ng-include(src="'events/modal-actions/search-recipe.fb-tile.html'" )
+      
+  ion-footer-bar
+    div.button-bar.condensed.positive
+      button.button.button-outline.button-stable.button-flat.ink-dark(
+      ng-click="closeModal('CANCELED')"
+      ) 
+        span.dark Cancel
+      button.button.button-balanced.button-flat.ink(
+      ng-click="mm.on.use($event)"
+      ng-class="{disabled:mm.isValidated(mm.selected)==false}"
+      ) Use

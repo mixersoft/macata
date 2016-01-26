@@ -382,14 +382,15 @@ EventActionHelpers = ($rootScope, $q, $timeout
                 userId: person.id
                 seats: options['defaultSeats']
                 maxSeats: options['maxSeats']
-                comment: null
+                message: null
                 attachment: null
-            vm: vm
-            createBooking: self.createBooking
+            # vm: vm
+            # createBooking: self.createBooking
           }
           ,modalOptions_ShowInkEffect)
         .then (result)->
-          $log.info "Booking Modal resolved, result=" + JSON.stringify result
+          $log.info ["Booking Modal resolved", result]
+          return result
 
       ###
       # @description check event.setting to determine if invitation is required to join Event
@@ -418,26 +419,28 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
-      createBooking: (particip)->
+      createBooking: (particip, event)->
+        if 'FAKE Add Menu-item'
+          event.menuItems.push(particip.attachment) if particip.attachment?.id
         return $log.warn "TODO: create participation from booking"
-        return ParticipationsResource.post(particip)
-        .then (result)->
-          # update lookups
-          if !~vm.event['participationIds'].indexOf(result.id)
-            vm.event['participationIds'].push result.id
-            # vm.event['participantIds'].push result.participantId
-          vm.lookup['Participations'][result.id] = result
-          vm.lookup['Users'][result.participantId] = person
-          vm.lookup['MyParticipation'] = vm.getParticipationByUser(person)
-          $rootScope.$broadcast 'lookup-data:changed', {className:'Participations'}
-          return result
-        .then (participation)->
-          $rootScope.$broadcast 'event:participant-changed', options
-          message = "Congratulations, you have just booked " + participation.seats + " seats! "
-          message += "Now search for your contribution."
-          toastr.info message
-          $timeout ()-> vm.on.scrollTo('cp-participant')
-          return participation
+        # return ParticipationsResource.post(particip)
+        # .then (result)->
+        #   # update lookups
+        #   if !~vm.event['participationIds'].indexOf(result.id)
+        #     vm.event['participationIds'].push result.id
+        #     # vm.event['participantIds'].push result.participantId
+        #   vm.lookup['Participations'][result.id] = result
+        #   vm.lookup['Users'][result.participantId] = person
+        #   vm.lookup['MyParticipation'] = vm.getParticipationByUser(person)
+        #   $rootScope.$broadcast 'lookup-data:changed', {className:'Participations'}
+        #   return result
+        # .then (participation)->
+        #   $rootScope.$broadcast 'event:participant-changed', options
+        #   message = "Congratulations, you have just booked " + participation.seats + " seats! "
+        #   message += "Now search for your contribution."
+        #   toastr.info message
+        #   $timeout ()-> vm.on.scrollTo('cp-participant')
+        #   return participation
 
 
 
