@@ -33,6 +33,14 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   padding: 0 !important;
 }
 
+.rotate-90 {
+    -moz-transform: rotateZ(90deg);
+    -webkit-transform: rotateZ(90deg);
+    -o-transform: rotateZ(90deg);
+    -ms-transform: rotateZ(90deg);
+    transform: rotateZ(90deg);
+}
+
  // used by <new-tile>
 .bar-inset-wrap {
   height: initial;
@@ -97,6 +105,7 @@ ion-input {
       margin-left: -$content-padding;
     }
     > * {
+      height: 49px;
       padding: $content-padding;
       margin-top: -$content-padding;
       margin-bottom: -$content-padding;
@@ -106,7 +115,7 @@ ion-input {
     }
     > * > .icon {
       height: 29px;
-      padding: 5px 4px;
+      padding: 5px 0;
     }
     .icon-left {
       margin-left: -10px;

@@ -1,6 +1,6 @@
 'use strict'
 
-# helper functions for managing user actions on events
+# helper functions for mansolid redng user actions on events
 EventActionHelpers = ($rootScope, $q, $timeout
   $location, $state, $stateParams, $ionicPopup
   $log, toastr
@@ -37,6 +37,14 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
 
     self = {
+      'bookingWizard': (person, event, vm)->
+        templateName = "request-seat.modal.html"
+        return self.beginBooking(templateName, person, event, vm)
+        .then (result)->
+          return if !result
+          participation = result
+          return self.createBooking(participation, event)
+
       getShareLinks: (event)->
         vm = this
         target = null
@@ -384,8 +392,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
                 maxSeats: options['maxSeats']
                 message: null
                 attachment: null
-            # vm: vm
-            # createBooking: self.createBooking
+                address: null
+                location: null
           }
           ,modalOptions_ShowInkEffect)
         .then (result)->

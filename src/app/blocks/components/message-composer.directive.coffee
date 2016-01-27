@@ -17,8 +17,9 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
     # replace: true
     # require: ['messageComposer','ngModel']
     controllerAs: '$mc'
-    controller: [ '$scope', 'appModalSvc', 'tileHelpers', 'devConfig'
-      ($scope, appModalSvc, tileHelpers, devConfig)->
+    controller: [ '$scope', 'appModalSvc', 'tileHelpers', 'locationHelpers'
+      'devConfig'
+      ($scope, appModalSvc, tileHelpers, locationHelpers, devConfig)->
         $mc = this
 
         $mc.settings = {
@@ -50,9 +51,11 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
               $timeout ()->
                 $mc.$container[0].querySelector(selector).scrollIntoView()
             return show[key]
-          'locationClick': ($event, opton )->
-            TileEditorCtrl.locationClick.apply(this, arguments)
-            return
+          'locationClick': ($event, value )->
+            $mc.LOCATION.getLocation(value)
+            .then (result)->
+              $scope.location = result || {}
+
         }
 
         $mc.RECIPE = {
@@ -113,12 +116,35 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
             return $q.when result
         }
 
+        $mc.LOCATION = {
+          getLocation: (value)->
+            $mc.geo.errorMsg.location = null
+            if value == 'CURRENT'
+              $mc.geo.setting.show.spinner.location = true
+              promise = locationHelpers.getCurrentPosition()
+              .finally ()->
+                $mc.geo.setting.show.spinner.location = false
+            else
+              # note: geocodeSvc.geocode() will parse "lat,lon" values
+              promise = locationHelpers.geocodeAddress({address:value})
+
+            return promise
+            .then (result)->
+              $mc.scope.address = result.address
+              $mc.scope.address ?= result.latlon?.join(', ') || ''
+              $mc.scope.location = result
+            , (err)->
+              $mc.geo.errorMsg.location = err.humanize
+
+        }
+
         return $mc
     ]
     scope: {
       placeholderText: '@'
       message: '='
       attachment: '='
+      address: '='
       location: '='
     }
     link:
@@ -128,14 +154,15 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
         $mc = controllers
         $mc.$container = element
         $mc.scope = scope
+
+        $mc.geo.setting.hasGeolocation = navigator.geolocation?
         return
 
   }
   return directive
 
-
-
 MessageComposerDirective.$inject = ['$compile', '$q', '$timeout', 'tileHelpers']
+
 
 angular.module('blocks.components')
   .directive 'messageComposer', MessageComposerDirective

@@ -18,8 +18,10 @@ EventBookingCtrl = (
       #     userId: person.id
       #     seats: options['defaultSeats']
       #     maxSeats: options['maxSeats']
-      #     comment: null
+      #     message: null
       #     attachment: null
+      #     address: null   # addressString
+      #     location: null  # {address: latlon:}
       # }
       angular.extend mm, $scope.copyToModalViewModal
       angular.extend mm , {
@@ -31,8 +33,6 @@ EventBookingCtrl = (
       $scope['attachmentContainer'] =
         document.querySelector('#request-seat-modal .attachment-container')
 
-      mm.geo.setting.hasGeolocation = navigator.geolocation?
-      mm.geo.setting.show.location = false
       return
 
     mm.isAnonymous = ()->
@@ -51,8 +51,9 @@ EventBookingCtrl = (
         participantId: person.id + ''
         response: 'Yes'
         seats: parseInt booking.seats
-        comment: booking.comment
+        message: booking.message
         attachment: booking.attachment
+        location: booking.location
       }
       # check for existing participation
       if ~participantIds?.indexOf(person.id)
@@ -67,25 +68,6 @@ EventBookingCtrl = (
 
       return $q.when(particip)
 
-    mm.settings = {
-      show:
-        newTile: false
-        location: false
-        spinner:
-          newTile: false
-    }
-
-    #  TODO: refactor
-    mm.geo = {
-      setting:
-        hasGeolocation: null  # set in init
-        show:
-          spinner:
-            location: false
-          location: false
-      errorMsg:
-        location: null
-    }
 
     mm.attachment = null
 
@@ -122,7 +104,8 @@ EventBookingCtrl = (
       validateBooking : (person, event, booking, onSuccess)->
         # clean data
         booking.attachment =
-          _.pick booking.attachment, ['id', 'url','title','description','image', 'site_name', 'extras']
+          _.pick( booking.attachment
+          , ['id', 'url','title','description','image', 'site_name', 'extras'])
         booking.seats = parseInt booking.seats
 
         # some sanity checks
@@ -147,66 +130,6 @@ EventBookingCtrl = (
             return onSuccess?()
           $q.reject err
         return
-
-
-
-      ### Tile Methods ###
-      TILE:
-        editTile: (data)->
-          return tileHelpers.modal_showTileEditor(data)
-          .then (result)->
-            mm.attachment = result
-          return
-
-        detachTile: (tile)->
-          console.log ['detachTile', 'id='+tile.id , tile]
-          mm.attachment = null
-
-        attachTile: (result)->
-          return mm.on.TILE.submitNewTile(result)
-          .then (result)->
-            mm.booking.attachment = mm.attachment = result
-
-            # tile = mm.on.makeTile(result)
-            # $scope['attachmentContainer'].push tile
-
-        submitNewTile: (result)->
-          console.log ['submitNewTile', result]
-          mm.settings.show.newTile = false
-          result = devConfig.setData(result) if result
-          return $q.when result
-
-      ### Recipe Methods ###
-      RECIPE:
-        search: ()->
-          return devConfig.getData()
-          .then (data)->
-            mm.rows = data
-            return mm.on.RECIPE.modal_showSearchRecipeTile(mm.rows)
-        modal_showSearchRecipeTile : (data)->
-          options = {modalCallback: null} # see RecipeSearchCtrl
-          return appModalSvc.show(
-            'events/modal-actions/search-recipe.modal.html'
-            , 'RecipeSearchCtrl as mm'
-            , {
-              copyToModalViewModal :
-                rows: data
-                booking: angular.copy _.omit( $scope.mm.booking, 'attachment')
-                # EventBookingCtrl: $scope.mm
-              vm: $scope.vm
-            }
-            , options )
-          .then (result)->
-            # wait for closeModal()
-            result ?= 'CANCELED'
-            console.log ['modal_showSearchRecipeTile()', result]
-            if result == 'CANCELED'
-              return $q.reject('CANCELED')
-            return $q.reject(result) if result?['isError']
-
-            return result
-          .then (result)->
-            mm.booking.attachment = mm.attachment = result
 
 
     }

@@ -72,7 +72,8 @@ ion-modal-view#new-tile-modal-view
             div.item-input-wrapper
               i.icon.ion-ios-location.positive.padding-right
               input(
-                ng-blur="mm.on.locationClick($event)"
+                on-blur="mm.on.locationClick($event)"
+                return-close="true"
                 type="text"
                 auto-input
                 placeholder="Enter an Address to Set Location" 

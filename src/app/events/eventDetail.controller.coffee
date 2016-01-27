@@ -70,13 +70,7 @@ EventDetailCtrl = (
         return vm.settings.view.show = value
 
       'beginBooking': (person, event)->
-        templateName = "request-seat.modal.html"
-        return EventActionHelpers.beginBooking(templateName, person, event, vm)
-        .then (result)->
-          return if !result
-          participation = result
-          return EventActionHelpers.createBooking(participation, event)
-
+        return EventActionHelpers.bookingWizard(person, event, vm)
     }
 
     initialize = ()->

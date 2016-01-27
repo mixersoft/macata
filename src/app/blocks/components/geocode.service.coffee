@@ -578,9 +578,123 @@ ClearFieldDirective = ($compile, $timeout)->
 
 ClearFieldDirective.$inject = ['$compile', '$timeout']
 
+
+LocationHelpers = (geocodeSvc, $q)->
+
+  ERROR_CODES = { # err.code
+    1: 'PERMISSION_DENIED'
+    2: 'POSITION_UNAVAILABLE'
+    3: 'TIMEOUT'
+  }
+  self = {
+    hasGeolocation: null  # set in init
+    errorLookup:
+      'PERMISSION_DENIED':
+        "Permission Denied. Please check your privacy settings and try again."
+      'POSITION_UNAVAILABLE':
+        "Your current position unavailable."
+      'TIMEOUT':
+        "Sorry, we didn't get an answer. Please try later."
+
+    setErrorMsg: (keyOrObj, value)->
+      return angular.extend self.errorLookup, keyOrObj if _.isObject(keyOrObj)
+      key = ERROR_CODES[keyOrObj] if _.isNumber keyOrObj
+      self.errorLookup[key] = value
+      return self.errorLookup
+
+    ###
+    @description get [lat,lon] from current Position and show in modal-view
+      allow user to verify location & address string before returning result
+    @params options object
+      options.address, address string
+      options.latlon, array [lat,lon], usually from current location
+      options.isCurrentLocation boolean, set true to update address string but
+          NOT latlon
+    @return promise
+      resolve: result object {address:String, latlon:[], isCurrentLocation: boolean}
+      reject: err, err.humanize is the humanized error message
+    ###
+    getCurrentPosition: ()->
+      return $q.when()
+      .then ()->
+        if ionic.Platform.isWebView()
+          options = {timeout: 10000, enableHighAccuracy: false}
+          return $cordovaGeolocation.getCurrentPosition( options )
+        else
+          dfd = $q.defer()
+          navigator.geolocation.getCurrentPosition(
+            (result)-> return dfd.resolve(result)
+          , (err)-> return dfd.reject(err)
+          )
+          return dfd.promise
+      .then (result)->
+        gMapPoint = _.chain result.coords
+          .pick ['latitude','longitude']
+          # .each (v,k,o)-> return o[k]=geocodeSvc.mathRound6(v)
+          .value()
+        retval = {}
+        retval.latlon = [gMapPoint.latitude, gMapPoint.longitude]
+        retval.isCurrentLocation = true
+        retval.address = [
+          'lat:', gMapPoint.latitude
+          'lon:', gMapPoint.longitude
+        ].join(' ')
+        console.log ['with location',retval]
+        return retval
+      .catch (err)->
+        return self.handleCurrentLocationErr(err)
+      .then (result)->
+        # now verify current location
+        return self.geocodeAddress(result, 'force')
+
+    ###
+    @description geocode an address string or [lat,lon] and show in modal-view
+      allow user to verify location before returning result
+    @params options object
+      options.address, address string
+      options.latlon, array [lat,lon], usually from current location
+      options.isCurrentLocation boolean, set true to update address string but
+          NOT latlon
+    @return promise
+      resolve: result object {address:String, latlon:[], isCurrentLocation: boolean}
+      reject: err, err.humanize is the humanized error message
+    ###
+    geocodeAddress: (options, force)->
+      if options.latlon && options.isCurrentLocation && force
+        location = options.latlon.join(',')
+      if options.latlon && !force
+        console.log ['locationClick()', _.pick( options, ['latlon','address'] ) ]
+        return $q.when options
+      location ?= options.address
+      return $q.reject("ERROR: Expecting Address or Location.") if !location
+      #  this launches modal
+      return geocodeSvc.getLatLon( location )
+      .then (result)->
+        console.log ['locationClick()', result]
+        retval = {}
+        retval.latlon = result?.location
+        retval.address = result?.address
+        retval.isCurrentLocation = true if options.isCurrentLocation
+        return retval
+
+    handleCurrentLocationErr: (err)->
+      err.humanize = self.errorLookup[ ERROR_CODES[err.code] ]
+      console.warn ['Err location', err]
+      return $q.reject(err)
+  }
+
+  ionic.Platform.ready ()->
+    self.hasGeolocation = navigator.geolocation
+    return
+
+  return self
+
+LocationHelpers.$inject = ['geocodeSvc', '$q']
+
 angular.module 'blocks.components'
   .constant 'API_KEY', null
   .config geocodeSvcConfig
   .factory 'geocodeSvc', Geocoder
-  .directive 'clearField', ClearFieldDirective
+  .factory 'locationHelpers', LocationHelpers
+  # .directive 'clearField', ClearFieldDirective
   .controller 'VerifyLookupCtrl', VerifyLookupCtrl

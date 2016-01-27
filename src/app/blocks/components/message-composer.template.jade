@@ -1,6 +1,5 @@
 //- blocks/components/message-composer.template.html
 ion-input.item-input.item-stacked-label.message-composer(
-  style="border:1px solid red;"
   ) {{show=$mc.settings.show;''}}
   ion-label Message
   textarea(
@@ -80,7 +79,7 @@ ion-input.item-input.item-stacked-label.message-composer(
         ng-show="$mc.geo.setting.hasGeolocation"
         ng-click="$mc.on.locationClick($event,'CURRENT')" 
       )
-        i.icon.ion-pinpoint.positive.larger(
+        i.icon.ion-pinpoint.positive(
           ng-hide="$mc.geo.setting.show.spinner.location"
         )
         ion-spinner(
@@ -89,11 +88,12 @@ ion-input.item-input.item-stacked-label.message-composer(
         )
         
       div.item-input-wrapper
-        i.icon.ion-ios-location.positive.larger.padding-right
+        i.icon.ion-ios-location.positive.icon-left.padding-right
         input(
-          ng-blur="$mc.on.locationClick($event)"
+          on-blur="$mc.on.locationClick($event, value)"
           type="text"
           auto-input
+          return-close="true"
           placeholder="Enter an Address to Set Location" 
           ng-model="$mc.scope.address" 
         )
