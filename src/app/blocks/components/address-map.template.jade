@@ -18,7 +18,8 @@ ion-modal-view#address-lookup-modal-view
           div.item-input-wrapper.no-padding
             input(type="text" ng-model="vm.address0" 
               placeholder="Enter Address" 
-              ng-attr-clear-field="vm.isBrowser"
+              auto-input
+              return-close="true"
             )
 
           button#address-lookup-search.button.button-balanced.button-small.no-padding(
@@ -26,6 +27,7 @@ ion-modal-view#address-lookup-modal-view
           )
             i.icon.ion-search(ng-hide="vm.loading")
             ion-spinner.spinner-light(
+              icon-"ios-small"
               ng-show="vm.loading"
             )
         div.error(ng-show="vm['error-address0']")
@@ -84,7 +86,6 @@ ion-modal-view#address-lookup-modal-view
               models="opt.manyMarkers.models"
               options="opt.manyMarkers.options"
               modelbyref="true"
-              xxclick="'opt.manyMarkers.events.click'"
               events="opt.manyMarkers.events"
               )
         p.padding-horizontal 

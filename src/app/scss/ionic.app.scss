@@ -104,10 +104,48 @@ ion-input {
     input {
       padding-right: 0;
     }
+    > * > .icon {
+      height: 29px;
+      padding: 5px 4px;
+    }
+    .icon-left {
+      margin-left: -10px;
+    }
+    .icon.auto-input {
+      margin-right: -10px;
+    }
+    .spinner svg {
+      width: 20px;
+      padding: 3px 0;
+      vertical-align: baseline;
+    }
   }
 }
 
-
+/*
+ * auto-input directive
+ */
+.item-input {
+  .item-input-inset  {
+    .item-input-wrapper {
+      .icon {
+        height: 29px;
+        padding: 5px 4px;
+      }
+    }
+  }
+  & > input, & > textarea {
+    padding-right:16px !important;
+  }
+}
+// ion-modal-view scrollbar hack
+//  native-scroll scroll-bar z-index is too low
+.modal .overflow-scroll .scroll .item-input {
+ padding-right: 8px;
+}
+/*
+ * end auto-input
+ */
 
 .autocomplete-wrapper {
   $condensed-height: 28px;
@@ -298,28 +336,7 @@ ion-input {
  * END: placeholder.directive
  */
 
-/*
- * auto-input directive
- */
-.item-input {
-  i.auto-input {
-    line-height: inherit;
-    height: 34px;
-    padding: 8px 2px;
-    margin-right: -8px;
-  }
-  & > input, & > textarea {
-    padding-right:16px !important;
-  }
-}
-// ion-modal-view scrollbar hack
-//  native-scroll scroll-bar z-index is too low
-.modal .overflow-scroll .scroll .item-input {
- padding-right: 8px;
-}
-/*
- * end auto-input
- */
+
 
 /*
  * listSummaryDetail.directive

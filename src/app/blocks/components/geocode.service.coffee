@@ -533,7 +533,7 @@ VerifyLookupCtrl.$inject = ['$scope', 'parameters', '$q', '$timeout', '$window',
 
 
 
-
+# deprecate: use <auto-input>
 ClearFieldDirective = ($compile, $timeout)->
   directive = {
     restrict: 'A',
@@ -548,7 +548,7 @@ ClearFieldDirective = ($compile, $timeout)->
 
 
       btnTemplate = """
-      <i ng-show="enabled" ng-click="clear()" class="icon ion-close pull-right">&nbsp;</i>
+      <i ng-show="enabled" ng-click="clear()" class="icon ion-close-circled pull-right">&nbsp;</i>
       """
       template = $compile( btnTemplate )(scope)
       element.after(template)

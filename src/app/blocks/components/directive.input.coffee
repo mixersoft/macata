@@ -25,7 +25,7 @@ InputDirective = ($compile, $timeout)->
 
 
         btnTemplate = """
-        <i ng-show="enabled" ng-click="clear($event)" style="color:#666;" class="auto-input icon ion-close-circled pull-right"></i>
+        <i ng-show="enabled" ng-click="clear($event)" style="color:#666;" class="auto-input icon ion-close-circled"></i>
         """
         template = $compile( btnTemplate )(scope)
         if element[0].nodeName == 'TEXTAREA'
@@ -54,8 +54,9 @@ InputDirective = ($compile, $timeout)->
         element.bind 'blur', (e)->
           return if ngModel.$isEmpty element.val()
           if scope.onBlur
+            console.log ['autoInput blur', element.val()]
             $timeout ()->
-              scope.onBlur()
+              scope.onBlur({$event: e, value: element.val()})
               return
           return
 
