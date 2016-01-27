@@ -78,7 +78,7 @@ TileHelpers.$inject = ['appModalSvc', '$q']
 ###
 # @description TileEditorCtrl used by TileHelpers.modal_showTileEditor modal
 ###
-TileEditorCtrl = (scope, $q, geocodeSvc, $timeout, $cordovaGeolocation)->
+TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
   this.id = 'TileEditorCtrl'
   mm = this
 
@@ -119,7 +119,7 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout, $cordovaGeolocation)->
         return $q.when mm.data
       location ?= mm.data.address
       return if !location
-      return geocodeSvc.getLatLon( location )
+      return locationHelpers.getLatLon( location )
       .then (result)->
         console.log ['locationClick()', result]
         mm.data.latlon = result?.location
@@ -148,61 +148,94 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout, $cordovaGeolocation)->
       return
 
     # TODO: refactor, create directive:<item-input-location>
-    locationClick: (ev, option )->
+    locationClick: (ev, value )->
       mm.geo.errorMsg.location = null
-      switch option
-        when 'CURRENT'
-          console.log "Get Current Location"
-          mm.geo.setting.show.spinner.location = true
-          $q.when()
-          .then ()->
-            if ionic.Platform.isWebView()
-              options = {timeout: 10000, enableHighAccuracy: false}
-              return $cordovaGeolocation.getCurrentPosition( options )
-            else
-              dfd = $q.defer()
-              navigator.geolocation.getCurrentPosition(
-                (result)-> return dfd.resolve(result)
-              , (err)-> return dfd.reject(err)
-              )
-              return dfd.promise
-          .then (result)->
-            gMapPoint = _.chain result.coords
-              .pick ['latitude','longitude']
-              # .each (v,k,o)-> return o[k]=geocodeSvc.mathRound6(v)
-              .value()
-            mm.data.latlon = [gMapPoint.latitude, gMapPoint.longitude]
-            mm.data.isCurrentLocation = true
-            mm.data.address = [
-              'lat:', gMapPoint.latitude
-              'lon:', gMapPoint.longitude
-            ].join(' ')
-            console.log ['with location',mm.data]
-          .catch (err)->
-            mm.geo.handleGeolocationErr(err)
-            return
-          .finally ()->
-            mm.geo.setting.show.spinner.location = false
-          .then ()->
-            # now verify current location
-            mm.geo.geocodeAddress('force')
-        else # switch
-          if mm.data.latlon && mm.data.address
-            # what to do? update address? or replace latlon?
-            if mm.data.isCurrentLocation
-              return  # keep current latlon, & just update address field
-            else
-              # repeat: geocode current address
-              return mm.geo.geocodeAddress('force')
-          if mm.data.address && !mm.data.latlon
-            return mm.geo.geocodeAddress()
+      if value == 'CURRENT'
+        mm.geo.setting.show.spinner.location = true
+        promise = locationHelpers.getCurrentPosition()
+        .finally ()->
+          mm.geo.setting.show.spinner.location = false
+      else
+        if !value
+          mm.geo.setting.show.location = true
+          target = ev.currentTarget
+          selector = '#new-tile-modal-view .location'
+          $timeout ()->
+            document.querySelector(selector).scrollIntoView()
+          return $q.reject('ERROR: Expecting address')
+        # note: geocodeSvc.geocode() will parse "lat,lon" values
+        if mm.data.latlon && mm.data.isCurrentLocation
+          return $q.when(value) # keep current latlon, just updating address field
 
-          if !mm.data.address
-            mm.geo.setting.show.location = true
-            target = ev.currentTarget
-            selector = '#new-tile-modal-view ion-input.location'
-            $timeout ()->
-              document.querySelector(selector).scrollIntoView()
+        if mm.data.latlon
+          # repeat: geocode current address
+          promise = locationHelpers.geocodeAddress({address:value}, 'force')
+        else
+          promise = locationHelpers.geocodeAddress({address:value})
+
+      return promise
+      .then (result)->
+        mm.data.latlon = result.latlon
+        mm.data.address = result.address
+      , (err)->
+        mm.geo.errorMsg.location = err.humanize
+
+
+      # return
+      # mm.geo.errorMsg.location = null
+      # switch option
+      #   when 'CURRENT'
+      #     console.log "Get Current Location"
+      #     mm.geo.setting.show.spinner.location = true
+      #     $q.when()
+      #     .then ()->
+      #       if ionic.Platform.isWebView()
+      #         options = {timeout: 10000, enableHighAccuracy: false}
+      #         return $cordovaGeolocation.getCurrentPosition( options )
+      #       else
+      #         dfd = $q.defer()
+      #         navigator.geolocation.getCurrentPosition(
+      #           (result)-> return dfd.resolve(result)
+      #         , (err)-> return dfd.reject(err)
+      #         )
+      #         return dfd.promise
+      #     .then (result)->
+      #       gMapPoint = _.chain result.coords
+      #         .pick ['latitude','longitude']
+      #         # .each (v,k,o)-> return o[k]=locationHelpers.mathRound6(v)
+      #         .value()
+      #       mm.data.latlon = [gMapPoint.latitude, gMapPoint.longitude]
+      #       mm.data.isCurrentLocation = true
+      #       mm.data.address = [
+      #         'lat:', gMapPoint.latitude
+      #         'lon:', gMapPoint.longitude
+      #       ].join(' ')
+      #       console.log ['with location',mm.data]
+      #     .catch (err)->
+      #       mm.geo.handleGeolocationErr(err)
+      #       return
+      #     .finally ()->
+      #       mm.geo.setting.show.spinner.location = false
+      #     .then ()->
+      #       # now verify current location
+      #       mm.geo.geocodeAddress('force')
+      #   else # switch
+      #     if mm.data.latlon && mm.data.address
+      #       # what to do? update address? or replace latlon?
+      #       if mm.data.isCurrentLocation
+      #         return  # keep current latlon, & just update address field
+      #       else
+      #         # repeat: geocode current address
+      #         return mm.geo.geocodeAddress('force')
+      #     if mm.data.address && !mm.data.latlon
+      #       return mm.geo.geocodeAddress()
+      #
+      #     if !mm.data.address
+      #       mm.geo.setting.show.location = true
+      #       target = ev.currentTarget
+      #       selector = '#new-tile-modal-view ion-input.location'
+      #       $timeout ()->
+      #         document.querySelector(selector).scrollIntoView()
 
       return
 
@@ -216,7 +249,7 @@ TileEditorCtrl = (scope, $q, geocodeSvc, $timeout, $cordovaGeolocation)->
     return
 
   return
-TileEditorCtrl.$inject = ['$scope', '$q', 'geocodeSvc', '$timeout', '$cordovaGeolocation']
+TileEditorCtrl.$inject = ['$scope', '$q', 'locationHelpers', '$timeout', '$cordovaGeolocation']
 
 
 
