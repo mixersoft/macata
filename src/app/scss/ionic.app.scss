@@ -98,35 +98,50 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   }
 }
 ion-input {
+  &.flex-item-wrap {
+    // same as .item-stacked-label
+    display:block;
+    background-color: transparent;
+    box-shadow: none;
+  }
   .item-input-inset.flex-icon-bar {
     width:100%;
     padding: 0;
-    > *:first-child {
-      margin-left: -$content-padding;
-    }
     > * {
-      height: 49px;
-      padding: $content-padding;
-      margin-top: -$content-padding;
-      margin-bottom: -$content-padding;
+      height: 34px;
+      position:relative;
+      @extend .padding-horizontal;
+      &:first-child {
+        margin-left: -$content-padding;
+      }
+      &:last-child {
+        @extend .text-center;
+      }
+      & > .icon {
+        height: 34px !important;
+        padding: 5px 0;
+        display: inline-block;
+        vertical-align: middle;
+      }
     }
-    input {
-      padding-right: 0;
+    .item-input-wrapper {
+      input {
+        height: 100%;
+        padding-right: 0;
+      }
+      .icon.auto-input {
+        margin-right: -10px;
+      }
     }
-    > * > .icon {
-      height: 29px;
-      padding: 5px 0;
-    }
-    .icon-left {
-      margin-left: -10px;
-    }
-    .icon.auto-input {
-      margin-right: -10px;
-    }
-    .spinner svg {
-      width: 20px;
-      padding: 3px 0;
-      vertical-align: baseline;
+    .spinner-wrap {
+      .ion-ios-arrow-forward {
+        font-size: 24px;
+      }
+      .spinner svg {
+        width: 20px;
+        padding: 3px 0;
+        vertical-align: middle;
+      }
     }
   }
 }
