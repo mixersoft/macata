@@ -9,6 +9,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
   )
   
     ion-list.menu-items {{ event=vm.event; host=vm.me; show=vm.settings.show;''}}
+                
       ion-item.item-divider
         p menu
       ion-item.item-complex
@@ -115,6 +116,9 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
     ion-list.feed
       ion-item.item-divider
         p feed
+      ng-include(src="'events/post.html'")            
+          
+
         
     ion-list.control-panel
       ion-item.item-divider

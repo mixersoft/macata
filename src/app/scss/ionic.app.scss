@@ -171,6 +171,88 @@ ion-input {
  * end auto-input
  */
 
+
+/*
+ * item-feed 
+ */
+
+ion-item.item-post {
+  padding: 0;
+  padding-bottom: 16px;
+  .item.item-avatar {
+    border-color: transparent;
+  }
+  .item-body {
+    padding-top: 0;
+    > *:first-child {
+      padding-top: 0;
+      margin-top: 0;
+    }
+  }
+  .button-bar .button {
+    font-size: 12px;
+  }
+  .time-ago {
+    font-size: smaller;
+    color: #888;
+  }
+  .post-body {
+    .line-clamp {
+      overflow: hidden;
+    }
+  }
+  .post-actions {
+    font-size: 12px;
+    padding-bottom: 0;
+    > * {
+      border-bottom: 1px solid #ddd;
+    }
+    .likes {
+      height: 24px;
+      color: #888;
+      a {
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+  .post-comments {
+    padding-top: 0;
+    background-color: #f5f5f5;
+    .comment-form, .post-comment {
+      position: relative;
+      margin-top: 8px;
+      .avatar-wrap {
+        position: absolute;
+        top:0;
+        padding: 2px 0;
+        .item-image {
+          height: 32px;
+          width:32px;
+        }
+      }
+      .comment {
+        margin-left: 40px;
+        padding-left: 4px;
+        width: calc(100% - 40px);
+      }
+    }
+    .post-comment {
+      min-height: 32px;
+      font-size: smaller;
+    }
+  }
+  .host-actions {
+    margin-top: 8px;
+  }
+}
+
+
+ /*
+  * end .item-feed
+  */
 .autocomplete-wrapper {
   $condensed-height: 28px;
   width: 100%;
@@ -571,9 +653,9 @@ $hero-wrap-bg-height: 170px;
       // max-height: 30px;
       min-height: $condensed-height;
       line-height: $condensed-height;
-      .icon:before {
+      &.button-icon:before, .icon:before {
         font-size: 16px;
-        line-height: 16px;
+        line-height: $condensed-height;
         vertical-align: initial;
       }
     }

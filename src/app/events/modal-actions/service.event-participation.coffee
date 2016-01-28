@@ -1,6 +1,6 @@
 'use strict'
 
-# helper functions for mansolid redng user actions on events
+# helper functions for user actions on events
 EventActionHelpers = ($rootScope, $q, $timeout
   $location, $state, $stateParams, $ionicPopup
   $log, toastr
@@ -43,7 +43,23 @@ EventActionHelpers = ($rootScope, $q, $timeout
         .then (result)->
           return if !result
           participation = result
-          return self.createBooking(participation, event)
+
+          return self.createBooking(event, participation)
+        .then (participation)->
+          return participation
+
+      post:(event, post, vm)->
+        post.id = Date.now() + ""
+        post.createdAt = new Date()
+        post.owner = vm.me
+        return $q.when(post)
+        .then (post)->
+          switch post.type
+            when "Participation"
+              event.feed ?= []
+              event.feed.unshift(post)
+          return event.feed
+
 
       getShareLinks: (event)->
         vm = this
@@ -427,10 +443,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
-      createBooking: (particip, event)->
+      createBooking: (event, particip)->
         if 'FAKE Add Menu-item'
           event.menuItems.push(particip.attachment) if particip.attachment?.id
-        return $log.warn "TODO: create participation from booking"
+        $log.warn "TODO: create participation from booking"
+        return particip
         # return ParticipationsResource.post(particip)
         # .then (result)->
         #   # update lookups
