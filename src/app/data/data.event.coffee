@@ -139,7 +139,7 @@ EventsResource = (Resty, amMoment) ->
       location: [42.671027, 23.316299] # search/filter
 
       seatsTotal: 20
-      seatsOpen: null
+      seatsOpen: 4
 
       # host:
       ownerId: "10" # belongsTo Users

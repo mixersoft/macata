@@ -20,8 +20,18 @@ EventDetailCtrl = (
         "response":"Yes"
         "seats":2
         "message":"Exciting! I'll take 2"
-        "attachment":{"id":2,"url":"http://newyork.seriouseats.com/2013/09/how-betony-makes-their-short-ribs.html","title":"How Betony Makes Their Short Ribs","description":"It's rare that a restaurant opening in Midtown causes much of a stir, but with Chef Bryce Shuman—the former executive Sous Chef of Eleven Madison Park—at the helm, it's no surprise that Betony is making waves. This short rib dish is one of those wave-makers.","image":"http://newyork.seriouseats.com/assets_c/2013/08/20130826-264197-behind-the-scenes-betony-short-ribs-29-thumb-625xauto-348442.jpg","extras":{}}
+        "attachment":{"id":"2","url":"http://newyork.seriouseats.com/2013/09/how-betony-makes-their-short-ribs.html","title":"How Betony Makes Their Short Ribs","description":"It's rare that a restaurant opening in Midtown causes much of a stir, but with Chef Bryce Shuman—the former executive Sous Chef of Eleven Madison Park—at the helm, it's no surprise that Betony is making waves. This short rib dish is one of those wave-makers.","image":"http://newyork.seriouseats.com/assets_c/2013/08/20130826-264197-behind-the-scenes-betony-short-ribs-29-thumb-625xauto-348442.jpg","extras":{}}
         "location":{"latlon":[42.670053,23.314167],"address":"Blvd \"James Bourchier\" 103, 1407 Sofia, Bulgaria","isCurrentLocation":true}
+      }
+      {
+        "type":"Comment",
+        "id":"1453991861983",
+        "createdAt":"2016-01-28T14:37:41.983Z",
+        "owner":{"firstname":"Marky","lastname":"Mark","username":"marky","displayName":"marky","face":"http://lorempixel.com/200/200/people/1","id":"1"}
+        "eventId":"0",
+        "message":"This is what I've been waiting for. I'm on it.",
+        "attachment":{"id":4,"url":"http://www.yummly.com/recipe/My-classic-caesar-318835","title":"My Classic Caesar Recipe","description":"My Classic Caesar Recipe Salads with garlic, anchovy filets, sea salt flakes, egg yolks, lemon, extra-virgin olive oil, country bread, garlic, extra-virgin olive oil, sea salt, romaine lettuce, caesar salad dressing, parmagiano reggiano, ground black pepper, anchovies","image":"http://lh3.ggpht.com/J8bTX6MuGC-8y87DHlxxagqShmJLlPjXff28hN8gksOpLp3fZJ5XaLCGrkZLYMer3YlNAEoOfl6FyrSsl9uGcw=s730-e365","site_name":"Yummly","extras":{"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","yummlyfood:course":"Salads","yummlyfood:ingredients":"anchovies","yummlyfood:time":"40 min","yummlyfood:source":"Food52"},"$$hashKey":"object:258"},
+        "location":null
       }
     ]
     # coffeelint: enable=max_line_length
@@ -51,9 +61,18 @@ EventDetailCtrl = (
       menuItems: []
     }
 
+    vm.feed = {
+      showMessageComposer: ($event)->
+        return
+    }
+
     # TODO: make directive
     vm.post = {
-      comment: ($event)->
+      acl : {
+        isModerator: (event, post)->
+          return true if event.owner = vm.me
+      }
+      showCommentForm: ($event)->
         target = $event.currentTarget;
         parent = ionic.DomUtil.getParentWithClass(target,'item-post')
         $wrap = angular.element parent.querySelector('.post-comments')

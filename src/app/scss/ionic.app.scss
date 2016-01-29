@@ -175,10 +175,14 @@ ion-input {
 /*
  * item-feed 
  */
-
+.feed .list {
+  background-color: #EEE;
+}
 ion-item.item-post {
   padding: 0;
   padding-bottom: 16px;
+  margin: 2px 2px 8px 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   .item.item-avatar {
     border-color: transparent;
   }
@@ -195,6 +199,9 @@ ion-item.item-post {
   .time-ago {
     font-size: smaller;
     color: #888;
+  }
+  .host-actions .card {
+    margin: auto 0;
   }
   .post-body {
     .line-clamp {
