@@ -71,6 +71,12 @@ TileHelpers = (appModalSvc, $q)->
         return $q.reject(result) if result?['isError']
 
         return result
+    isTileComplete: (data)->
+      isComplete = _.reduce ['url', 'title', 'description', 'image'], (result, key)->
+        return result = result && data[key]
+      , true
+      return isComplete
+
   }
   return self
 TileHelpers.$inject = ['appModalSvc', '$q']
@@ -180,63 +186,6 @@ TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
       , (err)->
         mm.geo.errorMsg.location = err.humanize
 
-
-      # return
-      # mm.geo.errorMsg.location = null
-      # switch option
-      #   when 'CURRENT'
-      #     console.log "Get Current Location"
-      #     mm.geo.setting.show.spinner.location = true
-      #     $q.when()
-      #     .then ()->
-      #       if ionic.Platform.isWebView()
-      #         options = {timeout: 10000, enableHighAccuracy: false}
-      #         return $cordovaGeolocation.getCurrentPosition( options )
-      #       else
-      #         dfd = $q.defer()
-      #         navigator.geolocation.getCurrentPosition(
-      #           (result)-> return dfd.resolve(result)
-      #         , (err)-> return dfd.reject(err)
-      #         )
-      #         return dfd.promise
-      #     .then (result)->
-      #       gMapPoint = _.chain result.coords
-      #         .pick ['latitude','longitude']
-      #         # .each (v,k,o)-> return o[k]=locationHelpers.mathRound6(v)
-      #         .value()
-      #       mm.data.latlon = [gMapPoint.latitude, gMapPoint.longitude]
-      #       mm.data.isCurrentLocation = true
-      #       mm.data.address = [
-      #         'lat:', gMapPoint.latitude
-      #         'lon:', gMapPoint.longitude
-      #       ].join(' ')
-      #       console.log ['with location',mm.data]
-      #     .catch (err)->
-      #       mm.geo.handleGeolocationErr(err)
-      #       return
-      #     .finally ()->
-      #       mm.geo.setting.show.spinner.location = false
-      #     .then ()->
-      #       # now verify current location
-      #       mm.geo.geocodeAddress('force')
-      #   else # switch
-      #     if mm.data.latlon && mm.data.address
-      #       # what to do? update address? or replace latlon?
-      #       if mm.data.isCurrentLocation
-      #         return  # keep current latlon, & just update address field
-      #       else
-      #         # repeat: geocode current address
-      #         return mm.geo.geocodeAddress('force')
-      #     if mm.data.address && !mm.data.latlon
-      #       return mm.geo.geocodeAddress()
-      #
-      #     if !mm.data.address
-      #       mm.geo.setting.show.location = true
-      #       target = ev.currentTarget
-      #       selector = '#new-tile-modal-view ion-input.location'
-      #       $timeout ()->
-      #         document.querySelector(selector).scrollIntoView()
-
       return
 
     done: (ev)->
@@ -253,7 +202,7 @@ TileEditorCtrl.$inject = ['$scope', '$q', 'locationHelpers', '$timeout', '$cordo
 
 
 
-NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
+NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
   directive = {
     restrict: 'E'
     # controllerAs: 'dm'
@@ -292,8 +241,12 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
             console.warn ['openGraphSvc.get()', err]
             return
 
-        _showTileEditorAsModal = (data)->
-          return tileHelpers.modal_showTileEditor(data)
+
+        _showTileEditorAsModal = (data, force)->
+          return $q.when()
+          .then ()->
+            return data if tileHelpers.isTileComplete(data) && !force
+            return tileHelpers.modal_showTileEditor(data)
           .then (result)->
             scope.onComplete?({result: result})
           , (err)->
@@ -344,7 +297,7 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
                 return _showTileEditorAsModal(data)
           else
             dm.data.title = dm.field
-            return _showTileEditorAsModal(dm.data)
+            return _showTileEditorAsModal(dm.data, 'force')
           if attrs.onBlur
             $timeout ()->
               scope.onBlur()
@@ -387,7 +340,7 @@ NewTileDirective = ($compile, $timeout, openGraphSvc, tileHelpers)->
   return directive
 
 
-NewTileDirective.$inject = ['$compile', '$timeout', 'openGraphSvc', 'tileHelpers']
+NewTileDirective.$inject = ['$q', '$compile', '$timeout', 'openGraphSvc', 'tileHelpers']
 
 
 angular.module('blocks.components')

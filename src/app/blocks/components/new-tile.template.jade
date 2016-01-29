@@ -55,7 +55,7 @@ ion-modal-view#new-tile-modal-view
             placeholder="Enter Url for Photo" 
             )
           
-        ion-input.item-input.item.item-stacked-labelxx.flex-item-wrap(ng-show="mm.geo.setting.show.location")
+        ion-input.item-input.item.flex-item-wrap(ng-show="mm.geo.setting.show.location")
           div.item-input-inset.flex-icon-bar.location
             div.current-location.padding-right.spinner-wrap(
               ng-show="mm.geo.setting.hasGeolocation"
@@ -79,8 +79,7 @@ ion-modal-view#new-tile-modal-view
                 placeholder="Enter an Address to Set Location" 
                 ng-model="mm.data.address" 
               )
-            div.spinner-wrap(
-              )
+            div.spinner-wrap
               i.icon.ion-ios-arrow-forward.positive(
                 ng-show="!show.spinner.newTile"
               )
