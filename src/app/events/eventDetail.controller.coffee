@@ -62,7 +62,16 @@ EventDetailCtrl = (
     }
 
     vm.feed = {
+      show:
+        messageComposer: false
       showMessageComposer: ($event)->
+        vm.feed.post = {
+          message: null
+          attachment: null
+          address: null
+          location: null
+        }
+        this.show.messageComposer = true
         return
     }
 
@@ -73,7 +82,7 @@ EventDetailCtrl = (
           return true if event.owner = vm.me
       }
       showCommentForm: ($event)->
-        target = $event.currentTarget;
+        target = $event.currentTarget
         parent = ionic.DomUtil.getParentWithClass(target,'item-post')
         $wrap = angular.element parent.querySelector('.post-comments')
         $wrap.removeClass('hide')
@@ -138,6 +147,16 @@ EventDetailCtrl = (
         .then (result)->
           result.type = "Participation"
           return EventActionHelpers.post(event, result, vm)
+
+      'postToFeed': (post)->
+        post.type = "Comment"
+        return EventActionHelpers.post(vm.event, post, vm)
+        .then ()->
+          console.log ['postToFeed', post]
+          # reset message-console and hide
+          vm.feed.show.messageComposer = false
+          vm.feed.post={}
+
 
     }
 

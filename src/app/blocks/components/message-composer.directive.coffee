@@ -10,7 +10,7 @@
 #       <message-composer></message-composer>
 #
 
-MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
+MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDelegate)->
   directive = {
     restrict: 'EA'
     templateUrl: 'blocks/components/message-composer.template.html'
@@ -47,14 +47,31 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
           'toggleShow': (show, key, selector)->
             show[key] = !show[key]
             if show[key] && selector
-              # scroll into View
+              # scroll into by pixels
+              el = $mc.$container[0].querySelector(selector)
+              scroll = ionic.DomUtil.getParentOrSelfWithClass(el, 'ionic-scroll')
+              scrollHandle = scroll?.getAttribute('delegate-handle')
+              _ionScroll = $ionicScrollDelegate.$getByHandle(scrollHandle)
               $timeout ()->
-                $mc.$container[0].querySelector(selector).scrollIntoView()
+                _ionScroll.scrollBy(0, el.clientHeight, true)
+                el.getElementsByTagName('INPUT')?[0].focus()
+                # $mc.$container[0].querySelector(selector).scrollIntoView()
             return show[key]
           'locationClick': ($event, value )->
             $mc.LOCATION.getLocation(value)
             .then (result)->
               $scope.location = result || {}
+
+          'post': ($event)->
+            # check if there is a link that needs to be fetched
+            return if $mc.settings.show.newTile
+            result = _.pick $scope, ['message', 'attachment', 'address','location']
+            return $scope.postButton?({value: result})
+            .then (result)->
+              # reset form here or in parent controller?
+              return
+
+
 
         }
 
@@ -141,7 +158,9 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
         return $mc
     ]
     scope: {
+      headerText: '@'
       placeholderText: '@'
+      postButton: '&'
       message: '='
       attachment: '='
       address: '='
@@ -161,7 +180,9 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers)->
   }
   return directive
 
-MessageComposerDirective.$inject = ['$compile', '$q', '$timeout', 'tileHelpers']
+MessageComposerDirective.$inject = ['$compile', '$q', '$timeout', 'tileHelpers'
+  '$ionicScrollDelegate'
+]
 
 
 angular.module('blocks.components')

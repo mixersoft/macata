@@ -54,9 +54,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
         post.owner = vm.me
         return $q.when(post)
         .then (post)->
+          event.feed ?= []
           switch post.type
             when "Participation"
-              event.feed ?= []
+              event.feed.unshift(post)
+            when "Comment"
               event.feed.unshift(post)
           return event.feed
 

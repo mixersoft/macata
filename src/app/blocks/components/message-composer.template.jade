@@ -1,14 +1,14 @@
 //- blocks/components/message-composer.template.html
 ion-input.item-input.item-stacked-label.message-composer(
   ) {{show=$mc.settings.show;''}}
-  ion-label Message
+  ion-label(ng-bind="headerText") 
   textarea(
     ng-model="$mc.scope.message" 
     placeholder="{{placeholderText}}" 
     maxlength="165"
     )
     
-  div.attachment-container.padding-right(ng-show="$mc.scope.attachment")
+  div.attachment-container(ng-show="$mc.scope.attachment")
     //- TODO: make a directive
     div.tile.recipe.item.item-complex.content.ink(
     )
@@ -29,7 +29,7 @@ ion-input.item-input.item-stacked-label.message-composer(
       div.body.padding
         div.title.line-clamp-1 {{$mc.scope.attachment['title']}}
         p.description.line-clamp.line-clamp-2 {{$mc.scope.attachment['description']}}
-        p. {{$mc.scope.attachment['site_name']}}
+        p. {{fattachment['site_name']}}
         
   div.button-bar.condensed.positive(
     ng-click="$event.preventDefault();$event.stopImmediatePropagation();"
@@ -50,8 +50,13 @@ ion-input.item-input.item-stacked-label.message-composer(
       )
       i.icon.positive.ion-location.ink(
       )
+    button.button(
+      ng-show="$mc.scope.postButton"
+      ng-click="$mc.on.post($event)"
+      )
+      span.positive Post
       
-  div.padding-vertical.new-tile(ng-show="show.newTile")
+  div.flex-icon-bar-wrap.new-tile(ng-show="show.newTile")
     div.item-input-inset.flex-icon-bar
       div.item-input-wrapper(
         style="margin-left:0;"
@@ -64,7 +69,7 @@ ion-input.item-input.item-stacked-label.message-composer(
           is-fetching="show.spinner.newTile"
           on-complete="$mc.TILE.attachTile(result)"
         )
-      div.spinner-wrap
+      div.spinner-wrap.push-right
         i.icon.ion-ios-arrow-forward.positive(
           ng-show="!show.spinner.newTile"
         )
@@ -73,7 +78,7 @@ ion-input.item-input.item-stacked-label.message-composer(
           ng-show="show.spinner.newTile"
         )
         
-  div.padding-vertical.location(ng-show="show.location")
+  div.flex-icon-bar-wrap.location(ng-show="show.location")
     div.item-input-inset.flex-icon-bar
       div.current-location.padding-right(
         ng-show="$mc.geo.setting.hasGeolocation"
@@ -97,7 +102,7 @@ ion-input.item-input.item-stacked-label.message-composer(
           placeholder="Enter an Address to Set Location" 
           ng-model="$mc.scope.address" 
         )
-      div.spinner-wrap
+      div.spinner-wrap.push-right
         i.icon.ion-ios-arrow-forward.positive(
           ng-show="!show.spinner.newTile"
         )
