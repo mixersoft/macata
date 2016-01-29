@@ -446,29 +446,41 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
-      createBooking: (event, particip)->
-        if 'FAKE Add Menu-item'
-          event.menuItems.push(particip.attachment) if particip.attachment?.id
-        $log.warn "TODO: create participation from booking"
-        return particip
-        # return ParticipationsResource.post(particip)
-        # .then (result)->
-        #   # update lookups
-        #   if !~vm.event['participationIds'].indexOf(result.id)
-        #     vm.event['participationIds'].push result.id
-        #     # vm.event['participantIds'].push result.participantId
-        #   vm.lookup['Participations'][result.id] = result
-        #   vm.lookup['Users'][result.participantId] = person
-        #   vm.lookup['MyParticipation'] = vm.getParticipationByUser(person)
-        #   $rootScope.$broadcast 'lookup-data:changed', {className:'Participations'}
-        #   return result
-        # .then (participation)->
-        #   $rootScope.$broadcast 'event:participant-changed', options
-        #   message = "Congratulations, you have just booked " + participation.seats + " seats! "
-        #   message += "Now search for your contribution."
-        #   toastr.info message
-        #   $timeout ()-> vm.on.scrollTo('cp-participant')
-        #   return participation
+      createBooking: (event, particip, vm)->
+        # [
+        # "type", "status", "review"
+        # "id", "createdAt",
+        # "ownerId", "$$owner"
+        # "eventId", "participantId",
+        #  "response", "seats", "message", "attachment", "location",
+        # "likes",
+        #
+        # ]
+        _participation2menuItem = (participation)->
+          participant = _.find(vm.lookup.users, {id: participation.ownerId})
+          menuItem = _.extend participation.attachment, {
+            id: Date.now()
+            $$owner: participant
+            ownerId: participation.ownerId
+          }
+          return menuItem
+
+        event.participantIds ?= []
+        event.participantIds.push particip.ownerId
+        event.participantIds = _.unique(event.participantIds)
+
+        participant = _.find(vm.lookup.users, {id: particip.ownerId})
+        event.$$participants.push participant
+        event.$$participants = _.unique(event.$$participants)
+
+
+        # TODO: need to count seats in each participation
+        event.seatsOpen -= particip.seats
+        console.warn ["WARNING: createBooking() should count participation.seats to get event.seatsOpen", particip]
+        event.$$menuItems.push _participation2menuItem( particip)
+        event.$$menuItems = _.unique event.$$menuItems
+        return event
+
 
 
 

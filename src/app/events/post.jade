@@ -2,8 +2,7 @@
 div(ng-repeat="$post in event.feed track by $post.id" )
   ion-item.item-complex.item-post {{vm=$parent.$parent.$parent.vm;''}}
     div.item-body.host-actions(
-      ng-show='$post.type=="Participation"'
-      ng-if="vm.post.acl.isModerator(vm.event)"
+      ng-show='vm.moderator.requiresAction($post)'
       )
       div.card
         ion-item.item-divider.item-balanced
@@ -12,12 +11,16 @@ div(ng-repeat="$post in event.feed track by $post.id" )
           b.padding-right {{$post.$$owner.displayName}} 
           span.padding-right has requested {{$post.seats}} seats at the table.
         div.item.item-complex.item-balanced.button-bar.condensed
-          button.button.button-balanced
+          button.button.button-balanced(
+            ng-click="vm.moderator.reject($event, vm.event, $post)"
+            )
             i.icon.ion-close-circled &nbsp; Decline
           button.button.button-balanced
             i.icon.ion-chatbox(
             ) &nbsp; Message
-          button.button.button-balanced
+          button.button.button-balanced(
+            ng-click="vm.moderator.accept($event, vm.event, $post)"
+            )
             i.icon.ion-checkmark-circled &nbsp; Accept
 
     div.item.item-avatar {{owner=$post.$$owner;''}}

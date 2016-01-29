@@ -60,6 +60,53 @@ EventDetailCtrl = (
 
     vm.event = {
       menuItems: []
+      feed: []
+    }
+
+    vm.moderator = {
+      requiresAction: (participation)->
+        check = {
+          type: participation.type == 'Participation'
+          status: ~['new', 'pending'].indexOf(participation.status)
+          response: participation.response == 'Yes'
+        }
+        return _.reject(check).length == 0
+      accept: ($event, event, post)->
+        return if post.type != 'Participation'
+        post.status='accepted'
+        post.review ?= []
+        post.review.push {
+          createdAt: new Date()
+          reviewerId: vm.me.id
+          action: 'accepted'
+          comments: ''
+        }
+        $scope.$emit 'event:feed-changed', [event, post]
+        return $q.when()
+        .then ()->
+          participation = post
+          return EventActionHelpers.createBooking(event, participation, vm)
+        .then ()->
+          return filterFeed(event)
+        .then (filteredFeed)->
+          event.feed = filteredFeed
+
+      reject: ($event, event, post)->
+        return if post.type != 'Participation'
+        post.status='rejected'
+        post.review ?= []
+        post.review.push {
+          createdAt: new Date()
+          reviewerId: vm.me.id
+          action: 'rejected'
+          comments: ''
+        }
+        $scope.$emit 'event:feed-changed', [event, post]
+        return $q.when()
+        .then ()->
+          return filterFeed(event)
+        .then (filteredFeed)->
+          event.feed = filteredFeed
     }
 
     vm.feed = {
@@ -211,8 +258,9 @@ EventDetailCtrl = (
         return EventActionHelpers.bookingWizard(person, event, vm)
         .then (result)->
           return if result == 'CANCELED'
-          result.type = "Participation"
-          return EventActionHelpers.post(event, result, vm)
+          participation = result
+          post = participation
+          return EventActionHelpers.post(event, post, vm)
 
       'postToFeed': (post)->
         post.type = "Comment"
