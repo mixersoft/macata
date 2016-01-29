@@ -145,6 +145,7 @@ EventDetailCtrl = (
       'beginBooking': (person, event)->
         return EventActionHelpers.bookingWizard(person, event, vm)
         .then (result)->
+          return if result == 'CANCELED'
           result.type = "Participation"
           return EventActionHelpers.post(event, result, vm)
 

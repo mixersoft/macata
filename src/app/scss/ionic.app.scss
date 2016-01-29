@@ -44,7 +44,7 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
 .item-divider .button {
   display: inline;
   top: 2px;
-} 
+}
 
 
  // used by <new-tile>
@@ -122,7 +122,7 @@ ion-input {
       & > .icon {
         height: 34px !important;
         // same as: .item-input .item-input-inset .item-input-wrapper .icon
-        padding: 5px 4px;  
+        padding: 5px 4px;
         display: inline-block;
         vertical-align: middle;
       }
@@ -179,7 +179,7 @@ ion-input {
 
 
 /*
- * item-feed 
+ * item-feed
  */
 .feed {
   .list {
@@ -773,6 +773,9 @@ eventDetail View
     }
   }
   .participants {
+    .participant-list.line-clamp-1 {
+      display: inline-flex;
+    }
     .avatar-wrap .item-image.empty {
       border: 1px solid $dark;
     }
