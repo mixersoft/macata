@@ -9,6 +9,10 @@ HandyStuff = ($window, $document, amMoment) ->
         'background': "url({src}) center center".replace('{src}', url)
         'background-size': 'cover'
       }
+    getChildOfParent: (el, parentClass, childSelector)->
+      el = el[0] if el instanceof angular.element
+      parent = ionic.DomUtil.getParentWithClass(el, parentClass)
+      return child = parent.querySelector(childSelector)
   }
   return self
 

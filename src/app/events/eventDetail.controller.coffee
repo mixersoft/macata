@@ -5,7 +5,7 @@ EventDetailCtrl = (
   $ionicScrollDelegate, $state, $stateParams
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
-  EventsResource, EventActionHelpers
+  UsersResource, EventsResource, EventActionHelpers
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
@@ -14,7 +14,7 @@ EventDetailCtrl = (
         "type":"Participation"
         "id":"1453967670695"
         "createdAt":"2016-01-28T07:54:30.696Z"
-        "owner":{"firstname":"Masie","lastname":"May","username":"maymay","displayName":"maymay","face":"http://lorempixel.com/200/200/people/0","id":"0"}
+        "ownerId": 2
         "eventId":"0"
         "participantId":"0"
         "response":"Yes"
@@ -27,7 +27,7 @@ EventDetailCtrl = (
         "type":"Comment",
         "id":"1453991861983",
         "createdAt":"2016-01-28T14:37:41.983Z",
-        "owner":{"firstname":"Marky","lastname":"Mark","username":"marky","displayName":"marky","face":"http://lorempixel.com/200/200/people/1","id":"1"}
+        "ownerId": 3
         "eventId":"0",
         "message":"This is what I've been waiting for. I'm on it.",
         "attachment":{"id":4,"url":"http://www.yummly.com/recipe/My-classic-caesar-318835","title":"My Classic Caesar Recipe","description":"My Classic Caesar Recipe Salads with garlic, anchovy filets, sea salt flakes, egg yolks, lemon, extra-virgin olive oil, country bread, garlic, extra-virgin olive oil, sea salt, romaine lettuce, caesar salad dressing, parmagiano reggiano, ground black pepper, anchovies","image":"http://lh3.ggpht.com/J8bTX6MuGC-8y87DHlxxagqShmJLlPjXff28hN8gksOpLp3fZJ5XaLCGrkZLYMer3YlNAEoOfl6FyrSsl9uGcw=s730-e365","site_name":"Yummly","extras":{"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","yummlyfood:course":"Salads","yummlyfood:ingredients":"anchovies","yummlyfood:time":"40 min","yummlyfood:source":"Food52"},"$$hashKey":"object:258"},
@@ -83,8 +83,9 @@ EventDetailCtrl = (
       }
       showCommentForm: ($event)->
         target = $event.currentTarget
-        parent = ionic.DomUtil.getParentWithClass(target,'item-post')
-        $wrap = angular.element parent.querySelector('.post-comments')
+        # parent = ionic.DomUtil.getParentWithClass(target,'item-post')
+        # $wrap = angular.element parent.querySelector('.post-comments')
+        $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
         $wrap.removeClass('hide')
         $timeout().then ()->
           textbox = $wrap[0].querySelector('textarea.comment')
@@ -92,14 +93,21 @@ EventDetailCtrl = (
           textbox.scrollIntoViewIfNeeded()
       postComment: ($event, post)->
         target = $event.currentTarget
-        return if not target.value
-        postComment = {
-          owner: vm.me
-          createdAt: new Date()
-          comment: angular.copy target.value
-        }
-        target.value = ''
-        return $q.when([post, postComment])
+        # parent = ionic.DomUtil.getParentWithClass(target, 'comment-form')
+        # commentField = parent.querySelector('textarea.comment')
+        commentField = utils.getChildOfParent(target, 'comment-form', 'textarea.comment')
+        return $q.when() if not commentField.value
+
+        return $q.when()
+        .then ()->
+          postComment = {
+            $$owner: vm.me
+            ownerId: vm.me.id
+            createdAt: new Date()
+            comment: angular.copy commentField.value
+          }
+          commentField.value = ''
+          return [post, postComment]
         .then (result)->
           [post, postComment] = result
           post.comments ?= []
@@ -175,6 +183,16 @@ EventDetailCtrl = (
             return vm.me
       .then ()->
         getData()
+      .then ()->
+        done = _.reduce FEED, (promises, post)->
+          if post.ownerId
+            promises.push UsersResource.get(post.ownerId).then (result)->
+              post.$$owner = result
+              return
+          return promises
+        , []
+        return $q.all(done)
+
 
     activate = ()->
       if index = $stateParams.id
@@ -221,7 +239,7 @@ EventDetailCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
-  'EventsResource', 'EventActionHelpers'
+  'UsersResource', 'EventsResource', 'EventActionHelpers'
   'utils', 'devConfig', 'exportDebug'
 ]
 

@@ -9,7 +9,7 @@ div(ng-repeat="$post in event.feed track by $post.id" )
         ion-item.item-divider.item-balanced
           div Moderator Actions
         ion-item.item-text-wrap
-          b.padding-right {{$post.owner.displayName}} 
+          b.padding-right {{$post.$$owner.displayName}} 
           span.padding-right has requested {{$post.seats}} seats at the table.
         div.item.item-complex.item-balanced.button-bar.condensed
           button.button.button-balanced
@@ -20,7 +20,7 @@ div(ng-repeat="$post in event.feed track by $post.id" )
           button.button.button-balanced
             i.icon.ion-checkmark-circled &nbsp; Accept
 
-    div.item.item-avatar {{owner=$post.owner;''}}
+    div.item.item-avatar {{owner=$post.$$owner;''}}
       div.avatar-wrap
         img.item-image.ink(
           ng-src="{{owner.face}}"
@@ -75,7 +75,7 @@ div(ng-repeat="$post in event.feed track by $post.id" )
             )  {{$item['site_name']}}
 
     div.item-body.post-actions
-      div.likes {{ $post.likes=[$post.owner];''}}
+      div.likes {{ $post.likes=[$post.$$owner];''}}
         span(ng-repeat="person in $post.likes") #[a(ui-sref="app.profile({id: '{{person.id}}' })"){{person.displayName}} &nbsp;]
         span likes this.
 
@@ -89,7 +89,7 @@ div(ng-repeat="$post in event.feed track by $post.id" )
     div.item-body.post-comments.hide
       div.post-comment(
         ng-repeat="$comment in $post.comments"
-        ) {{owner=$comment.owner;''}}
+        ) {{owner=$comment.$$owner;''}}
         div.avatar-wrap 
           img.item-image.ink(
             ng-src="{{owner.face}}"
@@ -103,24 +103,19 @@ div(ng-repeat="$post in event.feed track by $post.id" )
           span.time-ago.padding-right(am-time-ago="$comment.createdAt")
 
       div.comment-form
-        div.avatar-wrap
-          img.item-image.ink(
-            ng-src="{{owner.face}}"
-            ng-click="$event.stopImmediatePropagation()"
-            ui-sref="app.profile({id: '{{owner.id}}' })"
-            width="40"
-          )
-        textarea.comment(
-          xxauto-input
-          xxreturn-close="false"
-          xxng-model="commentField"
-          placeholder="Write a comment..."
-          ng-blur="vm.post.postComment($event, $post)"
-          )
-
-
-
-
-
-
-
+        div.wrap
+          div.avatar-wrap
+            img.item-image.ink(
+              ng-src="{{owner.face}}"
+              ng-click="$event.stopImmediatePropagation()"
+              ui-sref="app.profile({id: '{{owner.id}}' })"
+              width="40"
+            )
+          textarea.comment(
+            placeholder="Write a comment..."
+            )
+        div.actions.text-right
+          button.button.button-small.button-clear.button-outline.button-positive(
+            ng-click="vm.post.postComment($event, $post)"
+            )
+            span.padding-horizontal Post
