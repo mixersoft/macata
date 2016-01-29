@@ -4,7 +4,7 @@ ion-modal-view#request-seat-modal {{item=mm.event; me=mm.person; show=mm.setting
     h1.title Join the Table
   ion-content
     div.dark-bg.content.padding
-      div.list.condensed {{host=mm.host;''}}
+      div.list.condensed {{host=mm.event.$$host;''}}
         div.item.item-divider.item-positive
           div.light.larger {{item.title}}
         div.item.item-avatar

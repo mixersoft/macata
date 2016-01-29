@@ -51,7 +51,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
       post:(event, post, vm)->
         post.id = Date.now() + ""
         post.createdAt = new Date()
-        post.owner = vm.me
+        post.$$owner = vm.me
+        post.ownerId = vm.me.id
         return $q.when(post)
         .then (post)->
           event.feed ?= []
@@ -401,7 +402,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           , 'EventBookingCtrl as mm'
           , {
             copyToModalViewModal :
-              host: vm.lookup['host']
+              # host: vm.lookup['host']
               person: person
               event: event
               booking:

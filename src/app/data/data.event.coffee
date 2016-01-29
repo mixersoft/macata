@@ -89,7 +89,7 @@ EventsResource = (Resty, amMoment) ->
       seatsOpen: 12
 
       # host:
-      ownerId: "1" # belongsTo Users
+      ownerId: "0" # belongsTo Users
 
       # guests:  # habtm Users
       # menu:    # menu ideas
@@ -142,7 +142,7 @@ EventsResource = (Resty, amMoment) ->
       seatsOpen: 4
 
       # host:
-      ownerId: "10" # belongsTo Users
+      ownerId: "1" # belongsTo Users
       isPublic: true # searchable
 
       # guests:  # habtm Users
@@ -199,7 +199,7 @@ EventsResource = (Resty, amMoment) ->
       seatsOpen: null
 
       # host:
-      ownerId: "10" # belongsTo Users
+      ownerId: "3" # belongsTo Users
       isPublic: true # searchable
 
       # guests:  # habtm Users
@@ -255,7 +255,7 @@ EventsResource = (Resty, amMoment) ->
       seatsOpen: null
 
       # host:
-      ownerId: "10" # belongsTo Users
+      ownerId: "2" # belongsTo Users
       isPublic: true # searchable
 
       # guests:  # habtm Users

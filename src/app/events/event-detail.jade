@@ -6,15 +6,14 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
   ion-content.event-detail.has-header.has-footer(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
-  )
-  
-    ion-list.menu-items {{ event=vm.event; host=vm.me; show=vm.settings.show;''}}
+  ) {{ event=vm.event; host=vm.event.$$host; show=vm.settings.show;''}}
+    ion-list.menu-items
                 
       ion-item.item-divider
         p menu
       ion-item.item-complex
         list-item-container.content.condensed(
-          collection="event.menuItems"
+          collection="event.$$menuItems"
           summary-min-width="320"
           item-height="100"
           xx-scroll-handle="event-menu-item-list-scroll"
@@ -31,7 +30,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
                   ng-click=""
                 )
                   img.ink(
-                    placeholder-data="img" group="face" size="160" index="{{$index}}"
+                    ng-src="{{$item.$$owner.face}}"
                     ng-click="$event.stopImmediatePropagation()"
                     ui-sref="app.profile({'id':{{$index}}})"
                   )
@@ -96,7 +95,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
             
     ion-list.participants
       ion-item.item-divider.item-button-right
-        p participants
+        p at the table
         button.button.button-icon.button-clear(
           ng-class="{'ion-arrow-down-b':show.hideParticipants, 'ion-arrow-up-b':!show.hideParticipants}"
           ng-click="show.hideParticipants = !show.hideParticipants"
@@ -104,21 +103,21 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
       ion-item.participant-list.item-avatar-list.item-text-wrap(
         ng-class="{'line-clamp-1': show.hideParticipants}"
         )
-        div.avatar-wrap
+        //- div.avatar-wrap
+        //-   img.item-image.ink(
+        //-     ng-src="{{host.face}}"
+        //-     ng-click="$event.stopImmediatePropagation()"
+        //-     ui-sref="app.profile({id: '{{host.id}}' })"
+        //-     width="40"
+        //-   )
+        div.avatar-wrap(ng-repeat="person in event.$$participants")
           img.item-image.ink(
-            ng-src="{{host.face}}"
+            ng-src="{{person.face}}"
             ng-click="$event.stopImmediatePropagation()"
-            ui-sref="app.profile({id: '{{host.id}}' })"
+            ui-sref="app.profile({id: '{{person.id}}' })"
             width="40"
           )
-        div.avatar-wrap(ng-repeat="personId in [1,2]")
-          img.item-image.ink(
-            placeholder-data="img" group="face" size="160" index="{{personId}}"
-            ng-click="$event.stopImmediatePropagation()"
-            ui-sref="app.profile({id: '{{personId}}' })"
-            width="40"
-          )
-        div.avatar-wrap(ng-repeat="personId in [3,4,5,6,7]")
+        div.avatar-wrap(ng-repeat="person in [3,4,5,6,7]")
           button.item-image.icon.ion-person-add(
             ng-click="vm.on.beginBooking(vm.me, event)"
             )

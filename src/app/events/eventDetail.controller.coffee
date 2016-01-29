@@ -12,11 +12,12 @@ EventDetailCtrl = (
     FEED = [
       {
         "type":"Participation"
+        "status":"new"
         "id":"1453967670695"
         "createdAt":"2016-01-28T07:54:30.696Z"
-        "ownerId": 2
-        "eventId":"0"
-        "participantId":"0"
+        "eventId":"1"
+        "$$participantId":"3"
+        "ownerId": "3"
         "response":"Yes"
         "seats":2
         "message":"Exciting! I'll take 2"
@@ -27,8 +28,8 @@ EventDetailCtrl = (
         "type":"Comment",
         "id":"1453991861983",
         "createdAt":"2016-01-28T14:37:41.983Z",
-        "ownerId": 3
-        "eventId":"0",
+        "ownerId": "0"
+        "eventId":"1",
         "message":"This is what I've been waiting for. I'm on it.",
         "attachment":{"id":4,"url":"http://www.yummly.com/recipe/My-classic-caesar-318835","title":"My Classic Caesar Recipe","description":"My Classic Caesar Recipe Salads with garlic, anchovy filets, sea salt flakes, egg yolks, lemon, extra-virgin olive oil, country bread, garlic, extra-virgin olive oil, sea salt, romaine lettuce, caesar salad dressing, parmagiano reggiano, ground black pepper, anchovies","image":"http://lh3.ggpht.com/J8bTX6MuGC-8y87DHlxxagqShmJLlPjXff28hN8gksOpLp3fZJ5XaLCGrkZLYMer3YlNAEoOfl6FyrSsl9uGcw=s730-e365","site_name":"Yummly","extras":{"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","yummlyfood:course":"Salads","yummlyfood:ingredients":"anchovies","yummlyfood:time":"40 min","yummlyfood:source":"Food52"},"$$hashKey":"object:258"},
         "location":null
@@ -64,7 +65,7 @@ EventDetailCtrl = (
     vm.feed = {
       show:
         messageComposer: false
-      showMessageComposer: ($event)->
+      showMessageComposer: ($event, event, post)->
         vm.feed.post = {
           message: null
           attachment: null
@@ -79,7 +80,8 @@ EventDetailCtrl = (
     vm.post = {
       acl : {
         isModerator: (event, post)->
-          return true if event.owner = vm.me
+          return true if event.moderatorId == vm.me.id
+          return true if event.ownerId == vm.me.id
       }
       showCommentForm: ($event)->
         target = $event.currentTarget
@@ -102,7 +104,7 @@ EventDetailCtrl = (
         .then ()->
           postComment = {
             $$owner: vm.me
-            ownerId: vm.me.id
+            ownerId: vm.me.id + ''
             createdAt: new Date()
             comment: angular.copy commentField.value
           }
@@ -115,28 +117,83 @@ EventDetailCtrl = (
 
     }
 
+    # TODO: make $filter
+    filterFeed = (event, feed)->
+      feed ?= event.feed
+      # check moderator status
+      feed = _.reduce feed, (result, post)->
+        check = {
+          eventId: post.eventId == event.id
+        }
+        switch post.type
+          when 'Participation'
+            check['status'] = ~['new','pending','accepted'].indexOf(post.status)
+            check['acl'] = vm.post.acl.isModerator(event, post)
+          else
+            'skip'
+        result.push post if _.reject(check).length == 0
+        return result
+      , []
+      return feed
+
     getData = ()->
-      vm.event.menuItems = []
       $q.when()
       .then ()->
-        return EventsResource.query()
-        .then (events)->
-          # events = sortEvents(events, vm.filter)
-          vm.events = events
-          # toastr.info JSON.stringify( events)[0...50]
-          return events
+        return UsersResource.query()
+        .then (users)->
+          vm.lookup.users = users
       .then ()->
+        return EventsResource.query()
+      .then (events)->
+        # events = sortEvents(events, vm.filter)
+        vm.events = events
+        # toastr.info JSON.stringify( events)[0...50]
+        return events
+      .then (events)->
         return devConfig.getData()
-      .then (data)->
-        vm.lookup.menuItems = _.chain data
-          .reduce (result, o, i)->
-            if ~[0,1,4].indexOf(i)
-              o.id = i
-              result.push o
-            return result
-          , []
-          .value()
-        return data
+        .then (data)->
+          vm.lookup.menuItems = data
+          return events
+      .then (events)->
+        done = _.map events, (event)->
+          return UsersResource.get(event.ownerId)
+          .then (owner)->
+            event.$$host = owner
+            event.moderatorId = vm.me.id  # force for demo data
+            event.menuItemIds = [0,1,4]
+            return event
+          , (err)->
+            console.error ["User not found", err]
+          .then (event)->
+            event.$$menuItems = _.map event.menuItemIds, (id)->
+              mi = vm.lookup.menuItems[id]
+              return mi
+            # fake data
+            # TODO: sum participation.seats
+            event.$$participants ?= []
+            event.participantIds ?= []
+
+            _.each event.$$menuItems, (mi, i, l)->
+              mi.ownerId = i + ''  # assign menuItem.ownerId
+              participant = _.find(vm.lookup.users, {id: mi.ownerId})
+              event.participantIds.push participant.id
+              event.$$participants.push( mi.$$owner = participant )
+              return
+            event.seatsOpen = event.seatsTotal - event.participantIds.length
+            event.$$participants = _.unique(event.$$participants)
+            event.participantIds = _.unique(event.participantIds)
+            return event
+          .catch (err)->
+            console.error err
+        return $q.all(done)
+      .then ()->
+        _.each FEED, (post)->
+          post.$$owner = _.find(vm.lookup.users, {id: post.ownerId})
+          return
+        return FEED
+
+
+
 
     vm.on = {
       scrollTo: (anchor)->
@@ -175,7 +232,7 @@ EventDetailCtrl = (
         if $rootScope.user?
           vm.me = $rootScope.user
         else
-          DEV_USER_ID = '0'
+          DEV_USER_ID = '3'
           devConfig.loginUser( DEV_USER_ID ).then (user)->
             # loginUser() sets $rootScope.user
             vm.me = $rootScope.user
@@ -183,29 +240,26 @@ EventDetailCtrl = (
             return vm.me
       .then ()->
         getData()
-      .then ()->
-        done = _.reduce FEED, (promises, post)->
-          if post.ownerId
-            promises.push UsersResource.get(post.ownerId).then (result)->
-              post.$$owner = result
-              return
-          return promises
-        , []
-        return $q.all(done)
 
 
     activate = ()->
-      if index = $stateParams.id
+      return $q.reject("ERROR: expecting event.id") if not $stateParams.id
+      return $q.when()
+      .then ()->
+        index = $stateParams.id
         vm.event = vm.events[index]
-        vm.event.menuItems = vm.lookup.menuItems
-        vm.event.feed = FEED
-        exportDebug.set('event', vm.event)
-      # // Set Ink
-      ionic.material?.ink.displayEffect()
-      ionic.material?.motion.fadeSlideInRight({
-        startVelocity: 2000
-        })
-      return
+        return vm.event
+      .then (event)->
+        event.feed = filterFeed(event, FEED)
+        return event
+      .then (event)->
+        exportDebug.set('event', event)
+        # // Set Ink
+        ionic.material?.ink.displayEffect()
+        ionic.material?.motion.fadeSlideInRight({
+          startVelocity: 2000
+          })
+        return
 
     resetMaterialMotion = (motion, parentId)->
       className = {
