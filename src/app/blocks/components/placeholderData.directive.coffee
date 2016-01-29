@@ -8,7 +8,7 @@ PlaceholderDataDirective = ($http, $compile)->
     console.log ['dir:Tile data[0]', result.data[0] , result.data.length]
     return result.data
   .catch (err)->
-    console.err ['Unsplash.it NOT AVAILABLE',err]
+    console.error ['Unsplash.it NOT AVAILABLE',err]
     throw err
 
   hashKey = (index, offset, list)->

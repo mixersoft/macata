@@ -31,7 +31,8 @@ ion-modal-view#request-seat-modal {{item=mm.event; me=mm.person; show=mm.setting
         div.item.item-avatar(ng-if="mm.isAnonymous()==false")
           img(ng-src="{{me.face}}")
           span.face-overlay(ng-if="!me.face" ng-bind="me.firstname[0]")
-          b {{me.displayName }} - You are requesting a seat(s) for this Table
+          b {{me.displayName }}
+          p You are requesting a seat(s) for this Table
 
         ion-input.item-input.text-and-range
           ion-label Seats
