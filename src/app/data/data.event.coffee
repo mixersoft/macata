@@ -89,7 +89,7 @@ EventsResource = (Resty, amMoment) ->
       seatsOpen: 12
 
       # host:
-      ownerId: "0" # belongsTo Users
+      ownerId: "1" # belongsTo Users
 
       # guests:  # habtm Users
       # menu:    # menu ideas

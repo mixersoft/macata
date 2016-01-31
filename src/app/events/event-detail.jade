@@ -6,7 +6,8 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
   ion-content.event-detail.has-header.has-footer(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
-  ) {{ event=vm.event; host=vm.event.$$host; show=vm.settings.show;''}}
+  ) 
+    div.hide {{ event=vm.event; show=vm.settings.show;''}}
     ion-list.menu-items
                 
       ion-item.item-divider
@@ -16,8 +17,6 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           collection="event.$$menuItems"
           summary-min-width="320"
           item-height="100"
-          xx-scroll-handle="event-menu-item-list-scroll"
-          xx-on-select="vm.on.select($item,$index,silent)"
         )
           list-item-summary {{vm=$parent.$parent.vm;''}}
             div.tile.recipe.item.item-complex.content.ink(
@@ -44,7 +43,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
                     ng-click="$item.favorite = !$item.favorite"
                     )
                   i.button.button-clear.larger.ion-map.ink(
-                    ui-sref="app.map({'id':{{$index}} })"
+                    ui-sref="app.map({'id':{{$item.id}} })"
                     )
                   i.button.button-clear.larger.ink(
                     ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
@@ -55,8 +54,10 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
                 div.feature.image(
                   bg-image="{{$item['image']}}"
                 )
-            
+
+                
     ion-list.details.list.has-icon-avatar.condensed
+      div.hide {{host=vm.event.$$host;''}}
       ion-item.item-divider.item-button-right
         p details
           span(ng-hide="!show.hideDetails") &nbsp; {{ event.startTime | amDateFormat:'ddd, MMM Do' }}
@@ -122,6 +123,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           button.item-image.icon.ion-person-add(
             ng-click="vm.on.beginBooking(vm.me, event)"
             )
+            
     ion-list.invitations
       ion-item.item-divider
         p invitations (participants can view invitations)
@@ -142,8 +144,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           address="feed.post.address"
           location="feed.post.location"
           )  
-      ng-include(src="'events/post.html'")            
-          
+      ng-include(src="'events/post.html'")  
 
         
     ion-list.control-panel

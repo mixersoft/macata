@@ -16,7 +16,7 @@ EventDetailCtrl = (
         "id":"1453967670695"
         "createdAt":"2016-01-28T07:54:30.696Z"
         "eventId":"1"
-        "$$participantId":"3"
+        # "$$participantId":"3"
         "ownerId": "3"
         "response":"Yes"
         "seats":2
@@ -86,7 +86,7 @@ EventDetailCtrl = (
         .then ()->
           participation = post
           return EventActionHelpers.createBooking(event, participation, vm)
-        .then ()->
+        .then (event)->
           return filterFeed(event)
         .then (filteredFeed)->
           event.feed = filteredFeed
@@ -187,57 +187,58 @@ EventDetailCtrl = (
       $q.when()
       .then ()->
         return UsersResource.query()
-        .then (users)->
-          vm.lookup.users = users
+      .then (users)->
+        vm.lookup.users = users
       .then ()->
-        return EventsResource.query()
-      .then (events)->
-        # events = sortEvents(events, vm.filter)
-        vm.events = events
-        # toastr.info JSON.stringify( events)[0...50]
-        return events
-      .then (events)->
         return devConfig.getData()
-        .then (data)->
-          vm.lookup.menuItems = data
-          return events
-      .then (events)->
-        done = _.map events, (event)->
-          return UsersResource.get(event.ownerId)
-          .then (owner)->
-            event.$$host = owner
-            event.moderatorId = vm.me.id  # force for demo data
-            event.menuItemIds = [0,1,4]
-            return event
-          , (err)->
-            console.error ["User not found", err]
-          .then (event)->
-            event.$$menuItems = _.map event.menuItemIds, (id)->
-              mi = vm.lookup.menuItems[id]
-              return mi
-            # fake data
-            # TODO: sum participation.seats
-            event.$$participants ?= []
-            event.participantIds ?= []
-
-            _.each event.$$menuItems, (mi, i, l)->
-              mi.ownerId = i + ''  # assign menuItem.ownerId
-              participant = _.find(vm.lookup.users, {id: mi.ownerId})
-              event.participantIds.push participant.id
-              event.$$participants.push( mi.$$owner = participant )
-              return
-            event.seatsOpen = event.seatsTotal - event.participantIds.length
-            event.$$participants = _.unique(event.$$participants)
-            event.participantIds = _.unique(event.participantIds)
-            return event
-          .catch (err)->
-            console.error err
-        return $q.all(done)
+      .then (data)->
+        vm.lookup.menuItems = data
       .then ()->
         _.each FEED, (post)->
+          # add $$owner to FEED posts
           post.$$owner = _.find(vm.lookup.users, {id: post.ownerId})
           return
-        return FEED
+      .then ()->
+        return EventsResource.query()
+
+      # .then (events)->
+      #   # TEST: ui-sref bug, delay until everything is ready
+      #   # events = sortEvents(events, vm.filter)
+      #   vm.events = events
+      #   # toastr.info JSON.stringify( events)[0...50]
+      #   return events
+      .then (events)->
+        vm.events = []
+        _.each events, (event)->
+          host = _.find(vm.lookup.users, {id: event.ownerId})
+          event.$$host = host
+          console.warn("TESTDATA: using currentUser as event Moderator")
+          event.moderatorId = vm.me.id  # force for demo data
+          event.menuItemIds = [0,1,4]
+          console.warn("TESTDATA: using random menuItemIds")
+          event.$$menuItems = _.map event.menuItemIds, (id)->
+            return vm.lookup.menuItems[id]
+
+          # fake data
+          # TODO: sum participation.seats
+          event.$$participants ?= []
+          event.participantIds ?= []
+
+          _.each event.$$menuItems, (mi, i, l)->
+            mi.ownerId = i + ''  # assign menuItem.ownerId
+            participant = _.find(vm.lookup.users, {id: mi.ownerId})
+            mi.$$owner = participant
+            event.participantIds.push participant.id
+            event.$$participants.push( mi.$$owner )
+            return
+          event.seatsOpen = event.seatsTotal - event.participantIds.length
+          event.$$participants = _.unique(event.$$participants)
+          event.participantIds = _.unique(event.participantIds)
+
+          vm.events.push event
+          return
+        return events
+
 
 
 
