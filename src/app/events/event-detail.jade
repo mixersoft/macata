@@ -32,7 +32,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
                   img.ink(
                     ng-src="{{$item.$$owner.face}}"
                     ng-click="$event.stopImmediatePropagation()"
-                    ui-sref="app.profile({'id':{{$index}}})"
+                    ui-sref="app.profile({'id':{{$item.ownerId}}})"
                   )
                 
                 div.icon-bar.bottom-toolbar.condensed.light(
@@ -69,10 +69,11 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
         ng-hide="show.hideDetails"
         min-width="260"
         )
-        ion-item.item-avatar
+        ion-item.item-avatar 
           img.item-image.ink(
             ng-src="{{host.face}}"
             ng-click="$event.stopImmediatePropagation()"
+            ng-if="hack_delay_uiSref = host"
             ui-sref="app.profile({id: '{{host.id}}' })"
           )
           span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || event.ownerId }}]

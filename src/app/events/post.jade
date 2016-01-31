@@ -23,16 +23,17 @@ div(ng-repeat="$post in event.feed track by $post.id" )
             )
             i.icon.ion-checkmark-circled &nbsp; Accept
 
-    div.item.item-avatar {{owner=$post.$$owner;''}}
+    div.item.item-avatar
       div.avatar-wrap
         img.item-image.ink(
-          ng-src="{{owner.face}}"
+          ng-src="{{$post.$$owner.face}}"
           ng-click="$event.stopImmediatePropagation()"
-          ui-sref="app.profile({id: '{{owner.id}}' })"
+          ng-if="hack_delay_uiSref = $post"
+          ui-sref="app.profile({id: '{{$post.ownerId}}' })"
           width="40"
         )
       div.header
-        b.padding-right {{owner.displayName}}
+        b.padding-right {{$post.$$owner.displayName}}
         p.item-text-wrap 
           span.time-ago.padding-right(am-time-ago="$post.createdAt")
           span.padding-right(
