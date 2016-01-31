@@ -53,6 +53,9 @@ EventActionHelpers = ($rootScope, $q, $timeout
         post.createdAt = new Date()
         post.$$owner = vm.me
         post.ownerId = vm.me.id
+        # testData
+        post.likes = _.sample(vm.lookup.users)
+        post.iLikeThis = !!~post.likes.indexOf(vm.me)
         return $q.when(post)
         .then (post)->
           event.feed ?= []

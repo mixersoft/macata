@@ -130,6 +130,16 @@ EventDetailCtrl = (
           return true if event.moderatorId == vm.me.id
           return true if event.ownerId == vm.me.id
       }
+      like: ($event, post)->
+        post.likes ?= []
+        #TODO: should add Ids to the array, not object
+        found = post.likes.indexOf(vm.me)
+        if ~found
+          post.likes.splice(found,1) # unlike
+        else
+          post.likes.push(vm.me)
+        post.iLikeThis = !!~post.likes.indexOf(vm.me)
+
       showCommentForm: ($event)->
         target = $event.currentTarget
         # parent = ionic.DomUtil.getParentWithClass(target,'item-post')
@@ -197,6 +207,8 @@ EventDetailCtrl = (
         _.each FEED, (post)->
           # add $$owner to FEED posts
           post.$$owner = _.find(vm.lookup.users, {id: post.ownerId})
+          post.likes = [_.sample(vm.lookup.users)]
+          post.iLikeThis = !!~post.likes.indexOf(vm.me)
           return
       .then ()->
         return EventsResource.query()
