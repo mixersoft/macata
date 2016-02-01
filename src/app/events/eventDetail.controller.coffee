@@ -5,6 +5,7 @@ EventDetailCtrl = (
   $ionicScrollDelegate, $state, $stateParams
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
+  uiGmapGoogleMapApi, geocodeSvc
   UsersResource, EventsResource, EventActionHelpers
   utils, devConfig, exportDebug
   )->
@@ -59,6 +60,7 @@ EventDetailCtrl = (
         'new': false
       show:
         'expandEventDetails': false
+        'map':false
     }
 
     vm.lookup = {}
@@ -202,6 +204,44 @@ EventDetailCtrl = (
 
     }
 
+    vm.location = {
+      GRID_RESPONSIVE_SM_BREAK: 680
+      map: null
+      prepareMap: (event, options)->
+        return $q.when() if !event.location
+
+        return uiGmapGoogleMapApi
+        .then ()->
+          # markerCount==1
+          mapOptions = {
+            type: 'oneMarker'
+            location: event.location
+            draggableMarker: false
+            dragendMarker: (marker, eventName, args)->
+              return
+          }
+          mapOptions = _.extend mapOptions, {
+            'control' : {}
+            'mapReady' : (map, eventName)->
+              $scope.$broadcast 'map-ready', map
+          }, options
+          mapConfig = geocodeSvc.getMapConfig mapOptions
+          # mapConfig.zoom = 11
+          return mapConfig
+      showOnMap: (event, options)->
+        return vm.location.prepareMap(event, options)
+        .then (config)->
+          vm.location.map = config
+          vm.settings.show.map = true if options.visible
+          exportDebug.set 'mapConfig', config
+          return
+
+
+
+
+
+    }
+
     # TODO: make $filter
     filterFeed = (event, feed)->
       feed ?= event.feed
@@ -253,6 +293,7 @@ EventDetailCtrl = (
           host = _.find(vm.lookup.users, {id: event.ownerId})
           event.$$host = host
           console.warn("TESTDATA: using currentUser as event Moderator")
+          event.visibleAddress = event.address
           event.moderatorId = vm.me.id  # force for demo data
           event.menuItemIds = [0,1,4]
           console.warn("TESTDATA: using random menuItemIds")
@@ -312,6 +353,11 @@ EventDetailCtrl = (
           # reset message-console and hide
           vm.feed.show.messageComposer = false
           vm.feed.post={}
+      'toggleMap': ($event)->
+        $event.preventDefault()
+        event.stopImmediatePropagation()
+        vm.settings.show.map = !vm.settings.show.map
+        # console.log ['toggleMap', vm.settings.show.map]
 
 
     }
@@ -341,6 +387,12 @@ EventDetailCtrl = (
         return vm.event
       .then (event)->
         event.feed = filterFeed(event, FEED)
+        deviceW = $window.innerWidth < vm.location.GRID_RESPONSIVE_SM_BREAK
+        mapOptions = {
+          visible: not deviceW
+          draggableMap: not deviceW  # can't scroll in mobile view
+        }
+        promise = vm.location.showOnMap(event, mapOptions)
         return event
       .then (event)->
         exportDebug.set('event', event)
@@ -383,6 +435,7 @@ EventDetailCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
+  'uiGmapGoogleMapApi', 'geocodeSvc'
   'UsersResource', 'EventsResource', 'EventActionHelpers'
   'utils', 'devConfig', 'exportDebug'
 ]

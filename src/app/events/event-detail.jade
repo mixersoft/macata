@@ -92,11 +92,41 @@ ion-view#event-detail(view-title="{{vm.title}}")
                 at {{ event.startTime | amDateFormat:'h:mm a'}} for
                 {{ event.duration | amDurationFormat:'milliseconds' }}
             ion-item.item-icon-left(
+              ng-click="vm.on.toggleMap($event)"
             )
               i.icon.ion-ios-location
               //- feastly: Exact addr will be shared upon purchase
               //- eatwith: exact location provided upon booking
               span {{ event['visibleAddress']}} &nbsp;
+          ion-item#event-detail-map.item-complex
+            style#event-detail-map-style.
+              #event-detail-map .wrap {min-height: 200px;}
+              #event-detail-map .angular-google-map-container {min-height: 200px;}
+            div.hide
+              {{map=vm.location.map;''}}
+              {{opt=map.options;''}}
+            div.wrap(
+              ng-if="show.map && map"
+            )
+              ui-gmap-google-map( 
+                center='map.center'
+                zoom='map.zoom'
+                options='opt.map.options'
+                control='map.control'
+                events='map.events'
+              )
+                ui-gmap-circle(
+                  ng-if="map.type=='circle'"
+                  center="opt.circle.center"
+                  radius="opt.circle.radius"
+                  stroke="opt.circle.stroke"
+                  )
+                ui-gmap-marker(
+                  idKey="opt.oneMarker.idKey"
+                  coords="opt.oneMarker.coords"
+                  options="opt.oneMarker.options"
+                  events="opt.oneMarker.events"
+                  )
                 
         ion-list.participants
           ion-item.item-divider.item-button-right
