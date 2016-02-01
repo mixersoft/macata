@@ -1,6 +1,6 @@
 'use strict'
 
-appRun = ($ionicPlatform, $rootScope, $location, $log) ->
+appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location, $log) ->
 
   $ionicPlatform.ready ->
     # Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -48,11 +48,9 @@ toastrConfig = (toastrConfig) ->
 
 
 
-appRun.$inject = ['$ionicPlatform', '$rootScope', '$location', '$log']
+appRun.$inject = ['$ionicPlatform', '$ionicHistory', '$rootScope', '$location', '$log']
 
 angular
   .module 'starter.core'
   .config toastrConfig
   .run appRun
-
-

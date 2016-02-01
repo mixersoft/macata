@@ -28,6 +28,7 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDel
             location: false
             spinner:
               newTile: false
+            postButton: false
         }
 
         $mc.geo = {
@@ -172,6 +173,7 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDel
       post: (scope, element, attrs, controllers) ->
         $mc = controllers
         $mc.$container = element
+        $mc.settings.show.postButton = attrs.postButton?
         $mc.scope = scope
 
         $mc.geo.setting.hasGeolocation = navigator.geolocation?
