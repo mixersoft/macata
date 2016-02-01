@@ -1,5 +1,6 @@
 // recipe/recipe.jade
-ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
+ion-view#event-detail(view-title="{{vm.title}}") 
+  div.hide {{ show=vm.settings.show;'' }}
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
 
@@ -8,143 +9,145 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
     scroll-sista="header"
   ) 
     div.hide {{ event=vm.event; show=vm.settings.show;''}}
-    ion-list.menu-items
-                
-      ion-item.item-divider
-        p menu
-      ion-item.item-complex
-        list-item-container.content.condensed(
-          collection="event.$$menuItems"
-          summary-min-width="320"
-          item-height="100"
-        )
-          list-item-summary {{vm=$parent.$parent.vm;''}}
-            div.tile.recipe.item.item-complex.content.ink(
-              ng-click="$event.stopImmediatePropagation()"
-              ui-sref="app.recipe({id:{{$item.id}}})"
+    div.row.responsive-sm.no-padding
+      div.col
+        ion-list.menu-items
+          ion-item.item-divider
+            p menu
+          ion-item.item-complex
+            list-item-container.content.condensed(
+              collection="event.$$menuItems"
+              summary-min-width="240"
+              item-height="100"
             )
-              //- TODO: event-detail-hero.template.html
-              div.hero.content
-                div.item-avatar-right.ink(
-                  ng-click=""
-                )
-                  img.ink(
-                    ng-src="{{$item.$$owner.face}}"
-                    ng-click="$event.stopImmediatePropagation()"
-                    ui-sref="app.profile({'id':{{$item.ownerId}}})"
-                  )
-                
-                div.icon-bar.bottom-toolbar.condensed.light(
-                  ng-show="$item['title']"
+              list-item-summary {{vm=$parent.$parent.vm;''}}
+                div.tile.recipe.item.item-complex.content.ink(
                   ng-click="$event.stopImmediatePropagation()"
-                  )
-                  i.button.button-clear.larger.ion-heart.ink(
-                    ng-class="$item.favorite && 'selected'"
-                    ng-click="$item.favorite = !$item.favorite"
-                    )
-                  i.button.button-clear.larger.ion-map.ink(
-                    ui-sref="app.map({'id':{{$item.id}} })"
-                    )
-                  i.button.button-clear.larger.ink(
-                    ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
-                    ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
-                    )         
-                  i.button.button-clear.ion-ios-upload.larger.ink(
-                    )
-                div.feature.image(
-                  bg-image="{{$item['image']}}"
+                  ui-sref="app.recipe({id:{{$item.id}}})"
                 )
+                  //- TODO: event-detail-hero.template.html
+                  div.hero.content
+                    div.item-avatar-right.ink(
+                      ng-click=""
+                    )
+                      img.ink(
+                        ng-src="{{$item.$$owner.face}}"
+                        ng-click="$event.stopImmediatePropagation()"
+                        ui-sref="app.profile({'id':{{$item.ownerId}}})"
+                      )
+                    
+                    div.icon-bar.bottom-toolbar.condensed.light(
+                      ng-show="$item['title']"
+                      ng-click="$event.stopImmediatePropagation()"
+                      )
+                      i.button.button-clear.larger.ion-heart.ink(
+                        ng-class="$item.favorite && 'selected'"
+                        ng-click="$item.favorite = !$item.favorite"
+                        )
+                      i.button.button-clear.larger.ion-map.ink(
+                        ui-sref="app.map({'id':{{$item.id}} })"
+                        )
+                      i.button.button-clear.larger.ink(
+                        ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
+                        ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+                        )         
+                      i.button.button-clear.ion-ios-upload.larger.ink(
+                        )
+                    div.feature.image(
+                      bg-image="{{$item['image']}}"
+                    )
+                  
+    div.row.responsive-sm.no-padding.row-reverse-m
+      div.col.col-33
 
-                
-    ion-list.details.list.has-icon-avatar.condensed
-      div.hide {{host=vm.event.$$host;''}}
-      ion-item.item-divider.item-button-right
-        p details
-          span(ng-hide="!show.hideDetails") &nbsp; {{ event.startTime | amDateFormat:'ddd, MMM Do' }}
-            span.nowrap &nbsp;( #[span(am-time-ago="event.startTime")] )
-        button.button.button-icon.button-clear(
-          ng-class="{'ion-arrow-down-b':show.hideDetails, 'ion-arrow-up-b':!show.hideDetails}"
-          ng-click="show.hideDetails = !show.hideDetails"
-          )
-      ng-repeat-grid(
-        ng-hide="show.hideDetails"
-        min-width="260"
-        )
-        ion-item.item-avatar 
-          img.item-image.ink(
-            ng-src="{{host.face}}"
-            ng-click="$event.stopImmediatePropagation()"
-            ng-if="hack_delay_uiSref = host"
-            ui-sref="app.profile({id: '{{host.id}}' })"
-          )
-          span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || event.ownerId }}]
-        ion-item.item-icon-left
-          i.icon.ion-ios-calendar-outline
-          {{ event.startTime | amDateFormat:'ddd, MMM Do' }}
-          span.nowrap &nbsp;( #[span(am-time-ago="event.startTime")] )
-        ion-item.item-icon-left
-          i.icon.ion-ios-clock-outline
-          span. 
-            at {{ event.startTime | amDateFormat:'h:mm a'}} for
-            {{ event.duration | amDurationFormat:'milliseconds' }}
-        ion-item.item-icon-left(
-          ng-click="vm.on.scrollTo('map')"
-        )
-          i.icon.ion-ios-location
-          //- feastly: Exact addr will be shared upon purchase
-          //- eatwith: exact location provided upon booking
-          span {{ event['visibleAddress']}} &nbsp;
-            
-    ion-list.participants
-      ion-item.item-divider.item-button-right
-        p at the table
-        button.button.button-icon.button-clear(
-          ng-class="{'ion-arrow-down-b':show.hideParticipants, 'ion-arrow-up-b':!show.hideParticipants}"
-          ng-click="show.hideParticipants = !show.hideParticipants"
-          )
-      ion-item.participant-list.item-avatar-list.item-text-wrap(
-        ng-class="{'line-clamp-1': show.hideParticipants}"
-        )
-        //- div.avatar-wrap
-        //-   img.item-image.ink(
-        //-     ng-src="{{host.face}}"
-        //-     ng-click="$event.stopImmediatePropagation()"
-        //-     ui-sref="app.profile({id: '{{host.id}}' })"
-        //-     width="40"
-        //-   )
-        div.avatar-wrap(ng-repeat="person in event.$$participants")
-          img.item-image.ink(
-            ng-src="{{person.face}}"
-            ng-click="$event.stopImmediatePropagation()"
-            ui-sref="app.profile({id: '{{person.id}}' })"
-            width="40"
-          )
-        div.avatar-wrap(ng-repeat="person in [3,4,5,6,7]")
-          button.item-image.icon.ion-person-add(
-            ng-click="vm.on.beginBooking(vm.me, event)"
+        ion-list.details.list.has-icon-avatar.condensed
+          div.hide {{host=vm.event.$$host;''}}
+          ion-item.item-divider.item-button-right
+            p details
+              span(ng-hide="!show.hideDetails") &nbsp; {{ event.startTime | amDateFormat:'ddd, MMM Do' }}
+                span.nowrap &nbsp;( #[span(am-time-ago="event.startTime")] )
+            button.button.button-icon.button-clear(
+              ng-class="{'ion-arrow-down-b':show.hideDetails, 'ion-arrow-up-b':!show.hideDetails}"
+              ng-click="show.hideDetails = !show.hideDetails"
+              )
+          ng-repeat-grid(
+            ng-hide="show.hideDetails"
+            min-width="768"
             )
-            
-    ion-list.invitations
-      ion-item.item-divider
-        p invitations (participants can view invitations)
-        
-    ion-list.feed {{feed=vm.feed;''}}
-      ion-item.item-divider.item-button-right 
-        p feed
-        button.button.button-icon.button-clear.ion-plus(
-          ng-click="vm.feed.showMessageComposer($event)"
-          )
-      message-composer(
-          ng-show="feed.show.messageComposer"
-          header-text="Post to Feed"
-          placeholder-text="What are you thinking..."
-          post-button="vm.on.postCommentToFeed(value)"
-          message="feed.postDefaults.message"
-          attachment="feed.postDefaults.attachment"
-          address="feed.postDefaults.address"
-          location="feed.postDefaults.location"
-          )  
-      ng-include(src="'events/post.html'")  
+            ion-item.item-avatar 
+              img.item-image.ink(
+                ng-src="{{host.face}}"
+                ng-click="$event.stopImmediatePropagation()"
+                ng-if="hack_delay_uiSref = host"
+                ui-sref="app.profile({id: '{{host.id}}' })"
+              )
+              span Hosted by #[b {{ [host.firstname,host.lastname].join(' ')  || event.ownerId }}]
+            ion-item.item-icon-left
+              i.icon.ion-ios-calendar-outline
+              {{ event.startTime | amDateFormat:'ddd, MMM Do' }}
+              span.nowrap &nbsp;( #[span(am-time-ago="event.startTime")] )
+            ion-item.item-icon-left
+              i.icon.ion-ios-clock-outline
+              span. 
+                at {{ event.startTime | amDateFormat:'h:mm a'}} for
+                {{ event.duration | amDurationFormat:'milliseconds' }}
+            ion-item.item-icon-left(
+            )
+              i.icon.ion-ios-location
+              //- feastly: Exact addr will be shared upon purchase
+              //- eatwith: exact location provided upon booking
+              span {{ event['visibleAddress']}} &nbsp;
+                
+        ion-list.participants
+          ion-item.item-divider.item-button-right
+            p at the table
+            button.button.button-icon.button-clear(
+              ng-class="{'ion-arrow-down-b':show.hideParticipants, 'ion-arrow-up-b':!show.hideParticipants}"
+              ng-click="show.hideParticipants = !show.hideParticipants"
+              )
+          ion-item.participant-list.item-avatar-list.item-text-wrap(
+            ng-class="{'line-clamp-1': show.hideParticipants}"
+            )
+            //- div.avatar-wrap
+            //-   img.item-image.ink(
+            //-     ng-src="{{host.face}}"
+            //-     ng-click="$event.stopImmediatePropagation()"
+            //-     ui-sref="app.profile({id: '{{host.id}}' })"
+            //-     width="40"
+            //-   )
+            div.avatar-wrap(ng-repeat="person in event.$$participants")
+              img.item-image.ink(
+                ng-src="{{person.face}}"
+                ng-click="$event.stopImmediatePropagation()"
+                ui-sref="app.profile({id: '{{person.id}}' })"
+                width="40"
+              )
+            div.avatar-wrap(ng-repeat="person in [3,4,5,6,7]")
+              button.item-image.icon.ion-person-add(
+                ng-click="vm.on.beginBooking(vm.me, event)"
+                )
+                
+        ion-list.invitations
+          ion-item.item-divider
+            p invitations (participants can view invitations)
+      div.col.col-67
+        ion-list.feed {{feed=vm.feed;''}}
+          ion-item.item-divider.item-button-right 
+            p feed
+            button.button.button-icon.button-clear.ion-plus(
+              ng-click="vm.feed.showMessageComposer($event)"
+              )
+          message-composer(
+              ng-show="feed.show.messageComposer"
+              header-text="Post to Feed"
+              placeholder-text="What are you thinking..."
+              post-button="vm.on.postCommentToFeed(value)"
+              message="feed.postDefaults.message"
+              attachment="feed.postDefaults.attachment"
+              address="feed.postDefaults.address"
+              location="feed.postDefaults.location"
+              )  
+          ng-include(src="'events/post.html'")  
 
         
     ion-list.control-panel

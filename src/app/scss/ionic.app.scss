@@ -33,6 +33,18 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   padding: 0 !important;
 }
 
+#event-detail {
+  .row, .col {
+    padding: 0;
+  }
+}
+
+@media(min-width: $grid-responsive-sm-break) {
+  .row-reverse-m {
+    flex-direction: row-reverse;
+  }
+}
+
 .rotate-90 {
     -moz-transform: rotateZ(90deg);
     -webkit-transform: rotateZ(90deg);
