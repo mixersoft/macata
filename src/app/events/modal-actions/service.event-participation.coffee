@@ -35,27 +35,30 @@ EventActionHelpers = ($rootScope, $q, $timeout
         return
     }
 
+    FeedHelpers = {
+      post: (event, data, vm)->
+        # data : {type: header: body:}
+        post = {
+          type: data.type
+          head:
+            id: Date.now() + ""
+            createdAt: new Date()
+            eventId: event.id
+            ownerId: vm.me.id
+          body: {}
+        }
+        angular.extend(post.head, data.head)
+        angular.extend(post.body, data.body)
 
-    self = {
-      'bookingWizard': (person, event, vm)->
-        templateName = "request-seat.modal.html"
-        return self.beginBooking(templateName, person, event, vm)
-        .then (result)->
-          return if !result
-          participation = result
+        if _.isArray post.body.message
+          post.body.message = post.body.message.join(' ')
 
-          return self.createBooking(event, participation)
-        .then (participation)->
-          return participation
+        if post.head.private
+          post.body.message += ' (This should be a private notification.)'
 
-      post:(event, post, vm)->
-        post.id = Date.now() + ""
-        post.createdAt = new Date()
-        post.$$owner = vm.me
-        post.ownerId = vm.me.id
         # testData
-        post.likes = _.sample(vm.lookup.users)
-        post.iLikeThis = !!~post.likes.indexOf(vm.me)
+        post.head['$$owner'] = vm.me
+        post.head['likes'] = [_.sample(vm.lookup.users)]
         return $q.when(post)
         .then (post)->
           event.feed ?= []
@@ -64,8 +67,67 @@ EventActionHelpers = ($rootScope, $q, $timeout
               event.feed.unshift(post)
             when "Comment"
               event.feed.unshift(post)
+            when "ParticipationResponse"
+              event.feed.unshift(post)
           return event.feed
 
+      log: (event, data, vm)->
+        type = data.type || data.body.type
+        method = '_log_' + type
+        return $q.when(method)
+        .then (method)->
+          return FeedHelpers[method]?(event, data, vm)
+          console.info ['FeedHelpers.log(): no log format for type=' + type]
+          return
+
+      _log_ParticipationResponse: (event, data, vm)->
+        # see vm.moderator.accept()
+        responseBody = data.body
+        participation = responseBody.$$participation
+
+        participationResponse = {
+          type: "ParticipationResponse"
+          head: {}
+          body:
+            message: ''
+        }
+
+        switch responseBody.action
+          when 'accepted'
+            message = [
+              'Welcome', participation.head.$$owner.displayName+','
+              'your booking has been accepted.'
+              'You have', participation.body.seats, 'seats at the table.'
+            ]
+            message.push responseBody.comment if responseBody.comment
+            if event.seatsOpen
+              message.push 'There are', event.seatsOpen, 'seats remaining.'
+            participationResponse.body.message = message
+          when 'rejected'
+            message = [
+              'Sorry'
+              participation.head.$$owner.displayName+','
+              'your booking was declined.'
+            ]
+            message.push responseBody.comment if responseBody.comment
+            participationResponse.head.private = true
+            # TODO: head.private posts should only appear as pm.
+            participationResponse.body.message = message
+          else
+            return
+
+        return FeedHelpers.post(event, participationResponse, vm)
+    }
+
+    self = {
+      'bookingWizard': (person, event, vm)->
+        templateName = "request-seat.modal.html"
+        return self.beginBooking(templateName, person, event, vm)
+        .then (result)->
+          return if !result
+          return participation = result
+
+      'FeedHelpers': FeedHelpers  # make a service
 
       getShareLinks: (event)->
         vm = this
@@ -449,39 +511,33 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
+      # called by vm.moderator.accept()
       createBooking: (event, particip, vm)->
-        # [
-        # "type", "status", "review"
-        # "id", "createdAt",
-        # "ownerId", "$$owner"
-        # "eventId", "participantId",
-        #  "response", "seats", "message", "attachment", "location",
-        # "likes",
-        #
-        # ]
+
         _participation2menuItem = (participation)->
-          participant = _.find(vm.lookup.users, {id: participation.ownerId})
-          menuItem = _.extend participation.attachment, {
+          participant = _.find(vm.lookup.users, {id: participation.head.ownerId})
+          menuItem = _.extend participation.body.attachment, {
             id: Date.now()
             $$owner: participant
-            ownerId: participation.ownerId
+            ownerId: participation.head.ownerId
           }
           return menuItem
 
         event.participantIds ?= []
-        event.participantIds.push particip.ownerId
+        event.participantIds.push particip.head.ownerId
         event.participantIds = _.unique(event.participantIds)
 
-        participant = _.find(vm.lookup.users, {id: particip.ownerId})
+        participant = _.find(vm.lookup.users, {id: particip.head.ownerId})
         event.$$participants.push participant
         event.$$participants = _.unique(event.$$participants)
 
 
         # TODO: need to count seats in each participation
-        event.seatsOpen -= particip.seats
-        console.warn ["WARNING: createBooking() should count participation.seats to get event.seatsOpen", particip]
+        event.seatsOpen -= particip.body.seats
+        console.warn ["WARNING: createBooking() sum seats to get event.seatsOpen", particip]
         event.$$menuItems.push _participation2menuItem( particip)
         event.$$menuItems = _.unique event.$$menuItems
+
         return event
 
 

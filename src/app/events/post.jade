@@ -1,7 +1,9 @@
 //- ion-list
-div(ng-repeat="$post in event.feed track by $post.id" )
+div(ng-repeat="$post in event.feed track by $post.head.id" )
   ion-item.item-complex.item-post 
-    div.hide {{vm=$parent.$parent.$parent.vm;''}}
+    div.hide 
+      {{vm=$parent.$parent.$parent.vm;''}}
+      {{$postHead = $post.head;$postBody=$post.body;''}}
     div.item-body.host-actions(
       ng-show='vm.moderator.requiresAction($post)'
       )
@@ -9,8 +11,8 @@ div(ng-repeat="$post in event.feed track by $post.id" )
         ion-item.item-divider.item-balanced
           div Moderator Actions
         ion-item.item-text-wrap
-          b.padding-right {{$post.$$owner.displayName}} 
-          span.padding-right has requested {{$post.seats}} seats at the table.
+          b.padding-right {{$postHead.$$owner.displayName}} 
+          span.padding-right has requested {{$postBody.seats}} seats at the table.
         div.item.item-complex.item-balanced.button-bar.condensed
           button.button.button-balanced(
             ng-click="vm.moderator.reject($event, vm.event, $post)"
@@ -27,30 +29,31 @@ div(ng-repeat="$post in event.feed track by $post.id" )
     div.item.item-avatar
       div.avatar-wrap
         img.item-image.ink(
-          ng-src="{{$post.$$owner.face}}"
+          ng-src="{{$postHead.$$owner.face}}"
           ng-click="$event.stopImmediatePropagation()"
           ng-if="hack_delay_uiSref = $post"
-          ui-sref="app.profile({id: '{{$post.ownerId}}' })"
+          ui-sref="app.profile({id: '{{$postHead.ownerId}}' })"
           width="40"
         )
       div.header
-        b.padding-right {{$post.$$owner.displayName}}
+        b.padding-right {{$postHead.$$owner.displayName}}
         p.item-text-wrap 
-          span.time-ago.padding-right(am-time-ago="$post.createdAt")
+          span.time-ago.padding-right(am-time-ago="$postHead.createdAt")
           span.padding-right(
-            ng-if="$post.location"
+            ng-if="$postBody.location"
             ) 
             i.icon.ion-location(
               ) &nbsp;
-              {{$post.location.address}}
+              {{$postBody.location.address}}
         
     div.item-body.post-body
       
-      p.body {{$post.message}}
+      p.body {{$postBody.message}}
 
       div.tile.recipe.item.item-complex.content.ink(
-        ng-if="$post.attachment.id"
-      ) {{$item=$post.attachment;''}}
+        ng-if="$postBody.attachment.id"
+      ) 
+        div.hide {{$item=$postBody.attachment;''}}
         div.hero.content(style="height:160px;")
           div.icon-bar.top-right-toolbar.condensed.light(
             ng-click="$event.stopImmediatePropagation()"
@@ -63,7 +66,7 @@ div(ng-repeat="$post in event.feed track by $post.id" )
               )
             i.button.button-clear.larger.ink(
               ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
-              ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($post.eventId, $item); "
+              ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($postHead.eventId, $item); "
               )         
             i.button.button-clear.ion-ios-upload.larger.ink(
               )
@@ -80,17 +83,18 @@ div(ng-repeat="$post in event.feed track by $post.id" )
             )  {{$item['site_name']}}
 
     div.item-body.post-actions
-      div.likes(ng-show="$post.likes.length") 
-        span(ng-repeat="person in $post.likes") 
-          a(
-            ui-sref="app.profile({id:'{{person.id}}' })"
-            ) {{$index ? ',':''}} {{person.displayName}}
-        span  &nbsp;likes this.
+      div.likes
+        div(ng-show="$postHead.likes.length")
+          span(ng-repeat="person in $postHead.likes") 
+            a(
+              ui-sref="app.profile({id:'{{person.id}}' })"
+              ) {{$index ? ',':''}} {{person.displayName}}
+          span  &nbsp;likes this.
 
-      div.button-bar.condensed.positive
+      div.button-bar.condensed.positive 
         button.button.button-icon.ion-heart.positive(
           ng-click="vm.post.like($event, $post)"
-          ng-class="{'balanced':$post.iLikeThis}"
+          ng-class="{'balanced': $postHead.likes.indexOf(vm.me) >= 0 }"
           ) &nbsp; Like
         button.button.button-icon.ion-chatbox.positive(
           ng-click="vm.post.showCommentForm($event)"
@@ -99,7 +103,7 @@ div(ng-repeat="$post in event.feed track by $post.id" )
 
     div.item-body.post-comments.hide
       div.post-comment(
-        ng-repeat="$comment in $post.comments"
+        ng-repeat="$comment in $postBody.comments"
         ) 
         div.hide {{owner=$comment.$$owner;''}}
         div.avatar-wrap 

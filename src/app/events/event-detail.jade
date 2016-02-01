@@ -138,11 +138,11 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
           ng-show="feed.show.messageComposer"
           header-text="Post to Feed"
           placeholder-text="What are you thinking..."
-          post-button="vm.on.postToFeed(value)"
-          message="feed.post.message"
-          attachment="feed.post.attachment"
-          address="feed.post.address"
-          location="feed.post.location"
+          post-button="vm.on.postCommentToFeed(value)"
+          message="feed.postDefaults.message"
+          attachment="feed.postDefaults.attachment"
+          address="feed.postDefaults.address"
+          location="feed.postDefaults.location"
           )  
       ng-include(src="'events/post.html'")  
 

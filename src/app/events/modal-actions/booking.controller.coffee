@@ -47,13 +47,15 @@ EventBookingCtrl = (
       # add booking as participant to event
       # clean up data
       particip = {
-        eventId: event.id
-        participantId: person.id + ''
-        response: 'Yes'
-        seats: parseInt booking.seats
-        message: booking.message
-        attachment: booking.attachment
-        location: booking.location
+        body:
+          type: 'Participation'
+          status: 'new'
+          response: 'Yes'
+          seats: parseInt booking.seats
+          message: booking.message
+          attachment: booking.attachment
+          address: booking.address
+          location: booking.location
       }
       # check for existing participation
       if ~participantIds?.indexOf(person.id)
@@ -101,6 +103,11 @@ EventBookingCtrl = (
           mm.autocomplete.options = _fakeFilter(value)
           return mm.autocomplete
 
+      ###
+      #  @description validate booking modal on submit
+      #   called by ng-submit
+      #  @returns mm.createParticipation( participation ) as promise
+      ###
       validateBooking : (person, event, booking, onSuccess)->
         # clean data
         booking.attachment =

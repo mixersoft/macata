@@ -12,27 +12,32 @@ EventDetailCtrl = (
     FEED = [
       {
         "type":"Participation"
-        "status":"new"
-        "id":"1453967670695"
-        "createdAt":"2016-01-28T07:54:30.696Z"
-        "eventId":"1"
-        # "$$participantId":"3"
-        "ownerId": "3"
-        "response":"Yes"
-        "seats":2
-        "message":"Exciting! I'll take 2"
-        "attachment":{"id":"2","url":"http://newyork.seriouseats.com/2013/09/how-betony-makes-their-short-ribs.html","title":"How Betony Makes Their Short Ribs","description":"It's rare that a restaurant opening in Midtown causes much of a stir, but with Chef Bryce Shuman—the former executive Sous Chef of Eleven Madison Park—at the helm, it's no surprise that Betony is making waves. This short rib dish is one of those wave-makers.","image":"http://newyork.seriouseats.com/assets_c/2013/08/20130826-264197-behind-the-scenes-betony-short-ribs-29-thumb-625xauto-348442.jpg","extras":{}}
-        "location":{"latlon":[42.670053,23.314167],"address":"Blvd \"James Bourchier\" 103, 1407 Sofia, Bulgaria","isCurrentLocation":true}
+        head:
+          "id":"1453967670695"
+          "createdAt":"2016-01-28T07:54:30.696Z"
+          "eventId":"1"
+          "ownerId": "3"
+        body:
+          "type":"Participation"
+          "status":"new"
+          "response":"Yes"
+          "seats":2
+          "message":"Exciting! I'll take 2"
+          "attachment":{"id":"2","url":"http://newyork.seriouseats.com/2013/09/how-betony-makes-their-short-ribs.html","title":"How Betony Makes Their Short Ribs","description":"It's rare that a restaurant opening in Midtown causes much of a stir, but with Chef Bryce Shuman—the former executive Sous Chef of Eleven Madison Park—at the helm, it's no surprise that Betony is making waves. This short rib dish is one of those wave-makers.","image":"http://newyork.seriouseats.com/assets_c/2013/08/20130826-264197-behind-the-scenes-betony-short-ribs-29-thumb-625xauto-348442.jpg","extras":{}}
+          "location":{"latlon":[42.670053,23.314167],"address":"Blvd \"James Bourchier\" 103, 1407 Sofia, Bulgaria","isCurrentLocation":true}
       }
       {
-        "type":"Comment",
-        "id":"1453991861983",
-        "createdAt":"2016-01-28T14:37:41.983Z",
-        "ownerId": "0"
-        "eventId":"1",
-        "message":"This is what I've been waiting for. I'm on it.",
-        "attachment":{"id":4,"url":"http://www.yummly.com/recipe/My-classic-caesar-318835","title":"My Classic Caesar Recipe","description":"My Classic Caesar Recipe Salads with garlic, anchovy filets, sea salt flakes, egg yolks, lemon, extra-virgin olive oil, country bread, garlic, extra-virgin olive oil, sea salt, romaine lettuce, caesar salad dressing, parmagiano reggiano, ground black pepper, anchovies","image":"http://lh3.ggpht.com/J8bTX6MuGC-8y87DHlxxagqShmJLlPjXff28hN8gksOpLp3fZJ5XaLCGrkZLYMer3YlNAEoOfl6FyrSsl9uGcw=s730-e365","site_name":"Yummly","extras":{"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","yummlyfood:course":"Salads","yummlyfood:ingredients":"anchovies","yummlyfood:time":"40 min","yummlyfood:source":"Food52"},"$$hashKey":"object:258"},
-        "location":null
+        "type":"Comment"
+        head:
+          "id":"1453991861983",
+          "createdAt":"2016-01-28T14:37:41.983Z",
+          "ownerId": "0"
+          "eventId":"1",
+        body:
+          "type":"Comment"
+          "message":"This is what I've been waiting for. I'm on it.",
+          "attachment":{"id":4,"url":"http://www.yummly.com/recipe/My-classic-caesar-318835","title":"My Classic Caesar Recipe","description":"My Classic Caesar Recipe Salads with garlic, anchovy filets, sea salt flakes, egg yolks, lemon, extra-virgin olive oil, country bread, garlic, extra-virgin olive oil, sea salt, romaine lettuce, caesar salad dressing, parmagiano reggiano, ground black pepper, anchovies","image":"http://lh3.ggpht.com/J8bTX6MuGC-8y87DHlxxagqShmJLlPjXff28hN8gksOpLp3fZJ5XaLCGrkZLYMer3YlNAEoOfl6FyrSsl9uGcw=s730-e365","site_name":"Yummly","extras":{"fb:admins":"202900140,632263878,500721039,521616638,553471374,3417349,678870357,506741635","fb:app_id":"54208124338","og:type":"yummlyfood:recipe","yummlyfood:course":"Salads","yummlyfood:ingredients":"anchovies","yummlyfood:time":"40 min","yummlyfood:source":"Food52"},"$$hashKey":"object:258"},
+          "location":null
       }
     ]
     # coffeelint: enable=max_line_length
@@ -67,53 +72,64 @@ EventDetailCtrl = (
       requiresAction: (participation)->
         check = {
           type: participation.type == 'Participation'
-          status: ~['new', 'pending'].indexOf(participation.status)
-          response: participation.response == 'Yes'
+          status: ~['new', 'pending'].indexOf(participation.body.status)
+          response: participation.body.response == 'Yes'
         }
         return _.reject(check).length == 0
-      accept: ($event, event, post)->
-        return if post.type != 'Participation'
-        post.status='accepted'
-        post.review ?= []
-        post.review.push {
-          createdAt: new Date()
-          reviewerId: vm.me.id
-          action: 'accepted'
-          comments: ''
-        }
-        $scope.$emit 'event:feed-changed', [event, post]
+
+      accept: ($event, event, participation)->
         return $q.when()
         .then ()->
-          participation = post
+          return if participation.type != 'Participation'
+
+          participation.body.status='accepted'
+          return participation
+        .then (participation)->
+          # update event to include participation
           return EventActionHelpers.createBooking(event, participation, vm)
         .then (event)->
-          return filterFeed(event)
+          return vm.moderator._logAction(event, participation, vm)
+
+      reject: ($event, event, participation)->
+        return $q.when()
+        .then ()->
+          return if participation.type != 'Participation'
+
+          participation.body.status='rejected'
+          # update participation, post to Server
+          return participation
+        .then (participation)->
+          return vm.moderator._logAction(event, participation, vm)
+
+      _logAction: (event, participation, vm)->
+        # log ParticipationResponse
+        action = {
+          head:
+            reviewerId: vm.me.id
+          body:
+            type: 'ParticipationResponse'
+            action: participation.body.status  # ['accepted', 'rejected']
+            participationId: participation.id
+            $$participation: participation
+            comment: ''
+        }
+        $scope.$emit 'event:feed-changed', [event, action]
+        return EventActionHelpers.FeedHelpers.log(event, action, vm)
+        .then (feed)->
+          return filterFeed(event, feed)
         .then (filteredFeed)->
           event.feed = filteredFeed
 
-      reject: ($event, event, post)->
-        return if post.type != 'Participation'
-        post.status='rejected'
-        post.review ?= []
-        post.review.push {
-          createdAt: new Date()
-          reviewerId: vm.me.id
-          action: 'rejected'
-          comments: ''
-        }
-        $scope.$emit 'event:feed-changed', [event, post]
-        return $q.when()
-        .then ()->
-          return filterFeed(event)
-        .then (filteredFeed)->
-          event.feed = filteredFeed
     }
 
     vm.feed = {
+      postDefaults: {}
       show:
         messageComposer: false
       showMessageComposer: ($event, event, post)->
-        vm.feed.post = {
+        # template for post.body
+        # for post.head: {} # see: FeedHelpers.post()
+        this.postDefaults = {
           message: null
           attachment: null
           address: null
@@ -128,17 +144,17 @@ EventDetailCtrl = (
       acl : {
         isModerator: (event, post)->
           return true if event.moderatorId == vm.me.id
+          return true if ~post.head.moderatorIds?.indexOf vm.me.id
           return true if event.ownerId == vm.me.id
       }
       like: ($event, post)->
-        post.likes ?= []
+        post.head.likes ?= []
         #TODO: should add Ids to the array, not object
-        found = post.likes.indexOf(vm.me)
+        found = post.head.likes.indexOf(vm.me)
         if ~found
-          post.likes.splice(found,1) # unlike
+          post.head.likes.splice(found,1) # unlike
         else
-          post.likes.push(vm.me)
-        post.iLikeThis = !!~post.likes.indexOf(vm.me)
+          post.head.likes.push(vm.me)
 
       showCommentForm: ($event)->
         target = $event.currentTarget
@@ -159,6 +175,7 @@ EventDetailCtrl = (
 
         return $q.when()
         .then ()->
+          #TODO: use head: body: struct
           postComment = {
             $$owner: vm.me
             ownerId: vm.me.id + ''
@@ -180,11 +197,11 @@ EventDetailCtrl = (
       # check moderator status
       feed = _.reduce feed, (result, post)->
         check = {
-          eventId: post.eventId == event.id
+          eventId: post.head.eventId == event.id
         }
         switch post.type
           when 'Participation'
-            check['status'] = ~['new','pending','accepted'].indexOf(post.status)
+            check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
             check['acl'] = vm.post.acl.isModerator(event, post)
           else
             'skip'
@@ -206,9 +223,9 @@ EventDetailCtrl = (
       .then ()->
         _.each FEED, (post)->
           # add $$owner to FEED posts
-          post.$$owner = _.find(vm.lookup.users, {id: post.ownerId})
-          post.likes = [_.sample(vm.lookup.users)]
-          post.iLikeThis = !!~post.likes.indexOf(vm.me)
+          post.head ?= {}
+          post.head.$$owner = _.find(vm.lookup.users, {id: post.head.ownerId})
+          post.head.likes = [_.sample(vm.lookup.users)]
           return
       .then ()->
         return EventsResource.query()
@@ -269,15 +286,13 @@ EventDetailCtrl = (
 
       'beginBooking': (person, event)->
         return EventActionHelpers.bookingWizard(person, event, vm)
-        .then (result)->
-          return if result == 'CANCELED'
-          participation = result
-          post = participation
-          return EventActionHelpers.post(event, post, vm)
+        .then (participation)->
+          return if participation == 'CANCELED'
+          return EventActionHelpers.FeedHelpers.post(event, participation.body, vm)
 
-      'postToFeed': (post)->
-        post.type = "Comment"
-        return EventActionHelpers.post(vm.event, post, vm)
+      'postCommentToFeed': (comment)->
+        comment.type = "Comment"
+        return EventActionHelpers.FeedHelpers.post(vm.event, comment, vm)
         .then ()->
           console.log ['postToFeed', post]
           # reset message-console and hide
@@ -293,7 +308,7 @@ EventDetailCtrl = (
         if $rootScope.user?
           vm.me = $rootScope.user
         else
-          DEV_USER_ID = '3'
+          DEV_USER_ID = '1'
           devConfig.loginUser( DEV_USER_ID ).then (user)->
             # loginUser() sets $rootScope.user
             vm.me = $rootScope.user
