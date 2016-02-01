@@ -1,11 +1,6 @@
 // recipe/recipe.jade
 ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
-  ion-nav-buttons(side="primary")
-    button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
-    button.button.button-icon.button-clear(
-      ng-class="show.newTile ? 'ion-close': 'ion-plus'"
-      ng-click="vm.on.createNewTile()"
-    )
+
   ion-nav-buttons(side="secondary") 
     button.button.button-icon.button-clear.ion-plus(
       ng-class="show.newTile ? 'ion-close': 'ion-plus'"

@@ -166,6 +166,10 @@ EventDetailCtrl = (
           textbox = $wrap[0].querySelector('textarea.comment')
           textbox.focus()
           textbox.scrollIntoViewIfNeeded()
+
+      ###
+      # @description Post comment to a Feed Post
+      ###
       postComment: ($event, post)->
         target = $event.currentTarget
         # parent = ionic.DomUtil.getParentWithClass(target, 'comment-form')
@@ -175,19 +179,26 @@ EventDetailCtrl = (
 
         return $q.when()
         .then ()->
-          #TODO: use head: body: struct
           postComment = {
-            $$owner: vm.me
-            ownerId: vm.me.id + ''
-            createdAt: new Date()
-            comment: angular.copy commentField.value
+            type: "PostComment"
+            head:
+              id: Date.now()
+              ownerId: vm.me.id + ''
+              $$owner: vm.me
+              target:
+                id: post.head.id
+                class: post.type
+              createdAt: new Date()
+              likes: []
+            body:
+              comment: angular.copy commentField.value
           }
           commentField.value = ''
           return [post, postComment]
         .then (result)->
           [post, postComment] = result
-          post.comments ?= []
-          post.comments.unshift postComment
+          post.body.comments ?= []
+          post.body.comments.unshift postComment
 
     }
 
@@ -291,10 +302,13 @@ EventDetailCtrl = (
           return EventActionHelpers.FeedHelpers.post(event, participation.body, vm)
 
       'postCommentToFeed': (comment)->
-        comment.type = "Comment"
-        return EventActionHelpers.FeedHelpers.post(vm.event, comment, vm)
+        data = {
+          type: 'Comment'
+          body: comment
+        }
+        return EventActionHelpers.FeedHelpers.post(vm.event, data, vm)
         .then ()->
-          console.log ['postToFeed', post]
+          console.log ['postToFeed', comment]
           # reset message-console and hide
           vm.feed.show.messageComposer = false
           vm.feed.post={}

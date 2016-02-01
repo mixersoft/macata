@@ -105,7 +105,7 @@ div(ng-repeat="$post in event.feed track by $post.head.id" )
       div.post-comment(
         ng-repeat="$comment in $postBody.comments"
         ) 
-        div.hide {{owner=$comment.$$owner;''}}
+        div.hide {{owner=$comment.head.$$owner;''}}
         div.avatar-wrap 
           img.item-image.ink(
             ng-src="{{owner.face}}"
@@ -115,8 +115,22 @@ div(ng-repeat="$post in event.feed track by $post.head.id" )
           )
         div.comment.item-text-wrap
           b.padding-right {{owner.displayName}} 
-          span.padding-right {{$comment.comment}}
-          span.time-ago.padding-right(am-time-ago="$comment.createdAt")
+          span.padding-right {{$comment.body.comment}}
+          span.time-ago.padding-right(am-time-ago="$comment.head.createdAt")
+          div.likes
+            div
+              span(ng-show="$comment.head.likes.length")
+                span(ng-repeat="person in $comment.head.likes")
+                  {{$index ? ',':''}} 
+                  a(
+                    ui-sref="app.profile({id:'{{person.id}}' })"
+                    ) {{person.displayName}}
+                span  &nbsp;likes this. &mdash;&nbsp;
+              a(
+                ng-click="vm.post.like($event, $comment); $event.preventDefault()"
+                href="#"
+                ng-bind="$comment.head.likes.indexOf(vm.me)===-1 ? 'like' : 'unlike'"
+              )
 
       div.comment-form
         div.hide {{owner=vm.me;''}}
