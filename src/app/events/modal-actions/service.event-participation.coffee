@@ -5,7 +5,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
   $location, $state, $stateParams, $ionicPopup
   $log, toastr
   # TokensResource, ParticipationsResource, ContributionsResource, MenuItemsResource
-  AAAHelpers
+  AAAHelpers, $filter
   appModalSvc, utils
   )->
 
@@ -530,6 +530,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
         participant = _.find(vm.lookup.users, {id: particip.head.ownerId})
         event.$$participants.push participant
         event.$$participants = _.unique(event.$$participants)
+        #TODO: should use a listener or watch on 'event:participants-changed'
+        event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
 
 
         # TODO: need to count seats in each participation
@@ -750,7 +752,7 @@ EventActionHelpers.$inject = ['$rootScope', '$q', '$timeout'
 '$location', '$state', '$stateParams', '$ionicPopup'
 '$log', 'toastr'
 # 'TokensResource', 'ParticipationsResource', 'ContributionsResource', 'MenuItemsResource'
-'AAAHelpers'
+'AAAHelpers', '$filter'
 'appModalSvc', 'utils'
 ]
 

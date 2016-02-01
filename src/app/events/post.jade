@@ -1,5 +1,5 @@
 //- ion-list
-div(ng-repeat="$post in event.feed track by $post.head.id" )
+div(ng-repeat="$post in event | eventFeedFilter track by $post.head.id" )
   ion-item.item-complex.item-post 
     div.hide 
       {{vm=$parent.$parent.$parent.vm;''}}

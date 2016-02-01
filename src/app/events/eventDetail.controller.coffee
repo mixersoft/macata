@@ -6,7 +6,7 @@ EventDetailCtrl = (
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
   uiGmapGoogleMapApi, geocodeSvc
-  UsersResource, EventsResource, EventActionHelpers
+  UsersResource, EventsResource, EventActionHelpers, $filter
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
@@ -117,10 +117,8 @@ EventDetailCtrl = (
         }
         $scope.$emit 'event:feed-changed', [event, action]
         return EventActionHelpers.FeedHelpers.log(event, action, vm)
-        .then (feed)->
-          return filterFeed(event, feed)
-        .then (filteredFeed)->
-          event.feed = filteredFeed
+        # .then (feed)->
+        #   return event.feed = $filter('feedFilter')(event, FEED)
 
     }
 
@@ -242,24 +240,6 @@ EventDetailCtrl = (
 
     }
 
-    # TODO: make $filter
-    filterFeed = (event, feed)->
-      feed ?= event.feed
-      # check moderator status
-      feed = _.reduce feed, (result, post)->
-        check = {
-          eventId: post.head.eventId == event.id
-        }
-        switch post.type
-          when 'Participation'
-            check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
-            check['acl'] = vm.post.acl.isModerator(event, post)
-          else
-            'skip'
-        result.push post if _.reject(check).length == 0
-        return result
-      , []
-      return feed
 
     getData = ()->
       $q.when()
@@ -294,6 +274,7 @@ EventDetailCtrl = (
           event.$$host = host
           console.warn("TESTDATA: using currentUser as event Moderator")
           event.visibleAddress = event.address
+          event.isPostModerator = vm.post.acl.isModerator
           event.moderatorId = vm.me.id  # force for demo data
           event.menuItemIds = [0,1,4]
           console.warn("TESTDATA: using random menuItemIds")
@@ -386,7 +367,10 @@ EventDetailCtrl = (
         vm.event = vm.events[index]
         return vm.event
       .then (event)->
-        event.feed = filterFeed(event, FEED)
+        event.feed = FEED
+        # event.feed = $filter('feedFilter')(event, FEED)
+        event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
+
         deviceW = $window.innerWidth < vm.location.GRID_RESPONSIVE_SM_BREAK
         mapOptions = {
           visible: not deviceW
@@ -436,7 +420,7 @@ EventDetailCtrl.$inject = [
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'uiGmapGoogleMapApi', 'geocodeSvc'
-  'UsersResource', 'EventsResource', 'EventActionHelpers'
+  'UsersResource', 'EventsResource', 'EventActionHelpers', '$filter'
   'utils', 'devConfig', 'exportDebug'
 ]
 

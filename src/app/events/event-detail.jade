@@ -135,27 +135,24 @@ ion-view#event-detail(view-title="{{vm.title}}")
               ng-class="{'ion-arrow-down-b':show.hideParticipants, 'ion-arrow-up-b':!show.hideParticipants}"
               ng-click="show.hideParticipants = !show.hideParticipants"
               )
+          
           ion-item.participant-list.item-avatar-list.item-text-wrap(
             ng-class="{'line-clamp-1': show.hideParticipants}"
             )
-            //- div.avatar-wrap
-            //-   img.item-image.ink(
-            //-     ng-src="{{host.face}}"
-            //-     ng-click="$event.stopImmediatePropagation()"
-            //-     ui-sref="app.profile({id: '{{host.id}}' })"
-            //-     width="40"
-            //-   )
-            div.avatar-wrap(ng-repeat="person in event.$$participants")
+            div.avatar-wrap(ng-repeat="person in event.$$paddedParticipants")
               img.item-image.ink(
+                ng-if="person.face"
                 ng-src="{{person.face}}"
                 ng-click="$event.stopImmediatePropagation()"
                 ui-sref="app.profile({id: '{{person.id}}' })"
+                alt="{{person.displayName}}"
                 width="40"
               )
-            div.avatar-wrap(ng-repeat="person in [3,4,5,6,7]")
               button.item-image.icon.ion-person-add(
+                ng-if="person.value=='placeholder'"
                 ng-click="vm.on.beginBooking(vm.me, event)"
                 )
+
                 
         ion-list.invitations
           ion-item.item-divider
