@@ -83,12 +83,17 @@ RecipeCtrl = (
           console.warn ['forkTile', err]
 
 
+      # called by <new-tile[on-complete]>
       submitNewTile: (result)->
         # new Tile has been submitted to $metor and should be added to collection
         # ?:use a $on listener instead?
         console.log ['submitNewTile', result]
         vm.settings.show.newTile = false
-        vm.rows = devConfig.setData(result)
+        devConfig.setData(result)
+        return devConfig.getData()
+        .then (result)->
+          vm.rows = result
+
 
     }
 

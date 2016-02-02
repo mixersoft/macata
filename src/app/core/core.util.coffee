@@ -13,6 +13,11 @@ HandyStuff = ($window, $document, amMoment) ->
       el = el[0] if el instanceof angular.element
       parent = ionic.DomUtil.getParentWithClass(el, parentClass)
       return child = parent.querySelector(childSelector)
+
+    range: (min, max, step)->
+      step ?= 1
+      range = (x for x in [min..max] by step)
+      return range
   }
   return self
 
