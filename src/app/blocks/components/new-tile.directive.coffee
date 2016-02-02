@@ -19,7 +19,17 @@ MARKUP = {
 
 
 OpenGraph = ($q, $http )->
-  OG_API_ENDPOINT = 'http://localhost:3333/methods/' + 'get-open-graph'
+  OG_API_ENDPOINT ={
+    active: null
+    local: 'http://localhost:3333/methods/' + 'get-open-graph'
+    remote: 'http://app.snaphappi.com:3333/og'
+  }
+
+  OG_API_ENDPOINT.active =
+    if window.location.hostname == "localhost"
+    then OG_API_ENDPOINT.local
+    else OG_API_ENDPOINT.remote
+
   self = {
     matchUrl : (value)->
       # match a url inside a string
@@ -30,7 +40,7 @@ OpenGraph = ($q, $http )->
       found = value.match(reMatchUrl)
       return found?[0]
     get : (url)->
-      return $http.get(OG_API_ENDPOINT, {
+      return $http.get(OG_API_ENDPOINT.active, {
         params: {url: url}
       })
       .then (resp)->
@@ -38,6 +48,11 @@ OpenGraph = ($q, $http )->
         return $q.reject('NOT FOUND') if _.isEmpty resp.data
         og = resp.data
         return og
+      , (err)->
+        if OG_API_ENDPOINT.active == OG_API_ENDPOINT.local
+          OG_API_ENDPOINT.active = OG_API_ENDPOINT.remote
+          console.log(['open-graph.get',err])
+          return self.get(url)
 
     normalize : (og)->
       primaryFields = ['og:url', 'og:title', 'og:description', 'og:image', 'og:site_name']
