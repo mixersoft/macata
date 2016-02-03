@@ -350,7 +350,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
 
       return mapConfig = {
         type: options.type
-        center: angular.copy gMapPoint
+        center: _.pick gMapPoint, ['latitude','longitude']
         zoom: 14
         scrollwheel: false
         control: {}

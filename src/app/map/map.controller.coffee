@@ -60,6 +60,13 @@ MapCtrl = (
 
       #  list-item-container[on-select]
       select: ($item, $index, silent)->
+        if $item == null
+          # unSelect
+          $state.transitionTo($state.current.name
+          , null
+          , {notify:false}
+          )
+          return
         # update history url
         $state.transitionTo($state.current.name
         , {id: $item && $item.id || $index}

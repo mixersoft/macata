@@ -198,7 +198,13 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
               $selectedElContainer =  angular.element target # .list-item-wrap
 
             # console.log $selectedElContainer
+
+
+            # event=null if vm.listItemDelegate.select() on activate() 
+            return if not event instanceof MouseEvent
+
             if $selectedElContainer.hasClass('selected')
+              # unSelect
               vm.selected( null )
               vm.layout('summary', $selectedElContainer)
               $scope.onSelect?({
