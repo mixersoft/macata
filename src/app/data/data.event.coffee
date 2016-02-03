@@ -18,7 +18,7 @@ EventsResource = (Resty, amMoment) ->
       inspiration: "Just because I miss my days in Tokyo"
       aspiration: 2           # 0-3 stars
 
-      heroPic: "http://danielfooddiary.com/wp-content/uploads/2013/09/ippudosg3.jpg"
+      heroPic: "http://vignette2.wikia.nocookie.net/ramen/images/c/c2/Tonkotsu_ramen_640.jpg/revision/latest?cb=20150514230437"
 
       # when: 4=Thur
       startTime: moment().weekday(7).add(14,'d').hour(20).startOf('hour').toJSON() # search/filter

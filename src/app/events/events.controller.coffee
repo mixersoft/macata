@@ -5,6 +5,7 @@ EventCtrl = (
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
+  UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
 
@@ -35,11 +36,20 @@ EventCtrl = (
 
     getData = ()->
       vm.rows = []
-      return devConfig.getData(null,{className:'Event'})
-      .then (data)->
-        vm.rows = _.filter data, (o,i,l)->
-          return true if ~[0,1,4].indexOf(i)
-        exportDebug.set('rows', vm.rows)
+      return $q.when()
+      .then ()->
+        return UsersResource.query()
+      .then (users)->
+        vm.lookup.users = users
+      .then ()->
+        return EventsResource.query()
+        .then (events)->
+          _.each events, (o)->
+            o['image'] = o['heroPic']
+            return
+          return events
+      .then (events)->
+        vm.rows = events
         return vm.rows
 
     vm.on = {
@@ -115,6 +125,7 @@ EventCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
+  'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 
