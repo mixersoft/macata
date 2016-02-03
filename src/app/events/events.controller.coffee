@@ -44,8 +44,9 @@ EventCtrl = (
       .then ()->
         return EventsResource.query()
         .then (events)->
-          _.each events, (o)->
+          _.each events, (o, i)->
             o['image'] = o['heroPic']
+            o.createdAt = moment().subtract(i, 'days').toJSON()
             return
           return events
       .then (events)->

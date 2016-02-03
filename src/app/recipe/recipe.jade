@@ -39,6 +39,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
  
     list-item-container.content.condensed(
       collection="vm.rows"
+      filter="'mostRecentFilter:createdAt'"
       scroll-handle="recipe-list-scroll"
       summary-min-width="320"
       detail-max-width="720"

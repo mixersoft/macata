@@ -6,6 +6,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
     restrict: 'E'
     scope: {
       collection:"="
+      filter:"="
       itemHeight:"="
       summaryMinWidth: "="
       detailMaxWidth: "="
@@ -237,6 +238,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
             return vm.getColWidth()
           'setItemHeight' : ()->
             throw new Error '$listItemDelegate.setItemHeight() not ready' # set in link
+          'filter': $scope.filter
         }
 
         return vm
@@ -272,7 +274,7 @@ ListItemContainerDirective.$inject = ['ngRepeatGridSvc']
 
 
 
-ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
+ListSummaryDirective = ($filter, $window, $controller, $ionicScrollDelegate)->
   return {
     restrict: 'E'
     require: '^listItemContainer'
@@ -280,48 +282,59 @@ ListSummaryDirective = ($compile, $window, $controller, $ionicScrollDelegate)->
     replace: true
     template: """
       <div name="list-summary-wrap" class="list-item-summary row ng-repeat-grid">
-        <div class="list-item-wrap col" ng-class="$listItemDelegate.getColWidth()" ng-repeat="$item in collection" ng-transclude-parent="parent">
+        <div class="list-item-wrap col"
+          ng-class="$listItemDelegate.getColWidth()"
+          ng-repeat="$item in collection"
+          ng-transclude-parent="parent">
         </div>
       </div>
     """
     scope: {
       collection:"="
     }
-    link:
-      pre: (scope, element, attrs, controller, transclude) ->
-        controller['$summaryEl'] = element
-        return
-      post: (scope, element, attrs, controller, transclude) ->
-        scope.$listItemDelegate = controller['$listItemDelegate']
+    compile: (tElement, tAttrs, transclude)->
+      link = {
+        pre: (scope, element, attrs, controller, transclude) ->
+          controller['$summaryEl'] = element
+          return
+        post: (scope, element, attrs, controller, transclude) ->
+          scope.$listItemDelegate = controller['$listItemDelegate']
 
-        if not attrs.collection?
-          # list-item-summary[collection] takes precedence
-          scope.$watch '$listItemDelegate.collection()', (newV, oldV)->
-            scope.collection = newV
-            scope.$broadcast 'list-item-summary:changed'
-            return
+          if not attrs.collection?
+            # list-item-summary[collection] takes precedence
+            scope.$watch '$listItemDelegate.collection()', (newV, oldV)->
 
-        controller.selected(null)
-        scope.dbg = {
-          'faceClick': (event, className)->
-            event.stopImmediatePropagation()
-            angular.element(
-              document.querySelector('.list-item-detail')
-            ).toggleClass(className)
-            return
-          'select' : controller.select
-          'close' : (event)->
-            event.stopImmediatePropagation()
-            target = angular.element event.currentTarget
-            $selectedElContainer = target.parent() # .list-item-wrap
-            controller.selected(null)
-            controller.layout('summary', $selectedElContainer)
+              filter = scope.$listItemDelegate.filter?.split(':')
+              if filter
+                scope.collection = $filter(filter.shift()).apply(this, [newV].concat(filter))
+              else
+                scope.collection = newV
+              scope.$broadcast 'list-item-summary:changed'
+              return
 
-        }
-        return
+          controller.selected(null)
+          scope.dbg = {
+            'faceClick': (event, className)->
+              event.stopImmediatePropagation()
+              angular.element(
+                document.querySelector('.list-item-detail')
+              ).toggleClass(className)
+              return
+            'select' : controller.select
+            'close' : (event)->
+              event.stopImmediatePropagation()
+              target = angular.element event.currentTarget
+              $selectedElContainer = target.parent() # .list-item-wrap
+              controller.selected(null)
+              controller.layout('summary', $selectedElContainer)
+
+          }
+          return
+      }
+      return link
   }
 
-ListSummaryDirective.$inject = ['$compile', '$window', '$controller', '$ionicScrollDelegate']
+ListSummaryDirective.$inject = ['$filter', '$window', '$controller', '$ionicScrollDelegate']
 
 
 

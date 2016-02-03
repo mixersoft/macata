@@ -274,7 +274,8 @@ EventDetailCtrl = (
       #   return events
       .then (events)->
         vm.events = []
-        _.each events, (event)->
+        _.each events, (event, i)->
+          event.createdAt = moment().subtract(i, 'days').toJSON()
           host = _.find(vm.lookup.users, {id: event.ownerId})
           event.$$host = host
           console.warn("TESTDATA: using currentUser as event Moderator")

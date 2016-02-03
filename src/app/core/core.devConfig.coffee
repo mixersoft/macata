@@ -56,6 +56,7 @@ DevConfig = ($rootScope, UsersResource, $q, $log, openGraphSvc)->
           merged = openGraphSvc.normalize o
           merged.id = i
           merged.location = sampleData.location[i]
+          merged.createdAt = moment().subtract(7-i, 'days').toJSON()
           angular.extend(merged, options) if options
           return merged
         CACHE[key] = data
