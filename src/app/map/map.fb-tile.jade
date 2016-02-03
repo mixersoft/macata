@@ -29,7 +29,7 @@ list-item-summary.animate-fade-slide-in-right(
         i.button.button-clear.ion-ios-upload.larger.ink(
           )
       div.feature.image(
-        bg-image="{{$item['image']}}"
+        bg-image="{{$item['image'] || $item['heroPic']}}"
       )
     div.body.padding
       div.title.line-clamp-1 {{$item['title']}}
@@ -49,11 +49,15 @@ list-item-detail
       ng-click="$event.stopImmediatePropagation()"
       )
       a.button(
-        href="{{$item['url']}}"
-        target="_blank"
+        href="{{$item['url']}}" target="_blank"
         )
         i.icon.positive.ion-android-open.ink(
         )
+      button.button(
+        ng-click="dvm.on.gotoTarget($event,$item)"
+        )
+        i.icon.positive.ion-forward.ink(
+        )  
       button.button(
         ng-click="$item.favorite = !$item.favorite"
         )

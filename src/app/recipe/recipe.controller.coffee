@@ -89,6 +89,9 @@ RecipeCtrl = (
         # ?:use a $on listener instead?
         console.log ['submitNewTile', result]
         vm.settings.show.newTile = false
+        # console.log "newTile=" + JSON.stringify result
+        # check result.body for details
+        # 
         devConfig.setData(result)
         return devConfig.getData(null,{className:'Recipe'})
         .then (result)->
@@ -166,12 +169,23 @@ RecipeCtrl.$inject = [
 ###
 
 RecipeDetailCtrl = (
-  $scope, $rootScope, $q
+  $scope, $rootScope, $q, $state
   tileHelpers, openGraphSvc
   $log, toastr
   ) ->
     vm = this
     vm.on = {
+      'gotoTarget':(event, item)->
+        event.stopImmediatePropagation()
+        switch item.className
+          when 'Events'
+            return $state.go('app.event-detail', {id:item.id})
+            # return "app.events({id:'" + item.id + "'})"
+          else
+            return  $state.go('app.recipe', {id:item.id})
+            # return "app.recipe({id:'" + item.id + "'})"
+
+
       'click': (event, item)->
         event.stopImmediatePropagation()
         $log.info ['RecipeDetailCtrl.on.click', item.name]
@@ -203,7 +217,7 @@ RecipeDetailCtrl = (
     return vm
 
 RecipeDetailCtrl.$inject = [
-  '$scope', '$rootScope', '$q'
+  '$scope', '$rootScope', '$q', '$state'
   'tileHelpers', 'openGraphSvc'
   '$log', 'toastr'
 ]

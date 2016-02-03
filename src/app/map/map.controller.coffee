@@ -5,6 +5,7 @@ MapCtrl = (
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
   uiGmapGoogleMapApi, openGraphSvc, geocodeSvc
+  EventsResource
   utils, devConfig, exportDebug
   )->
 
@@ -87,10 +88,16 @@ MapCtrl = (
     _getAsGeocodeResult = (rows)->
       rows ?= vm.rows
       return _.map rows, (o, i, rows)->
+        if _.isArray o.location
+          [lat,lon] = o.location
+        else if o.location?.lat
+          lat = o.location.lat?() || o.location.lat
+          lon = o.location.lng?() || o.location.lon
+
         o.geometry = {
           location:
-            lat: ()->return o.location.lat
-            lng: ()->return o.location.lon
+            lat: ()->return lat
+            lng: ()->return lon
         }
         o.formatted_address = o.address
         return o
@@ -223,7 +230,18 @@ MapCtrl = (
 
     getData = ()->
       vm.rows = []
-      return devConfig.getData()
+      return $q.when()
+      .then ()->
+        promises=[]
+        promises.push devConfig.getData(null,{className:'Recipe'})  # recipes/ideas
+        promises.push EventsResource.query().then (result)->
+          return result[0...3]
+        return $q.all(promises)
+        .then (results)->
+          data = []
+          _.each results, (result)->
+            data = data.concat( result )
+          return data
       .then (data)->
         vm.rows = data
         exportDebug.set('rows', vm.rows)
@@ -250,7 +268,7 @@ MapCtrl = (
 
     activate = ()->
       if index = $stateParams.id
-        stop = $scope.$on 'map-ready', (ev)->
+        stop = $scope.$on 'map-ready', (ev, map)->
           vm.listItemDelegate.select(null, vm.rows[index], index)
           stop?()
           return
@@ -294,6 +312,7 @@ MapCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
   'uiGmapGoogleMapApi', 'openGraphSvc', 'geocodeSvc'
+  'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 
