@@ -36,7 +36,7 @@ RecipeCtrl = (
 
     getData = ()->
       vm.rows = []
-      return devConfig.getData()
+      return devConfig.getData(null,{className:'Recipe'})
       .then (data)->
         vm.rows = data
         exportDebug.set('rows', vm.rows)
@@ -90,7 +90,7 @@ RecipeCtrl = (
         console.log ['submitNewTile', result]
         vm.settings.show.newTile = false
         devConfig.setData(result)
-        return devConfig.getData()
+        return devConfig.getData(null,{className:'Recipe'})
         .then (result)->
           vm.rows = result
 

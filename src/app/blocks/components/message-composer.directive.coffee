@@ -78,7 +78,7 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDel
 
         $mc.RECIPE = {
           search: ()->
-            return devConfig.getData()
+            return devConfig.getData(null,{className:'Recipe'})
             .then (data)->
               rows = data
               return $mc.RECIPE.modal_showSearchRecipeTile(rows)

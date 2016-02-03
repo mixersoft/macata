@@ -2,8 +2,9 @@
 
 Resty = ($q) ->
 
-  RestyClass = (@_data = {}) ->
+  RestyClass = (@_data = {}, className) ->
     # alias to mimic ngResource
+    @className = className
     @get = RestyClass::get
     @query = (filter)->
       RestyClass::get.call(this, 'all')
@@ -18,9 +19,13 @@ Resty = ($q) ->
 
 
   RestyClass::get = (id) ->
+    className = @className
     if id=='all' || `id==null`
       result = _.chain( @_data )
-      .each (v,k)-> v.id = k
+      .each (v,k)->
+        v.id = k
+        v.className = className
+        return
       .value()
       return $q.when _.values result
 
@@ -58,7 +63,7 @@ Resty = ($q) ->
     delete @_data[id]
     return $q.when true
 
-  
+
 
   # static methods
   RestyClass.lorempixel = (w,h,cat)->

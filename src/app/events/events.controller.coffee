@@ -35,7 +35,7 @@ EventCtrl = (
 
     getData = ()->
       vm.rows = []
-      return devConfig.getData()
+      return devConfig.getData(null,{className:'Event'})
       .then (data)->
         vm.rows = _.filter data, (o,i,l)->
           return true if ~[0,1,4].indexOf(i)

@@ -46,7 +46,7 @@ DevConfig = ($rootScope, UsersResource, $q, $log, openGraphSvc)->
         $rootScope.$emit 'user:sign-in', $rootScope['user']
         return $rootScope['user']
 
-    getData : (key='null')->
+    getData : (key='null', options)->
       return $q.when CACHE[key] if not _.isEmpty CACHE[key]
       return $q.when()
       .then ()->
@@ -55,6 +55,7 @@ DevConfig = ($rootScope, UsersResource, $q, $log, openGraphSvc)->
           merged = openGraphSvc.normalize o
           merged.id = i
           merged.location = sampleData.location[i]
+          angular.extend(merged, options) if options
           return merged
         CACHE[key] = data
         return data

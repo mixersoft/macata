@@ -248,7 +248,7 @@ EventDetailCtrl = (
       .then (users)->
         vm.lookup.users = users
       .then ()->
-        return devConfig.getData()
+        return devConfig.getData(null,{className:'Recipe'})
       .then (data)->
         vm.lookup.menuItems = data
       .then ()->

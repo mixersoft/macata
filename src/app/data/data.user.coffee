@@ -1,6 +1,7 @@
 'use strict'
 
 UsersResource = (Resty, amMoment) ->
+  className = 'Users'
   data = {
     0:
       firstname  : 'Masie'
@@ -33,8 +34,8 @@ UsersResource = (Resty, amMoment) ->
     v.face += k
     return
 
-    
-  return service = new Resty(data)
+
+  return service = new Resty(data, className)
 
 
 UsersResource.$inject = ['Resty','amMoment']
