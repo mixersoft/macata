@@ -292,8 +292,9 @@ EventDetailCtrl = (
           event.$$participants ?= []
           event.participantIds ?= []
 
+          sampleOwnerIds = _.sample( [0...3], event.menuItemIds.length)
           _.each event.$$menuItems, (mi, i, l)->
-            mi.ownerId = _.sample( [0...3] ) + ''  # assign menuItem.ownerId
+            mi.ownerId = sampleOwnerIds[i] + ''  # assign menuItem.ownerId
             participant = _.find(vm.lookup.users, {id: mi.ownerId})
             mi.$$owner = participant
             event.participantIds.push participant.id

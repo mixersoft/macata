@@ -87,15 +87,21 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
 .item-input.text-and-range {
   @extend .padding-right;
   .item-input-wrapper {
-    display: inline-flex;
+    position:relative;
     height: 34px;
-    input {
-      width: initial;
+    input[type="text"] {
+      width: 10%;
+      max-width: 10%;
       padding-right: 0;
     }
     .range {
       height: 34px;
       padding-left: 0;
+      width: 90%;
+      input[type="range"] {
+        width: initial;
+        padding-right: 0;
+      }
     }
   }
 }
