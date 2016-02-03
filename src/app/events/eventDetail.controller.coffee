@@ -15,17 +15,22 @@ EventDetailCtrl = (
         "type":"Participation"
         head:
           "id":"1453967670695"
-          "createdAt":"2016-01-28T07:54:30.696Z"
+          "createdAt": moment().subtract(23, 'minutes').toJSON()
           "eventId":"1"
           "ownerId": "3"
         body:
           "type":"Participation"
           "status":"new"
           "response":"Yes"
-          "seats":2
-          "message":"Exciting! I'll take 2"
-          "attachment":{"id":"2","url":"http://newyork.seriouseats.com/2013/09/how-betony-makes-their-short-ribs.html","title":"How Betony Makes Their Short Ribs","description":"It's rare that a restaurant opening in Midtown causes much of a stir, but with Chef Bryce Shuman—the former executive Sous Chef of Eleven Madison Park—at the helm, it's no surprise that Betony is making waves. This short rib dish is one of those wave-makers.","image":"http://newyork.seriouseats.com/assets_c/2013/08/20130826-264197-behind-the-scenes-betony-short-ribs-29-thumb-625xauto-348442.jpg","extras":{}}
-          "location":{"latlon":[42.670053,23.314167],"address":"Blvd \"James Bourchier\" 103, 1407 Sofia, Bulgaria","isCurrentLocation":true}
+          "seats":2,
+          "message":"Exciting. I'll take 2 and bring the White Stork."
+          "attachment":
+            "id":6
+            "url":"http://whitestorkco.com/"
+            "title":"White Stork","description":"At White Stork, we are passionate about taste and the need to have more good beer in Bulgaria. After extensive research, testing, tasting, tweaking and experimentation since 2011, we hatched our first Pale Ale in December 2013 and wanted to show you the wonders of the Citra hop in our Summer Pale Ale in July 2014. Although our beers are currently made by our amazing master brewer in Belgium, we are building our brewery in Sofia which will hopefully be operational soon."
+            "image":"https://pbs.twimg.com/profile_images/691694111468945408/H8VRdkNg.jpg"
+          "address":"ul. \"Oborishte\" 18, 1504 Sofia, Bulgaria",
+          "location":{"latlon":[42.69448,23.342364],"address":"ul. \"Oborishte\" 18, 1504 Sofia, Bulgaria"}
       }
       {
         "type":"Comment"
@@ -276,7 +281,7 @@ EventDetailCtrl = (
           event.visibleAddress = event.address
           event.isPostModerator = vm.post.acl.isModerator
           event.moderatorId = vm.me.id  # force for demo data
-          event.menuItemIds = [0,1,4]
+          event.menuItemIds = _.sample( [0...6] ,3)
           console.warn("TESTDATA: using random menuItemIds")
           event.$$menuItems = _.map event.menuItemIds, (id)->
             return vm.lookup.menuItems[id]
@@ -287,7 +292,7 @@ EventDetailCtrl = (
           event.participantIds ?= []
 
           _.each event.$$menuItems, (mi, i, l)->
-            mi.ownerId = i + ''  # assign menuItem.ownerId
+            mi.ownerId = _.sample( [0...3] ) + ''  # assign menuItem.ownerId
             participant = _.find(vm.lookup.users, {id: mi.ownerId})
             mi.$$owner = participant
             event.participantIds.push participant.id

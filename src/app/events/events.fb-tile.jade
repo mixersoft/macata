@@ -7,7 +7,7 @@ list-item-summary.animate-fade-slide-in-right(
   opt-collection="vm.rows"
 ) {{vm=$parent.$parent.vm;''}}
   div.tile.recipe.item.item-complex.content.ink(
-    ng-class="[$item.color,'bg'].join('-')"
+    xxx-ng-class="[$item.color,'bg'].join('-')"
     ng-click="$event.stopImmediatePropagation()"
     ui-sref="app.event-detail({id:{{$index}}})"
   )

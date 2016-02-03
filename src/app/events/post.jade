@@ -62,7 +62,7 @@ div(ng-repeat="$post in event | eventFeedFilter track by $post.head.id" )
               ng-class="{'selected':$item.favorite}"
               )     
             i.button.button-clear.larger.ion-map.ink(
-              xxx-ui-sref="app.map({'id':{{ $item.id }} })"
+              xxx-ui-sref="app.map({'latlon':{{ $postBody.location.latlon }} })"
               )
             i.button.button-clear.larger.ink(
               ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"

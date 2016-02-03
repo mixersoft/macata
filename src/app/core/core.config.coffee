@@ -44,6 +44,13 @@ toastrConfig = (toastrConfig) ->
     positionClass: 'toast-bottom-right'
   }
 
+ionicConfig = ($ionicConfigProvider)->
+  $ionicConfigProvider.backButton.text('')
+  $ionicConfigProvider.backButton.previousTitleText(false)
+  return
+
+ionicConfig.$inject = ['$ionicConfigProvider']
+
 
 
 
@@ -53,4 +60,5 @@ appRun.$inject = ['$ionicPlatform', '$ionicHistory', '$rootScope', '$location', 
 angular
   .module 'starter.core'
   .config toastrConfig
+  .config ionicConfig
   .run appRun

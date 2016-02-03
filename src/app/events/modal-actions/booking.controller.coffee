@@ -54,8 +54,8 @@ EventBookingCtrl = (
           seats: parseInt booking.seats
           message: booking.message
           attachment: booking.attachment
-          address: booking.address
-          location: booking.location
+          'xxx-address': booking.address  # deprecate?
+          location: booking.location  # booking.location = {address: latlon:}
       }
       # check for existing participation
       if ~participantIds?.indexOf(person.id)

@@ -1,9 +1,10 @@
 
-ion-side-menus(enable-menu-with-back-views="true")
+ion-side-menus(enable-menu-with-back-views="false")
 
   // Menu Content
   ion-side-menu-content(edge-drag-threshold="true")
     ion-nav-bar.bar-positive
+      ion-nav-back-button
       ion-nav-buttons(side="primary")
         button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
 
@@ -18,8 +19,11 @@ ion-side-menus(enable-menu-with-back-views="true")
     ion-content
       ion-list
         ion-item.ink(nav-clear, menu-close, ui-sref="app.home") Home
-        ion-item.ink(nav-clear, menu-close, ui-sref="app.me") My Profile
-        ion-item.ink(nav-clear, menu-close, ui-sref="app.grid") Grid
-        ion-item.ink(nav-clear, menu-close, ui-sref="app.recipe") Recipe
+        ion-item.ink(nav-clear, menu-close, ui-sref="app.events") Events
+        ion-item.ink(nav-clear, menu-close, ui-sref="app.recipe") Ideas
         ion-item.ink(nav-clear, menu-close, ui-sref="app.map") Map
-        ion-item.ink(nav-clear, menu-close, ui-sref="app.events") Event
+        ion-item.ink(nav-clear, menu-close, ui-sref="app.me") My Profile
+        //- ion-item.ink(nav-clear, menu-close, ui-sref="app.grid") Grid
+        
+        
+        

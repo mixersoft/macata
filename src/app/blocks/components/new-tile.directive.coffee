@@ -49,7 +49,7 @@ OpenGraph = ($q, $http )->
         og = resp.data
         return og
       , (err)->
-        if OG_API_ENDPOINT.active == OG_API_ENDPOINT.local
+        if OG_API_ENDPOINT.active != OG_API_ENDPOINT.remote
           OG_API_ENDPOINT.active = OG_API_ENDPOINT.remote
           console.log(['open-graph.get',err])
           return self.get(url)
@@ -60,6 +60,8 @@ OpenGraph = ($q, $http )->
       _.each _.pick( og, primaryFields ), (v,k)->
         normalized[ k.replace('og:','') ] = v
         return
+      return og if _.isEmpty normalized
+
       normalized['extras'] = _.omit og, primaryFields
       return normalized
   }
@@ -87,6 +89,7 @@ TileHelpers = (appModalSvc, $q)->
 
         return result
     isTileComplete: (data)->
+      return isComplete = false if _.isEmpty data
       isComplete = _.reduce ['url', 'title', 'description', 'image'], (result, key)->
         return result = result && data[key]
       , true

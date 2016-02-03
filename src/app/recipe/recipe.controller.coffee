@@ -11,7 +11,7 @@ RecipeCtrl = (
     viewLoaded = null   # promise
 
     vm = this
-    vm.title = "Recipes"
+    vm.title = "Ideas"
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
     vm.acl = {
@@ -91,7 +91,7 @@ RecipeCtrl = (
         vm.settings.show.newTile = false
         # console.log "newTile=" + JSON.stringify result
         # check result.body for details
-        # 
+
         devConfig.setData(result)
         return devConfig.getData(null,{className:'Recipe'})
         .then (result)->

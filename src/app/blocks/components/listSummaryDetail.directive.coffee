@@ -200,7 +200,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
             # console.log $selectedElContainer
 
 
-            # event=null if vm.listItemDelegate.select() on activate() 
+            # event=null if vm.listItemDelegate.select() on activate()
             return if not event instanceof MouseEvent
 
             if $selectedElContainer.hasClass('selected')
