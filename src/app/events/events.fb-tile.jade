@@ -12,11 +12,10 @@ list-item-summary.animate-fade-slide-in-right(
     ui-sref="app.event-detail({id:{{$index}}})"
   )
     div.hero.content(style="height:160px;")
-      div.item-avatar-right.ink(
-        ng-click=""
-      )
+      div.item-avatar-right.ink
         img.ink(
-          placeholder-data="img" group="face" size="160" index="{{$index}}"
+          xxx-placeholder-data="img" group="face" size="200" index="{{$index}}"
+          ng-src="{{$item.$$host.face}}"
           ng-click="$event.stopImmediatePropagation()"
           ui-sref="app.profile({'id':{{$index}}})"
         )

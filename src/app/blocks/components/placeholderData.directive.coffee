@@ -1,42 +1,73 @@
 # placeholder.direcctive.coffee
 'use strict'
 
-PlaceholderDataDirective = ($http, $compile)->
+str2Int = (key)->
+  return parseInt key if not _.isNaN parseInt( key )
+  return null if not _.isString key
+  return _.reduce [0...key.length], (hash, i)->
+    return hash += key.charCodeAt(i)
+  , 0
 
-  ready = $http.get('https://unsplash.it/list')
+UnsplashIt = ($http)->
+  _data = []
+
+  hashKey = (index, offset, list)->
+    offset = str2Int( offset )
+    index = str2Int( index )
+    return hash = ((index * 11 + offset ) %% list.length)
+
+
+  waitUntilReady = $http.get('https://unsplash.it/list')
   .then (result)->
     console.log ['dir:Tile data[0]', result.data[0] , result.data.length]
-    return result.data
+    _data = result.data
+    self.isReady = true
+    return _data
   .catch (err)->
     console.error ['Unsplash.it NOT AVAILABLE',err]
     throw err
 
-  hashKey = (index, offset, list)->
-    index = str2Int( index )
-    return hash = ((index * 11 + offset ) %% list.length)
 
-  getImgSrc = (index, offset, list, options)->
-    options = _.extend {
-      width: 320
-      height: 240
-    }, options
-    hash = hashKey(index,offset,list)
-    id = list[ hash ].id
-    [
-      'https://unsplash.it/'
-      options.width + '/'
-      options.height + '/'
-      '?image='
-      id
-    ].join('')
+  _defaultSize = {
+    width: 320
+    height: 240
+  }
 
-  str2Int = (key)->
-    return parseInt key if not _.isNaN parseInt( key )
-    return null if not _.isString key
-    return _.reduce [0...key.length], (hash, i)->
-      return hash += key.charCodeAt(i)
-    , 0
+  self = {
+    ready: waitUntilReady
+    isReady: false
+    getName: (index, offset, options, list)->
+      return 'NOT_READY' if not self.isReady
+      list ?= _data
+      hash = hashKey(index,offset,list)
+      name = list[hash]['author']
+      return name
+    getImgSrc: (index, offset, options, list)->
+      return 'NOT_READY' if not self.isReady
+      list ?= _data
+      options = _.extend _defaultSize, options
+      if options['face']?
+        options = {
+          width: 200
+          height: 200
+        }
+      hash = hashKey(index,offset,list)
+      id = list[ hash ].id
+      return [
+        'https://unsplash.it/'
+        options.width + '/'
+        options.height + '/'
+        '?image='
+        id
+      ].join('')
 
+  }
+  return self
+
+
+UnsplashIt.$inject = ['$http']
+
+PlaceholderDataDirective = ($compile, unsplashItSvc)->
 
   return {
     restrict: 'A'
@@ -60,8 +91,8 @@ PlaceholderDataDirective = ($http, $compile)->
               height: scope.size
             }
 
-          return ready
-          .then (list)->
+          return unsplashItSvc.ready
+          .finally ()->
             offset = str2Int attrs['group']
             offset ?= Math.random()*100
             index = attrs['index'] || attrs['key']
@@ -69,18 +100,19 @@ PlaceholderDataDirective = ($http, $compile)->
             switch attrs['placeholderData']
               when 'img', 'image'
                 # console.log ['placeholderImg', offset, index]
-                src = getImgSrc(index , offset, list, options)
+                src = unsplashItSvc.getImgSrc(index , offset, options)
                 element.attr('src', src)
               when 'bg-src', 'bgSrc'
                 # console.log ['bg-img', offset, index]
-                scope.model?['bgSrc'] = getImgSrc(index , offset, list, options)
+                src = unsplashItSvc.getImgSrc(index , offset, options)
+                scope.model?['bgSrc'] = src
               when 'bg-image'
+                # just move src to background-image
                 # element.attr('bg-image', src)
                 element.addClass('bg-image')
                   .css('background-image', "url({src})".replace('{src}', src) )
               when 'name'
-                hash = hashKey(index,offset,list)
-                name = list[hash]['author']
+                name = unsplashItSvc.getName(index , offset, options)
                 if scope.model?
                   scope.model['name'] = name
                 else
@@ -89,7 +121,8 @@ PlaceholderDataDirective = ($http, $compile)->
       }
   }
 
-PlaceholderDataDirective.$inject = ['$http', '$compile']
+PlaceholderDataDirective.$inject = ['$compile', 'unsplashItSvc']
 
 angular.module 'blocks.components'
+  .factory 'unsplashItSvc', UnsplashIt
   .directive 'placeholderData', PlaceholderDataDirective

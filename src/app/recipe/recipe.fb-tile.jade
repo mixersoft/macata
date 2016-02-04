@@ -7,10 +7,17 @@ list-item-summary.animate-fade-slide-in-right(
   opt-collection="vm.rows"
 ) {{vm=$parent.$parent.vm;''}}
   div.tile.recipe.item.item-complex.content.ink(
-    ng-class="[$item.color,'bg'].join('-')"
+    xxx-ng-class="[$item.color,'bg'].join('-')"
     ng-click="$listItemDelegate.select($event, $item, $index)"
   )
     div.hero.content(style="height:160px;")
+      div.item-avatar-right.ink
+        img.ink(
+          placeholder-data="img" group="face" size="200" index="{{$index}}"
+          xxx-ng-src="{{$item.$$host.face}}"
+          ng-click="$event.stopImmediatePropagation()"
+          ui-sref="app.profile({'id':{{$index}}})"
+        )
       div.icon-bar.bottom-toolbar.condensed.light(
         ng-show="$item['title']"
         ng-click="$event.stopImmediatePropagation()"
