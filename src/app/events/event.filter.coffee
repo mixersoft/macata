@@ -40,28 +40,32 @@ EventFeedFilter.$inject = []
 ###
 EventParticipantsFilter = ()->
   return (event)->
-    return [] if not (event.$$participants && event.$$host)
+    return [] if not (event.$$participations && event.$$host)
     MAX_VISIBLE_PARTICIPANTS = 12
     total = Math.min event.seatsTotal, MAX_VISIBLE_PARTICIPANTS
     padded = []
     hostId = event.$$host.id
-    participantList = event.$$participants
+    now = Date.now() + '-'
+    h = _.findIndex event.$$participations, {ownerId: hostId}
     #move host to front
-    h = _.findIndex participantList, {id: hostId}
     if h > 0
-      host = participantList.splice(h,1)
-      participantList.unshift(host[0])
+      host = event.$$participations.splice(h,1)
+      event.$$participations.unshift(host[0])
 
-    _.each [0...total], (i)->
-      person = participantList[i]
-      if person?
-        padded.push person
+    _.each event.$$participations, (p, i)->
+      _.each [0...p.seats], (i)->
+        face = _.pick p.$$owner, ['id', 'face', 'displayName']
+        face['trackBy'] = now + padded.length
+        padded.push face
         return
+      return
+    _.each [padded.length...total], (i)->
       padded.push {
-        id: Date.now() + '' + i
+        'trackBy': now + padded.length
         value: 'placeholder'
       }
       return
+
     return padded
 
 EventParticipantsFilter.$inject = []

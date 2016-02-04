@@ -1,6 +1,10 @@
 'use strict'
 
-appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location, $log) ->
+appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
+  $log, devConfig
+) ->
+
+  devConfig.loadData()
 
   $ionicPlatform.ready ->
     # Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -55,7 +59,9 @@ ionicConfig.$inject = ['$ionicConfigProvider']
 
 
 
-appRun.$inject = ['$ionicPlatform', '$ionicHistory', '$rootScope', '$location', '$log']
+appRun.$inject = ['$ionicPlatform', '$ionicHistory', '$rootScope', '$location',
+  '$log', 'devConfig'
+]
 
 angular
   .module 'starter.core'

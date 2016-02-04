@@ -4,7 +4,7 @@ RecipeCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  appModalSvc, tileHelpers, openGraphSvc
+  appModalSvc, tileHelpers, openGraphSvc, IdeasResource
   utils, devConfig, exportDebug
   )->
 
@@ -36,10 +36,9 @@ RecipeCtrl = (
 
     getData = ()->
       vm.rows = []
-      return devConfig.getData(null,{className:'Recipe'})
+      return IdeasResource.query()
       .then (data)->
         vm.rows = data
-        exportDebug.set('rows', vm.rows)
         return vm.rows
 
     vm.on = {
@@ -91,11 +90,12 @@ RecipeCtrl = (
         vm.settings.show.newTile = false
         # console.log "newTile=" + JSON.stringify result
         # check result.body for details
-
-        devConfig.setData(result)
-        return devConfig.getData(null,{className:'Recipe'})
-        .then (result)->
-          vm.rows = result
+        if result
+          return IdeasResource.post(result)
+          .then ()->
+            return IdeasResource.query()
+          .then (result)->
+            vm.rows = result
 
 
     }
@@ -158,7 +158,7 @@ RecipeCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'openGraphSvc'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'IdeasResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 

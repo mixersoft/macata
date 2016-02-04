@@ -10,7 +10,9 @@
 #       <message-composer></message-composer>
 #
 
-MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDelegate)->
+MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
+  tileHelpers, IdeasResource
+)->
   directive = {
     restrict: 'EA'
     templateUrl: 'blocks/components/message-composer.template.html'
@@ -78,7 +80,7 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDel
 
         $mc.RECIPE = {
           search: ()->
-            return devConfig.getData(null,{className:'Recipe'})
+            return IdeasResource.query()
             .then (data)->
               rows = data
               return $mc.RECIPE.modal_showSearchRecipeTile(rows)
@@ -130,8 +132,8 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDel
           submitNewTile: (result)->
             console.log ['submitNewTile', result]
             $mc.settings.show.newTile = false
-            result = devConfig.setData(result) if result
-            return $q.when result
+            if result
+              return IdeasResource.post(result)
         }
 
         $mc.LOCATION = {
@@ -182,8 +184,8 @@ MessageComposerDirective = ($compile, $q, $timeout, tileHelpers, $ionicScrollDel
   }
   return directive
 
-MessageComposerDirective.$inject = ['$compile', '$q', '$timeout', 'tileHelpers'
-  '$ionicScrollDelegate'
+MessageComposerDirective.$inject = ['$compile', '$q', '$timeout', '$ionicScrollDelegate'
+  'tileHelpers', 'IdeasResource'
 ]
 
 

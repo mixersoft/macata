@@ -6,7 +6,7 @@ EventDetailCtrl = (
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
   uiGmapGoogleMapApi, geocodeSvc
-  UsersResource, EventsResource, EventActionHelpers, $filter
+  UsersResource, EventsResource, IdeasResource, EventActionHelpers, $filter
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
@@ -17,7 +17,7 @@ EventDetailCtrl = (
           "id":"1453967670695"
           "createdAt": moment().subtract(23, 'minutes').toJSON()
           "eventId":"1"
-          "ownerId": "3"
+          "ownerId": "5"
         body:
           "type":"Participation"
           "status":"new"
@@ -253,7 +253,7 @@ EventDetailCtrl = (
       .then (users)->
         vm.lookup.users = users
       .then ()->
-        return devConfig.getData(null,{className:'Recipe'})
+        return IdeasResource.query()
       .then (data)->
         vm.lookup.menuItems = data
       .then ()->
@@ -265,45 +265,13 @@ EventDetailCtrl = (
           return
       .then ()->
         return EventsResource.query()
-
-      # .then (events)->
-      #   # TEST: ui-sref bug, delay until everything is ready
-      #   # events = sortEvents(events, vm.filter)
-      #   vm.events = events
-      #   # toastr.info JSON.stringify( events)[0...50]
-      #   return events
       .then (events)->
         vm.events = []
         _.each events, (event, i)->
-          event.createdAt = moment().subtract(i, 'days').toJSON()
-          host = _.find(vm.lookup.users, {id: event.ownerId})
-          event.$$host = host
           console.warn("TESTDATA: using currentUser as event Moderator")
           event.visibleAddress = event.address
           event.isPostModerator = vm.post.acl.isModerator
           event.moderatorId = vm.me.id  # force for demo data
-          event.menuItemIds = _.sample( [0...6] ,3)
-          console.warn("TESTDATA: using random menuItemIds")
-          event.$$menuItems = _.map event.menuItemIds, (id)->
-            return vm.lookup.menuItems[id]
-
-          # fake data
-          # TODO: sum participation.seats
-          event.$$participants ?= []
-          event.participantIds ?= []
-
-          sampleOwnerIds = _.sample( [0...3], event.menuItemIds.length)
-          _.each event.$$menuItems, (mi, i, l)->
-            mi.ownerId = sampleOwnerIds[i] + ''  # assign menuItem.ownerId
-            participant = _.find(vm.lookup.users, {id: mi.ownerId})
-            mi.$$owner = participant
-            event.participantIds.push participant.id
-            event.$$participants.push( mi.$$owner )
-            return
-          event.seatsOpen = event.seatsTotal - event.participantIds.length
-          event.$$participants = _.unique(event.$$participants)
-          event.participantIds = _.unique(event.participantIds)
-
           vm.events.push event
           return
         return events
@@ -427,7 +395,7 @@ EventDetailCtrl.$inject = [
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'uiGmapGoogleMapApi', 'geocodeSvc'
-  'UsersResource', 'EventsResource', 'EventActionHelpers', '$filter'
+  'UsersResource', 'EventsResource', 'IdeasResource', 'EventActionHelpers', '$filter'
   'utils', 'devConfig', 'exportDebug'
 ]
 

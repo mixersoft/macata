@@ -5,7 +5,7 @@ MapCtrl = (
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
   uiGmapGoogleMapApi, openGraphSvc, geocodeSvc
-  EventsResource
+  EventsResource, IdeasResource
   utils, devConfig, exportDebug
   )->
 
@@ -233,7 +233,7 @@ MapCtrl = (
       return $q.when()
       .then ()->
         promises=[]
-        promises.push devConfig.getData(null,{className:'Recipe'})  # recipes/ideas
+        promises.push IdeasResource.query()  # recipes/ideas
         promises.push EventsResource.query().then (result)->
           return result[0...3]
         return $q.all(promises)
@@ -312,7 +312,7 @@ MapCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
   'uiGmapGoogleMapApi', 'openGraphSvc', 'geocodeSvc'
-  'EventsResource'
+  'EventsResource', 'IdeasResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 

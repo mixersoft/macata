@@ -139,7 +139,7 @@ ion-view#event-detail(view-title="{{vm.title}}")
           ion-item.participant-list.item-avatar-list.item-text-wrap(
             ng-class="{'line-clamp-1': show.hideParticipants}"
             )
-            div.avatar-wrap(ng-repeat="person in event.$$paddedParticipants")
+            div.avatar-wrap(ng-repeat="person in event.$$paddedParticipants track by person.trackBy")
               img.item-image.ink(
                 ng-if="person.face"
                 ng-src="{{person.face}}"

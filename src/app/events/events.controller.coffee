@@ -46,12 +46,9 @@ EventCtrl = (
         .then (events)->
           _.each events, (o, i)->
             o['image'] = o['heroPic']
-            o.createdAt = moment().subtract(i, 'days').toJSON()
             return
-          return events
-      .then (events)->
-        vm.rows = events
-        return vm.rows
+          vm.rows = events
+          return vm.rows
 
     vm.on = {
       scrollTo: (anchor)->

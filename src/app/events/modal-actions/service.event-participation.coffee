@@ -514,30 +514,34 @@ EventActionHelpers = ($rootScope, $q, $timeout
       # called by vm.moderator.accept()
       createBooking: (event, particip, vm)->
 
-        _participation2menuItem = (participation)->
-          participant = _.find(vm.lookup.users, {id: participation.head.ownerId})
-          menuItem = _.extend participation.body.attachment, {
+        _participation2menuItem = (participation, item)->
+          menuItem = _.extend item.body.attachment, {
             id: Date.now()
-            $$owner: participant
-            ownerId: participation.head.ownerId
+            $$owner: participation.$$owner
+            ownerId: participation.ownerId
           }
           return menuItem
 
         event.participantIds ?= []
         event.participantIds.push particip.head.ownerId
         event.participantIds = _.unique(event.participantIds)
+        p = {
+          id: Date.now()
+          seats: particip.body.seats
+          createdAt: new Date()
+          ownerId: particip.head.ownerId
+          $$owner: _.find(vm.lookup.users, {id: particip.head.ownerId})
+        }
 
-        participant = _.find(vm.lookup.users, {id: particip.head.ownerId})
-        event.$$participants.push participant
-        event.$$participants = _.unique(event.$$participants)
+        event.participationIds.push p.id
+        event.$$participations.push p
         #TODO: should use a listener or watch on 'event:participants-changed'
         event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
 
 
         # TODO: need to count seats in each participation
         event.seatsOpen -= particip.body.seats
-        console.warn ["WARNING: createBooking() sum seats to get event.seatsOpen", particip]
-        event.$$menuItems.push _participation2menuItem( particip)
+        event.$$menuItems.push _participation2menuItem(p, particip)
         event.$$menuItems = _.unique event.$$menuItems
 
         return event
