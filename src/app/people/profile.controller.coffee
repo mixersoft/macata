@@ -21,6 +21,9 @@ ProfileCtrl = (
     vm.title = "Profile"
     vm.me = null      # current user, set in initialize()
     vm.imgAsBg = utils.imgAsBg
+    vm.demoRole = null
+    $scope.$watch 'vm.demoRole', (newV)->
+      $rootScope.demoRole = newV
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -32,6 +35,13 @@ ProfileCtrl = (
         show: null    # [signin|profile|account]
       editing: false
       changePassword: false
+    }
+    vm.demoRoles = {
+      'host': 'Host'
+      'participant': 'Participant'
+      'booking': 'Booking'
+      'invited': 'Invited'
+      'visitor': 'Visitor'
     }
     vm.on = {
       scrollTo: (anchor)->

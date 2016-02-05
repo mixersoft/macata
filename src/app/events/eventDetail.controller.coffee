@@ -17,7 +17,7 @@ EventDetailCtrl = (
           "id":"1453967670695"
           "createdAt": moment().subtract(23, 'minutes').toJSON()
           "eventId":"1"
-          "ownerId": "5"
+          "ownerId": "4"
         body:
           "type":"Participation"
           "status":"new"
@@ -239,11 +239,31 @@ EventDetailCtrl = (
           exportDebug.set 'mapConfig', config
           return
 
-
-
-
-
     }
+
+    loginByRole = (event)->
+      userId = null
+      switch $rootScope.demoRole
+        when 'host'
+          userId = event.ownerId
+        when 'participant'
+          userId = _.sample event.participantIds[1...event.participantIds.length]
+        when 'booking'
+          userId = '4'
+        when 'invited'
+          userId = '5'
+        when 'visitor'
+          userId = '6'
+      return $q.when() if !userId
+      return devConfig.loginUser(userId, 'force')
+      .then (user)->
+        toastr.info [
+          "You are now "
+          user.displayName
+          ", role="
+          $rootScope.demoRole
+        ].join('')
+
 
 
     getData = ()->
@@ -340,6 +360,7 @@ EventDetailCtrl = (
       .then ()->
         index = $stateParams.id
         vm.event = vm.events[index]
+        loginByRole(vm.event)
         return vm.event
       .then (event)->
         event.feed = FEED

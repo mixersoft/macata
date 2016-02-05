@@ -30,14 +30,20 @@ UsersResource = (Resty, $q, unsplashItSvc) ->
     4:
       firstname  : 'Daisy'
       lastname   : 'Duke'
-      username   : 'dudu'
-      displayName: 'dudu'
+      username   : 'daisy'
+      displayName: 'daisy'
       face       : Resty.lorempixel 200, 200, 'people'
-    5:
+    5: # invited
       firstname  : 'Bobby'
       lastname   : 'Boo'
       username   : 'booboo'
       displayName: 'booboo'
+      face       : Resty.lorempixel 200, 200, 'people'
+    6: # Visitor
+      firstname  : 'Vikki'
+      lastname   : 'Vee'
+      username   : 'vivi'
+      displayName: 'vivi'
       face       : Resty.lorempixel 200, 200, 'people'
 
   }
@@ -74,7 +80,7 @@ UsersResource = (Resty, $q, unsplashItSvc) ->
   #       user.face = result.image_urls.epic
   #       return user
 
-  
+
   promises = []
   promises.push service.query()
   promises.push unsplashItSvc.ready
