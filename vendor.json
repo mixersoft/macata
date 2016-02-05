@@ -13,6 +13,8 @@
     "robotodraft/fonts/**/*",
     "angular-meteor/dist/angular-meteor.bundle.js",
     "angular-google-maps/dist/angular-google-maps.js",
+    "manual/ion-fab.css",
+    "manual/ion-fab.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [

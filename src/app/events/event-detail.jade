@@ -4,7 +4,8 @@ ion-view#event-detail(view-title="{{vm.title}}")
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
 
-  ion-content.event-detail.has-header.has-footer(
+  ion-content.event-detail.has-header(
+    fab-scroll-container
     delegate-handle="list-item-scroll"
     scroll-sista="header"
   ) 
@@ -181,10 +182,11 @@ ion-view#event-detail(view-title="{{vm.title}}")
       ion-item.item-divider
         p control panel
                   
-  ion-footer-bar.bar-positive.no-padding {{ event=vm.event;'' }}
-    div.button-bar
-      button.button(
-        ng-click="vm.on.beginBooking(vm.me, event)"
-        ) Join
-      button.button.button-icon.ion-pizza(ng-click="")
-      button.button(ng-click="mm.on.done($event)") Done
+  ion-fab(
+    animation="fade"
+    xxlive-displace="false"
+    ng-click="vm.on.fabClick($event, vm)"
+    )
+    i.icon.ion(
+      ng-class="vm.settings.show.fabIcon"
+      )

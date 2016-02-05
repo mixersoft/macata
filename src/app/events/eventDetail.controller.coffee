@@ -310,7 +310,21 @@ EventDetailCtrl = (
           role = 'visitor'
         vm.me.role = role
         console.log "addRoleToUser(), role="+role
+        setFabIcon()
 
+    setFabIcon = ()->
+      vm.settings.show.fabIcon = 'ion-load-d' if !vm.me
+
+      icon = null
+      switch vm.me?.role
+        when 'host', 'participant', 'booking'
+          # edit event
+          icon = 'ion-edit'
+        when 'invitation','visitor'
+          # join
+          icon = 'ion-plus'
+      # console.log ["FabIcon=" + icon, vm.me.role]
+      vm.settings.show.fabIcon = icon
 
 
 
@@ -325,6 +339,23 @@ EventDetailCtrl = (
           next = if vm.settings.show == 'grid' then 'list' else 'grid'
           return vm.settings.view.show = next
         return vm.settings.view.show = value
+
+      fabClick: ()->
+        switch vm.me.role
+          when 'host'
+            # edit event
+            return vm.on.notReady 'Edit'
+          when 'participant'
+            # edit participation, contribution
+            return vm.on.notReady 'Edit'
+          when 'booking'
+            # edit booking
+            return vm.on.notReady 'Edit'
+          when 'invitation','visitor'
+            # join
+            return vm.on['beginBooking'](vm.me, vm.event)
+        return
+
 
       'beginBooking': (person, event)->
         return EventActionHelpers.bookingWizard(person, event, vm)
