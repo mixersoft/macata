@@ -18,8 +18,24 @@ getStates = ->
       url: '/app'
       abstract: true
       templateUrl: 'layout/sidemenu.html'
-      # controller: 'AppCtrl'
-      # controllerAs: 'vm'
+      controllerAs: 'vm'
+      controller: [ '$rootScope', ($rootScope)->
+        vm = this
+        vm.demoRole = null
+        vm.demoRoles = {
+          'host': 'Host'
+          'participant': 'Participant'
+          'booking': 'Booking'
+          'invited': 'Invited'
+          'visitor': 'Visitor'
+        }
+        vm.roleChanged = ($event, role)->
+          $rootScope.demoRole = role
+          $rootScope.$emit 'demo-role:changed', role
+          return
+        return vm
+      ]
+
   ]
 
 appRun.$inject = ['routerHelper']

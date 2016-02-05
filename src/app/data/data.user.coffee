@@ -33,13 +33,19 @@ UsersResource = (Resty, $q, unsplashItSvc) ->
       username   : 'daisy'
       displayName: 'daisy'
       face       : Resty.lorempixel 200, 200, 'people'
-    5: # invited
+    5: # booking
       firstname  : 'Bobby'
       lastname   : 'Boo'
       username   : 'booboo'
       displayName: 'booboo'
       face       : Resty.lorempixel 200, 200, 'people'
-    6: # Visitor
+    6: # invited
+      firstname  : 'Izzy'
+      lastname   : 'Wizz'
+      username   : 'izzy'
+      displayName: 'izzy'
+      face       : Resty.lorempixel 200, 200, 'people'
+    7: # Visitor
       firstname  : 'Vikki'
       lastname   : 'Vee'
       username   : 'vivi'

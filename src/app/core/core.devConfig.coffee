@@ -21,11 +21,13 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
         $rootScope.$emit 'user:sign-in', $rootScope['user']
         return $rootScope['user']
 
+    dataReady: null # promise
+
     loadData: ()->
       users = []
       ideas = []
       events = []
-      return $q.when()
+      return self.dataReady = $q.when()
       .then ()->
         return UsersResource.query()
       .then (result)->
@@ -36,7 +38,7 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
         ideas = result
         _.each ideas, (idea, i)->
           idea.createdAt = moment().subtract(i, 'days').toJSON()
-          idea.$$owner = users[ i % users.length ]
+          idea.$$owner = users[ i % 4 ]  # only userId < 4
           idea.ownerId = idea.$$owner.id
           IdeasResource.put(idea.id, idea)
         return ideas
@@ -54,8 +56,8 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
           console.warn("TESTDATA: using random menuItems")
           fromHost = _.find ideas, {ownerId: event.ownerId}
           event.$$menuItems = [fromHost]
-          event.$$menuItems = event.$$menuItems.concat( _.sample ideas, 3 )
-          event.$$menuItems = _.unique(event.$$menuItems)[0...3]
+          event.$$menuItems = event.$$menuItems.concat( _.sample ideas[0...3], 3 )
+          event.$$menuItems = _.unique(event.$$menuItems)
           event.menuItemIds = _.pluck event.$$menuItems, 'id'
 
           event.seatsOpen = event.seatsTotal
@@ -83,6 +85,7 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
         exportDebug.set('users',users)
         exportDebug.set('ideas',ideas)
         exportDebug.set('events',events)
+
   }
 
   return self # DevConfig

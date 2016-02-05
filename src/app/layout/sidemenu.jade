@@ -24,6 +24,18 @@ ion-side-menus(enable-menu-with-back-views="false")
         ion-item.ink(nav-clear, menu-close, ui-sref="app.map") Map
         ion-item.ink(nav-clear, menu-close, ui-sref="app.me") My Profile
         //- ion-item.ink(nav-clear, menu-close, ui-sref="app.grid") Grid
+        //
+      div#demo-roles.content
+        div.card(
+          ng-click="vm.roleChanged($event, vm.demoRole)"
+          )
+          ion-item.item-divider.item-assertive(
+            ) Change User/Roles for Demo
+          ion-radio(
+            ng-repeat="(role, label) in vm.demoRoles"
+            ng-value="role"
+            ng-model="vm.demoRole"
+            ) {{label}}
         
         
         

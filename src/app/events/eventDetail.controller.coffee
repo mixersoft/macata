@@ -70,10 +70,7 @@ EventDetailCtrl = (
 
     vm.lookup = {}
 
-    vm.event = {
-      menuItems: []
-      feed: []
-    }
+    vm.event = {}
 
     vm.moderator = {
       requiresAction: (participation)->
@@ -149,7 +146,7 @@ EventDetailCtrl = (
       acl : {
         isModerator: (event, post)->
           return true if event.moderatorId == vm.me.id
-          return true if ~post.head.moderatorIds?.indexOf vm.me.id
+          return true if post.head.moderatorIds? && ~post.head.moderatorIds.indexOf vm.me.id
           return true if event.ownerId == vm.me.id
       }
       like: ($event, post)->
@@ -246,24 +243,26 @@ EventDetailCtrl = (
       switch $rootScope.demoRole
         when 'host'
           userId = event.ownerId
-        when 'participant'
+        when 'participant' # userId < 4
           userId = _.sample event.participantIds[1...event.participantIds.length]
         when 'booking'
-          userId = '4'
-        when 'invited'
           userId = '5'
-        when 'visitor'
+        when 'invited'
           userId = '6'
+        when 'visitor'
+          userId = '7'
       return $q.when() if !userId
       return devConfig.loginUser(userId, 'force')
       .then (user)->
+        vm.me = user
+        return user
+      .finally ()->
         toastr.info [
           "You are now "
-          user.displayName
+          vm.me.displayName
           ", role="
-          $rootScope.demoRole
+          $rootScope.demoRole.toUpperCase()
         ].join('')
-
 
 
     getData = ()->
@@ -291,11 +290,26 @@ EventDetailCtrl = (
           console.warn("TESTDATA: using currentUser as event Moderator")
           event.visibleAddress = event.address
           event.isPostModerator = vm.post.acl.isModerator
-          event.moderatorId = vm.me.id  # force for demo data
+          event.moderatorId = event.ownerId
           vm.events.push event
           return
         return events
 
+    addRoleToUser = ()->
+      return devConfig.dataReady.finally ()->
+        return if !vm.event.participantIds
+        if vm.me.id == vm.event.ownerId
+          role = 'host'
+        else if ~vm.event.participantIds.indexOf vm.me.id
+          role = 'participant'
+        else if vm.me.id == '5'
+          role = 'booking'
+        else if vm.me.id == '6'
+          role = 'invitation'
+        else
+          role = 'visitor'
+        vm.me.role = role
+        console.log "addRoleToUser(), role="+role
 
 
 
@@ -333,7 +347,11 @@ EventDetailCtrl = (
         $event.preventDefault()
         event.stopImmediatePropagation()
         vm.settings.show.map = !vm.settings.show.map
+
         # console.log ['toggleMap', vm.settings.show.map]
+      notReady: (value)->
+        toastr.info "Sorry, " + value + " is not available yet"
+        return false
 
 
     }
@@ -344,11 +362,11 @@ EventDetailCtrl = (
         if $rootScope.user?
           vm.me = $rootScope.user
         else
-          DEV_USER_ID = '1'
+          DEV_USER_ID = '5'
           devConfig.loginUser( DEV_USER_ID ).then (user)->
             # loginUser() sets $rootScope.user
             vm.me = $rootScope.user
-            toastr.info "Login as userId=0"
+            toastr.info "Login as userId="+vm.me.id
             return vm.me
       .then ()->
         getData()
@@ -356,13 +374,13 @@ EventDetailCtrl = (
 
     activate = ()->
       return $q.reject("ERROR: expecting event.id") if not $stateParams.id
-      return $q.when()
-      .then ()->
+      return devConfig.dataReady
+      .finally ()->
         index = $stateParams.id
         vm.event = vm.events[index]
-        loginByRole(vm.event)
-        return vm.event
-      .then (event)->
+        loginByRole(vm.event).then addRoleToUser
+      .then ()->
+        event = vm.event
         event.feed = FEED
         # event.feed = $filter('feedFilter')(event, FEED)
         event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
@@ -394,6 +412,16 @@ EventDetailCtrl = (
       angular.element(document.querySelectorAll(selector))
         .removeClass('in')
         .removeClass('done')
+
+    $rootScope.$on 'demo-role:changed', (ev, newV)->
+      return if !newV
+      # $rootScope.demoRole = newV
+      return loginByRole(vm.event) if vm.event
+
+    $scope.$watch 'vm.me', (newV)->
+      return if !newV
+      vm.me.role = null
+      addRoleToUser()
 
     $scope.$on '$ionicView.leave', (e) ->
       resetMaterialMotion('fadeSlideInRight')

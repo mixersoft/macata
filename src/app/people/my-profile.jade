@@ -50,14 +50,3 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
               button.button.button-assertive(
                 ng-click="vm.on.signOut()"
                 ) Sign out
-
-    div#demo-roles.content.row.responsive-sm
-      div.col.col-offset-25.col-50
-        div.card
-          ion-item.item-divider.item-royal(
-            ) Change User/Roles for Demo
-          ion-radio(
-            ng-repeat="(role, label) in vm.demoRoles"
-            ng-value="role"
-            ng-model="vm.demoRole"
-            ) {{label}}
