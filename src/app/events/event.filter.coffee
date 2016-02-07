@@ -4,8 +4,10 @@
 # @description filter event.feed for demo data
 ###
 EventFeedFilter = ()->
-  return (event, feed, me)->
+  return (event, me, feed)->
+    return [] if !event.feed
     feed ?= event.feed
+    # console.info "user NOT set" if !me
 
     # check moderator status
     feed = _.reduce feed, (result, post)->
@@ -13,17 +15,27 @@ EventFeedFilter = ()->
       if "OK-for-demo"
         post.head.eventId = event.id
 
+      # all check properties must be truthy for true
+      head = post.head
       check = {
-        eventId: post.head.eventId == event.id
+        eventId: head.eventId == event.id
+        notPrivate: not head.private
       }
       switch post.type
+        when 'Invitation'
+          check['status'] = ~['new','viewed','closed'].indexOf(post.body.status)
+          check['privy'] = me && ~[head.ownerId, head.recipientId].indexOf me.id
+          delete check['notPrivate']
         when 'Participation'
           check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
           check['acl'] = event.isPostModerator(event, post)
         when 'ParticipationResponse'
-          head = post.head
           # hide private from feed
-          check['private'] = true || head.ownerId == me.id || not head.private
+          check['ownerId'] = me && head.ownerId == me.id
+          delete check['notPrivate']
+        when 'Comment'
+          if head.notPrivate==false
+            check['privy'] = me && ~[head.ownerId, head.recipientId].indexOf me.id
         else
           'skip'
       result.push post if _.reject(check).length == 0

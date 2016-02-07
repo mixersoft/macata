@@ -241,6 +241,7 @@ ion-item.item-post {
       color: #888;
       a {
         text-decoration: none;
+        cursor: pointer;
       }
       a:hover {
         text-decoration: underline;
@@ -556,6 +557,10 @@ body.platform-browser  {
  * END listSummaryDetail.directive
  */
 
+
+ion-side-menu > ion-content {
+  background-color: #BBB;
+}
 
 /*
  * app.profile

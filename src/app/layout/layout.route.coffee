@@ -19,21 +19,28 @@ getStates = ->
       abstract: true
       templateUrl: 'layout/sidemenu.html'
       controllerAs: 'vm'
-      controller: [ '$rootScope', ($rootScope)->
-        vm = this
-        vm.demoRole = null
-        vm.demoRoles = {
-          'host': 'Host'
-          'participant': 'Participant'
-          'booking': 'Booking'
-          'invited': 'Invited'
-          'visitor': 'Visitor'
-        }
-        vm.roleChanged = ($event, role)->
-          $rootScope.demoRole = role
-          $rootScope.$emit 'demo-role:changed', role
-          return
-        return vm
+      controller: [
+        '$rootScope', '$ionicSideMenuDelegate'
+        ($rootScope, $ionicSideMenuDelegate)->
+          vm = this
+          vm.demoRole = null
+          vm.demoRoles = {
+            'host': 'Host'
+            'participant': 'Participant'
+            'booking': 'Booking'
+            'invited': 'Invited'
+            'visitor': 'Visitor'
+          }
+          $rootScope.$watch '$rootScope.demoRole', (newV)->
+            vm.demoRole = $rootScope.demoRole
+
+          vm.roleChanged = ($event, role)->
+            $rootScope.demoRole = role
+            # $emit or $watch('$rootScope.demoRole')
+            $rootScope.$emit 'demo-role:changed', role
+            $ionicSideMenuDelegate.toggleLeft(false)
+            return
+          return vm
       ]
 
   ]

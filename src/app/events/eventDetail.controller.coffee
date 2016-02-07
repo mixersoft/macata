@@ -5,12 +5,30 @@ EventDetailCtrl = (
   $ionicScrollDelegate, $state, $stateParams
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
-  uiGmapGoogleMapApi, geocodeSvc
+  uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc
   UsersResource, EventsResource, IdeasResource, EventActionHelpers, $filter
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
     FEED = [
+      {
+        # NOTE: for invitation by link, we only know from the invite token
+        #   vm.me may be undefined
+        "type":"Invitation"
+        head:
+          "id":"1453967670694"
+          "createdAt": moment().subtract(7, 'hours').toJSON()
+          "eventId":"1"
+          "ownerId": "0"      # sender
+          "token":  "invite-token-if-found"
+          "recipientId": "6"  # filterBy: feed.type
+          "notPrivate": false
+        body:
+          "type":"Invitation"
+          "status":"new"      # [new, viewed, closed, hide]
+          "message":"Please come-this will be epic!"
+          "comments":[]       #$postBody.comments, show msg, regrets here
+      }
       {
         "type":"Participation"
         head:
@@ -72,12 +90,113 @@ EventDetailCtrl = (
 
     vm.event = {}
 
-    vm.moderator = {
-      requiresAction: (participation)->
+    vm.inviteActions = {
+      requiresAction: (post)->
         check = {
-          type: participation.type == 'Participation'
-          status: ~['new', 'pending'].indexOf(participation.body.status)
-          response: participation.body.response == 'Yes'
+          type: post.type == 'Invitation'
+          status: ~['new', 'viewed'].indexOf(post.body.status)
+        }
+        return _.reject(check).length == 0
+
+      accept: ($event, event, invitation)->
+        return $q.when()
+        .then ()->
+          return if invitation.type != 'Invitation'
+
+          invitation.body.status='viewed'
+          return invitation
+        .then (invitation)->
+          return vm.on.beginBooking(vm.me, event)
+        .then (participation)->
+          return if !participation
+          invitation.body.status='closed' # ???: accepted, rejected?
+          invitation.body.response = 'accepted'
+          # append a log as a comment to invitation
+          invitation.body.seats = participation.body.seats
+          return vm.inviteActions._logAction(event, invitation, vm)
+          .then (invitation)->
+            target = $event.target
+            $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
+            $wrap.removeClass('hide')
+          .then (invitation)->
+            return $timeout(2000)
+          .then ()->
+            # ???: auto accept invitation request
+            # TODO: need to change ParticipationResponse.head.ownerId
+            vm.moderatorActions.accept($event, event, participation)
+
+
+      message: ($event, event, invitation)->
+        return $q.when()
+        .then ()->
+          invitation.body.status='viewed'
+          return vm.post.showCommentForm($event)
+
+      reject: ($event, event, invitation)->
+        return $q.when()
+        .then ()->
+          return if invitation.type != 'Invitation'
+
+          invitation.body.status='closed'
+          invitation.body.response = 'declined'
+          # append a log as a comment to invitation
+          return vm.inviteActions._logAction(event, invitation, vm)
+        .then (result)->
+          target = $event.target
+          $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
+          $wrap.removeClass('hide')
+
+
+      _logAction: (event, invitation, vm)->
+        options = {
+          log: true
+          message: [
+            vm.me.displayName
+            'has', invitation.body.response
+          ]
+        }
+        switch invitation.body.response
+          when 'declined'
+            options.message.push 'this invitation.'
+          when 'accepted'
+            options.message = options.message.concat [
+              'this invitation, and requested'
+              invitation.body.seats
+              'seats.'
+            ]
+          else
+            return
+
+        return vm.post.postComment(null, invitation, options)
+
+
+        # action = {
+        #   head:
+        #     ownerId: invitation.head.recipientId
+        #     recipientId: invitation.head.ownerId
+        #     notPrivate: false
+        #   body:
+        #     type: 'Comment'
+        #     message: [
+        #       vm.me.displayName
+        #       'has', invitation.body.response ,'your invitation.'
+        #     ].join(' ')
+        # }
+        # ???: post or log?
+        # return EventActionHelpers.FeedHelpers.post(event, action, vm)
+        # .then (feed)->
+        #   $scope.$emit 'event:feed-changed', [event, action]
+        #   # return event.feed = $filter('feedFilter')(event, FEED)
+
+
+    }
+
+    vm.moderatorActions = {
+      requiresAction: (post)->
+        check = {
+          type: post.type == 'Participation'
+          status: ~['new', 'pending'].indexOf(post.body.status)
+          response: post.body.response == 'Yes'
         }
         return _.reject(check).length == 0
 
@@ -92,7 +211,13 @@ EventDetailCtrl = (
           # update event to include participation
           return EventActionHelpers.createBooking(event, participation, vm)
         .then (event)->
-          return vm.moderator._logAction(event, participation, vm)
+          return vm.moderatorActions._logAction(event, participation, vm)
+
+      message: ($event, event, participation)->
+        return $q.when()
+        .then ()->
+          participation.body.status='pending'
+          return vm.post.showCommentForm($event)
 
       reject: ($event, event, participation)->
         return $q.when()
@@ -103,7 +228,7 @@ EventDetailCtrl = (
           # update participation, post to Server
           return participation
         .then (participation)->
-          return vm.moderator._logAction(event, participation, vm)
+          return vm.moderatorActions._logAction(event, participation, vm)
 
       _logAction: (event, participation, vm)->
         # log ParticipationResponse
@@ -148,6 +273,8 @@ EventDetailCtrl = (
           return true if event.moderatorId == vm.me.id
           return true if post.head.moderatorIds? && ~post.head.moderatorIds.indexOf vm.me.id
           return true if event.ownerId == vm.me.id
+          # console.info "DEMO: isModerator() == true"
+          # return true
       }
       like: ($event, post)->
         post.head.likes ?= []
@@ -171,37 +298,53 @@ EventDetailCtrl = (
 
       ###
       # @description Post comment to a Feed Post
+      # @params options Obj, {log:boolean, message:String}
       ###
-      postComment: ($event, post)->
-        target = $event.currentTarget
-        # parent = ionic.DomUtil.getParentWithClass(target, 'comment-form')
-        # commentField = parent.querySelector('textarea.comment')
-        commentField = utils.getChildOfParent(target, 'comment-form', 'textarea.comment')
-        return $q.when() if not commentField.value
+      postComment: ($event, post, options)->
+        if !options
+          target = $event.currentTarget
+          # parent = ionic.DomUtil.getParentWithClass(target, 'comment-form')
+          # commentField = parent.querySelector('textarea.comment')
+          commentField = utils.getChildOfParent(target, 'comment-form', 'textarea.comment')
+          comment = angular.copy commentField.value
+        else
+          comment = options.message
+          comment = comment.join(' ') if _.isArray comment
+
+        return $q.when() if not comment
 
         return $q.when()
         .then ()->
+          from = vm.me
+          if options?['log'] == true
+            from = {
+              id: 'log'
+              displayName: 'feed:'
+              face: unsplashItSvc.getImgSrc(0,'syslog',{face:true})
+            }
+
           postComment = {
             type: "PostComment"
             head:
               id: Date.now()
-              ownerId: vm.me.id + ''
-              $$owner: vm.me
+              ownerId: from.id + ''
+              $$owner: from
               target:
                 id: post.head.id
                 class: post.type
               createdAt: new Date()
               likes: []
             body:
-              comment: angular.copy commentField.value
+              comment: comment
           }
-          commentField.value = ''
+          if commentField?
+            commentField.value = ''
           return [post, postComment]
         .then (result)->
           [post, postComment] = result
           post.body.comments ?= []
-          post.body.comments.unshift postComment
-
+          post.body.comments.push postComment
+          return post
     }
 
     vm.location = {
@@ -238,8 +381,9 @@ EventDetailCtrl = (
 
     }
 
-    loginByRole = (event)->
+    loginByRole = (event, forceRole)->
       userId = null
+      $rootScope.demoRole = forceRole if forceRole
       switch $rootScope.demoRole
         when 'host'
           userId = event.ownerId
@@ -255,6 +399,7 @@ EventDetailCtrl = (
       return devConfig.loginUser(userId, 'force')
       .then (user)->
         vm.me = user
+        $rootScope.$emit 'demo-role:changed', $rootScope.demoRole if forceRole
         return user
       .finally ()->
         toastr.info [
@@ -309,7 +454,7 @@ EventDetailCtrl = (
         else
           role = 'visitor'
         vm.me.role = role
-        console.log "addRoleToUser(), role="+role
+        console.info "addRoleToUser(), role="+role
         setFabIcon()
 
     setFabIcon = ()->
@@ -356,12 +501,14 @@ EventDetailCtrl = (
             return vm.on['beginBooking'](vm.me, vm.event)
         return
 
-
+      # TODO: change params to (event, person)
       'beginBooking': (person, event)->
         return EventActionHelpers.bookingWizard(person, event, vm)
         .then (participation)->
           return if participation == 'CANCELED'
-          return EventActionHelpers.FeedHelpers.post(event, participation.body, vm)
+          return EventActionHelpers.FeedHelpers.post(event, participation, vm)
+        .then (participation)->
+          return participation
 
       'postCommentToFeed': (comment)->
         data = {
@@ -391,14 +538,8 @@ EventDetailCtrl = (
       return viewLoaded = $q.when()
       .then ()->
         if $rootScope.user?
-          vm.me = $rootScope.user
-        else
-          DEV_USER_ID = '5'
-          devConfig.loginUser( DEV_USER_ID ).then (user)->
-            # loginUser() sets $rootScope.user
-            vm.me = $rootScope.user
-            toastr.info "Login as userId="+vm.me.id
-            return vm.me
+          return vm.me = $rootScope.user
+        $rootScope.demoRole = 'invited'
       .then ()->
         getData()
 
@@ -474,7 +615,7 @@ EventDetailCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
-  'uiGmapGoogleMapApi', 'geocodeSvc'
+  'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc'
   'UsersResource', 'EventsResource', 'IdeasResource', 'EventActionHelpers', '$filter'
   'utils', 'devConfig', 'exportDebug'
 ]

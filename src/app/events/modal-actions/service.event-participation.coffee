@@ -39,7 +39,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
       post: (event, data, vm)->
         # data : {type: header: body:}
         post = {
-          type: data.type
+          type: data.type || data.body.type
           head:
             id: Date.now() + ""
             createdAt: new Date()
@@ -53,30 +53,33 @@ EventActionHelpers = ($rootScope, $q, $timeout
         if _.isArray post.body.message
           post.body.message = post.body.message.join(' ')
 
-        if post.head.private
+        if post.head.notPrivate == false
           post.body.message += ' (This should be a private notification.)'
 
         # testData
         post.head['$$owner'] = vm.me
-        post.head['likes'] = [_.sample(vm.lookup.users)]
+        if post.type != 'Comment'
+          post.head['likes'] = [_.sample(vm.lookup.users)]
         return $q.when(post)
         .then (post)->
           event.feed ?= []
           switch post.type
+            when "Invitation"
+              event.feed.unshift(post)
             when "Participation"
               event.feed.unshift(post)
             when "Comment"
               event.feed.unshift(post)
             when "ParticipationResponse"
               event.feed.unshift(post)
-          return event.feed
+          return post
 
       log: (event, data, vm)->
         type = data.type || data.body.type
         method = '_log_' + type
         return $q.when(method)
         .then (method)->
-          return FeedHelpers[method]?(event, data, vm)
+          return FeedHelpers[method](event, data, vm) if FeedHelpers[method]?
           console.info ['FeedHelpers.log(): no log format for type=' + type]
           return
 
@@ -110,13 +113,14 @@ EventActionHelpers = ($rootScope, $q, $timeout
               'your booking was declined.'
             ]
             message.push responseBody.comment if responseBody.comment
-            participationResponse.head.private = true
-            # TODO: head.private posts should only appear as pm.
+            participationResponse.head.notPrivate = false
+            # TODO: head.notPrivate posts should only appear as pm.
             participationResponse.body.message = message
           else
             return
 
-        return FeedHelpers.post(event, participationResponse, vm)
+        return $timeout(2000).then ()->
+          return FeedHelpers.post(event, participationResponse, vm)
     }
 
     self = {
