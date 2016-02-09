@@ -13,6 +13,7 @@
         ownerId:
         recipientIds: [userId], private chat if set, see head.$$chatWith
         ??moderatorIds: []  who can/should take next action???
+        nextActionBy: String [owner, recipient, moderator, depending on post.type]
         token: TODO. invitation token?
         expiresAt: TODO
       body:
@@ -23,7 +24,6 @@
           address:
           latlon:
         # other body attrs
-        requiresActionById: TODO ?? body or header?
         status:
         response:
         seats:

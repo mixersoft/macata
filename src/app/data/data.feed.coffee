@@ -15,6 +15,7 @@ FeedResource = (Resty, $q, openGraphSvc) ->
         "eventId":"1"
         "ownerId": "0"      # for .item-post .item-avatar
         "recipientIds": ["6"]  # filterBy: feed.type
+        "nextActionBy": 'recipient' # [recipient, owner]
         "token":  "invite-token-if-found"
       body:
         "type":"Invitation"
@@ -29,6 +30,7 @@ FeedResource = (Resty, $q, openGraphSvc) ->
         "createdAt": moment().subtract(23, 'minutes').toJSON()
         "eventId":"1"
         "ownerId": "5"    # booboo
+        "nextActionBy": 'moderator' # [recipient, moderator, owner]
       body:
         "type":"Participation"
         "status":"new"

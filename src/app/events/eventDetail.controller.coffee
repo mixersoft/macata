@@ -29,7 +29,7 @@ EventDetailCtrl = (
         show: 'grid'
         'new': false
       show:
-        'expandEventDetails': false
+        'hideDetails': true
         'map':false
     }
 
@@ -38,11 +38,20 @@ EventDetailCtrl = (
     vm.event = {}
 
     vm.inviteActions = {
-      requiresAction: (post)->
+      requiresAction: (post, event, me)->
+        event ?= vm.event
+        me ?= vm.me
         check = {
           type: post.type == 'Invitation'
           status: ~['new', 'viewed'].indexOf(post.body.status)
         }
+        nextAction = post.head.nextActionBy
+        switch nextAction
+          when 'owner'
+            check['nextAction'] = me && event.$$owner == me
+            # check['nextAction'] = me && event.moderatorId == me.id
+          when 'recipient'
+            check['nextAction'] = me && ~post.head.recipientIds.indexOf me.id
         return _.reject(check).length == 0
 
       accept: ($event, event, invitation)->
@@ -138,12 +147,22 @@ EventDetailCtrl = (
     }
 
     vm.moderatorActions = {
-      requiresAction: (post)->
+      requiresAction: (post, event, me)->
+        event ?= vm.event
+        me ?= vm.me
         check = {
           type: post.type == 'Participation'
           status: ~['new', 'pending'].indexOf(post.body.status)
           response: ~['Yes','Message'].indexOf post.body.response
         }
+
+        nextAction = post.head.nextActionBy
+        switch nextAction
+          when 'moderator', 'owner'
+            check['nextAction'] = me && event.ownerId == me.id
+            # check['nextAction'] = me && event.moderatorId == me.id
+          when 'recipient'
+            check['nextAction'] = me && ~post.head.recipientIds.indexOf me.id
         return _.reject(check).length == 0
 
       accept: ($event, event, participation)->
