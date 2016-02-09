@@ -359,5 +359,5 @@ EventsResource = (Resty, amMoment) ->
 
 EventsResource.$inject = ['Resty','amMoment']
 
-angular.module 'starter.core'
+angular.module 'starter.data'
   .factory 'EventsResource', EventsResource

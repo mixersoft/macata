@@ -102,5 +102,5 @@ UsersResource = (Resty, $q, unsplashItSvc) ->
 
 UsersResource.$inject = ['Resty', '$q', 'unsplashItSvc']
 
-angular.module 'starter.core'
+angular.module 'starter.data'
   .factory 'UsersResource', UsersResource

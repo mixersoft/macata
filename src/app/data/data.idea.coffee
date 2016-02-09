@@ -43,5 +43,5 @@ IdeasResource = (Resty, $q, openGraphSvc) ->
 
 IdeasResource.$inject = ['Resty', '$q', 'openGraphSvc']
 
-angular.module 'starter.core'
+angular.module 'starter.data'
   .factory 'IdeasResource', IdeasResource
