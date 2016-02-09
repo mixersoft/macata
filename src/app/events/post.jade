@@ -56,7 +56,9 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
           i.icon.ion-checkmark-circled &nbsp; Accept
            
 
-    div.item.item-avatar
+    div.post-head.item.item-avatar-left(
+      ng-class="{'private item-avatar-right':$postHead.$$chatWith}"
+      )
       div.avatar-wrap
         img.item-image.ink(
           ng-src="{{$postHead.$$owner.face}}"
@@ -67,6 +69,9 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
         )
       div.header
         b.padding-right {{$postHead.$$owner.displayName}}
+        b.padding-left.pull-right(
+          ng-if="$postHead.$$chatWith"
+          ) {{$postHead.$$chatWith.displayName}}
         p.item-text-wrap 
           span.time-ago.padding-right(am-time-ago="$postHead.createdAt")
           span.padding-right(
@@ -75,6 +80,16 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
             i.icon.ion-location(
               ) &nbsp;
               {{$postBody.location.address}}
+      div.avatar-wrap.right(
+        ng-if="$postHead.$$chatWith"
+        )
+        img.item-image.ink(
+          ng-src="{{$postHead.$$chatWith.face}}"
+          ng-click="$event.stopImmediatePropagation()"
+          ng-if="hack_delay_uiSref = $post"
+          ui-sref="app.profile({id: '{{$postHead.$$chatWith.id}}' })"
+          width="40"
+        )      
         
     div.item-body.post-body
       
@@ -130,12 +145,14 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
       div.button-bar.condensed.positive 
         button.button.button-icon.ion-heart.positive(
           ng-click="vm.post.like($event, $post)"
-          ng-class="{'balanced': $postHead.likes.indexOf(vm.me) >= 0 }"
+          ng-class="{'balanced': $postHead.likes.indexOf(vm.me) >= 0, 'disabled':$postHead.$$chatWith }"
           ) &nbsp; Like
         button.button.button-icon.ion-chatbox.positive(
           ng-click="vm.post.showCommentForm($event)"
           ) &nbsp; Comment
-        button.button.button-icon.ion-share.positive &nbsp; Share
+        button.button.button-icon.ion-share.positive(
+          ng-class="{'disabled':$postHead.$$chatWith }"
+          ) &nbsp; Share
 
     div.item-body.post-comments.hide(
       )

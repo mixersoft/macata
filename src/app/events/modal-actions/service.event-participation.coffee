@@ -6,7 +6,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
   $log, toastr
   # TokensResource, ParticipationsResource, ContributionsResource, MenuItemsResource
   AAAHelpers, $filter
-  appModalSvc, utils
+  appModalSvc, utils, exportDebug
   )->
 
     passcodePopup = {
@@ -53,12 +53,13 @@ EventActionHelpers = ($rootScope, $q, $timeout
         if _.isArray post.body.message
           post.body.message = post.body.message.join(' ')
 
-        if post.head.notPrivate == false
-          post.body.message += ' (This should be a private notification.)'
+        if not _.isEmpty post.head.recipientIds
+          post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
+          # post.body.message += ' (This should be a private notification.)'
 
         # testData
         post.head['$$owner'] = vm.me
-        if post.type != 'Comment'
+        if 'for-demo-only' && post.type != 'Comment' && _.isEmpty post.head.recipientIds
           post.head['likes'] = [_.sample(vm.lookup.users)]
         return $q.when(post)
         .then (post)->
@@ -72,8 +73,10 @@ EventActionHelpers = ($rootScope, $q, $timeout
               event.feed.unshift(post)
             when "ParticipationResponse"
               event.feed.unshift(post)
+          exportDebug.set('feed', event.feed)
           return post
 
+      # TODO: should we make these logs Notifications?
       log: (event, data, vm)->
         type = data.type || data.body.type
         method = '_log_' + type
@@ -90,7 +93,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
         participationResponse = {
           type: "ParticipationResponse"
-          head: {}
+          head: data.head
           body:
             message: ''
         }
@@ -113,8 +116,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
               'your booking was declined.'
             ]
             message.push responseBody.comment if responseBody.comment
-            participationResponse.head.notPrivate = false
-            # TODO: head.notPrivate posts should only appear as pm.
+            participationResponse.head.recipientIds = [participation.head.ownerId]
             participationResponse.body.message = message
           else
             return
@@ -763,7 +765,7 @@ EventActionHelpers.$inject = ['$rootScope', '$q', '$timeout'
 '$log', 'toastr'
 # 'TokensResource', 'ParticipationsResource', 'ContributionsResource', 'MenuItemsResource'
 'AAAHelpers', '$filter'
-'appModalSvc', 'utils'
+'appModalSvc', 'utils', 'exportDebug'
 ]
 
 

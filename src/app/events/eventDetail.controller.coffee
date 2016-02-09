@@ -19,10 +19,9 @@ EventDetailCtrl = (
           "id":"1453967670694"
           "createdAt": moment().subtract(7, 'hours').toJSON()
           "eventId":"1"
-          "ownerId": "0"      # sender
+          "ownerId": "0"      # for .item-post .item-avatar
+          "recipientIds": ["6"]  # filterBy: feed.type
           "token":  "invite-token-if-found"
-          "recipientId": "6"  # filterBy: feed.type
-          "notPrivate": false
         body:
           "type":"Invitation"
           "status":"new"      # [new, viewed, closed, hide]
@@ -35,7 +34,7 @@ EventDetailCtrl = (
           "id":"1453967670695"
           "createdAt": moment().subtract(23, 'minutes').toJSON()
           "eventId":"1"
-          "ownerId": "4"
+          "ownerId": "5"    # booboo
         body:
           "type":"Participation"
           "status":"new"
@@ -119,7 +118,7 @@ EventDetailCtrl = (
             $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
             $wrap.removeClass('hide')
           .then (invitation)->
-            return $timeout(2000)
+            return $timeout(8000)
           .then ()->
             # ???: auto accept invitation request
             # TODO: need to change ParticipationResponse.head.ownerId
@@ -172,9 +171,8 @@ EventDetailCtrl = (
 
         # action = {
         #   head:
-        #     ownerId: invitation.head.recipientId
-        #     recipientId: invitation.head.ownerId
-        #     notPrivate: false
+        #     ownerId: invitation.head.recipientIds
+        #     recipientIds: [invitation.head.ownerId]
         #   body:
         #     type: 'Comment'
         #     message: [
@@ -196,7 +194,7 @@ EventDetailCtrl = (
         check = {
           type: post.type == 'Participation'
           status: ~['new', 'pending'].indexOf(post.body.status)
-          response: post.body.response == 'Yes'
+          response: ~['Yes','Message'].indexOf post.body.response
         }
         return _.reject(check).length == 0
 
@@ -234,7 +232,7 @@ EventDetailCtrl = (
         # log ParticipationResponse
         action = {
           head:
-            reviewerId: vm.me.id
+            ownerId: vm.me.id
           body:
             type: 'ParticipationResponse'
             action: participation.body.status  # ['accepted', 'rejected']
@@ -242,6 +240,9 @@ EventDetailCtrl = (
             $$participation: participation
             comment: ''
         }
+        if participation.body.status=='rejected'
+          # make rejected private (Notification?)
+          action.head['recipientIds'] = [participation.head.ownerId]
         $scope.$emit 'event:feed-changed', [event, action]
         return EventActionHelpers.FeedHelpers.log(event, action, vm)
         # .then (feed)->
@@ -290,7 +291,8 @@ EventDetailCtrl = (
         # parent = ionic.DomUtil.getParentWithClass(target,'item-post')
         # $wrap = angular.element parent.querySelector('.post-comments')
         $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
-        $wrap.removeClass('hide')
+        $wrap.toggleClass('hide')
+        return if $wrap.hasClass('hide')
         $timeout().then ()->
           textbox = $wrap[0].querySelector('textarea.comment')
           textbox.focus()
@@ -421,12 +423,20 @@ EventDetailCtrl = (
       .then (data)->
         vm.lookup.menuItems = data
       .then ()->
+        # $filter('eventFeedFilter')(event, me)
         _.each FEED, (post)->
           # add $$owner to FEED posts
           post.head ?= {}
           post.head.$$owner = _.find(vm.lookup.users, {id: post.head.ownerId})
-          post.head.likes = [_.sample(vm.lookup.users)]
+          if _.isEmpty post.head.recipientIds
+            post.head.likes = [_.sample(vm.lookup.users)]
+
+          # chatWith
+          if post.head.recipientIds?[0]
+            post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
+
           return
+
       .then ()->
         return EventsResource.query()
       .then (events)->

@@ -2,6 +2,42 @@
 
 ###
 # @description filter event.feed for demo data
+# expecting the following attrs for "posts" to event.feed
+    post:
+      type: [Invitation, Participation, ParticipationResponse, Comment, Notification]
+      head:
+        id:
+        createdAt:
+        modifiedAt:  TODO
+        eventId:
+        ownerId:
+        recipientIds: [userId], private chat if set, see head.$$chatWith
+        ??moderatorIds: []  who can/should take next action???
+        token: TODO. invitation token?
+        expiresAt: TODO
+      body:
+        # from <message-composer>
+        message: Array or String
+        attachment: Obj (optional),
+        location:
+          address:
+          latlon:
+        # other body attrs
+        requiresActionById: TODO ?? body or header?
+        status:
+        response:
+        seats:
+
+  additional Notes:
+    ParticipationResponse[status='rejected']
+      should we make this a Notification?
+    Notification:
+      created by system
+      can be dismissed by recipient
+        ??: remove from recipientIds
+      expiresAt for auto expiration
+      offer hints for next Action
+
 ###
 EventFeedFilter = ()->
   return (event, me, feed)->
@@ -19,23 +55,27 @@ EventFeedFilter = ()->
       head = post.head
       check = {
         eventId: head.eventId == event.id
-        notPrivate: not head.private
       }
+      if not _.isEmpty(head.recipientIds)
+        check['isRecipient'] = me && ~head.recipientIds.concat(head.ownerId).indexOf me.id
+
       switch post.type
         when 'Invitation'
+          #  sent by ownerId: owner > [recipientId]
           check['status'] = ~['new','viewed','closed'].indexOf(post.body.status)
-          check['privy'] = me && ~[head.ownerId, head.recipientId].indexOf me.id
-          delete check['notPrivate']
         when 'Participation'
+          # from action=[Join, ???Invitation[status=accept]  ]
+          #   need to notify event.moderatorId, or head.moderatorIds
           check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
           check['acl'] = event.isPostModerator(event, post)
         when 'ParticipationResponse'
-          # hide private from feed
-          check['ownerId'] = me && head.ownerId == me.id
-          delete check['notPrivate']
+          # from action=Participation[status='accepted']
+          # ??: automatically accept from invitation[status=accept>join]
+          # Participation[status='decline']
+          #   check[isRecipient] will make declines private
+          'none'
         when 'Comment'
-          if head.notPrivate==false
-            check['privy'] = me && ~[head.ownerId, head.recipientId].indexOf me.id
+          'TODO:allow recipientIds for comments' if head.recipientIds
         else
           'skip'
       result.push post if _.reject(check).length == 0

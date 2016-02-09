@@ -211,7 +211,7 @@ ion-item.item-post {
   .item-body {
     padding-top: 0;
     > *:first-child {
-      padding-top: 0;
+      padding-top: 4px;
       margin-top: 0;
     }
   }
@@ -224,6 +224,26 @@ ion-item.item-post {
   }
   .host-actions .card {
     margin: auto 0;
+  }
+
+  .post-head {
+    $header-padding-vertical: 8px;
+    & {
+      min-height: 56px;
+      padding-top: $header-padding-vertical;
+      padding-bottom: $header-padding-vertical;
+    }
+    img.item-image {
+      top: $header-padding-vertical;
+    }
+    &.private {
+      background-color: #ddd;
+      margin: 2px 4px 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    .avatar-wrap.right > img {
+      left: inherit;
+    }
   }
   .post-body {
     .line-clamp {
