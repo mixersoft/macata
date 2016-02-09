@@ -542,11 +542,13 @@ EventActionHelpers = ($rootScope, $q, $timeout
         #TODO: should use a listener or watch on 'event:participants-changed'
         event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
 
-
-        # TODO: need to count seats in each participation
         event.seatsOpen -= particip.body.seats
-        event.$$menuItems.push _participation2menuItem(p, particip)
-        event.$$menuItems = _.unique event.$$menuItems
+        if not _.isEmpty particip.body.attachment
+          event.$$menuItems.push _participation2menuItem(p, particip)
+          event.$$menuItems = _.unique event.$$menuItems
+        else
+          # TODO: show a placeholder in event.menuItems?
+          console.info '???:attach a placeholder and render in event.menuItems'
 
         return event
 
