@@ -8,56 +8,52 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
       {{$postHead = $post.head;$postBody=$post.body;''}}
       
     //- Invitation Actions  
-    div.item-body.invitation-actions(
+    div.card.invitation-actions(
       ng-show='vm.inviteActions.requiresAction($post)'
       )
-      div
-        div.card
-          ion-item.item-divider.item-royal
-            div Invitation Actions
-          ion-item.item-text-wrap
-            b.padding-right {{$postHead.$$owner.displayName}} 
-            span.padding-right has invited you to join this table.
-          div.item.item-complex.item-balanced.button-bar.condensed
-            button.button.button-royal(
-              ng-click="vm.inviteActions.reject($event, vm.event, $post)"
-              )
-              i.icon.ion-close-circled &nbsp; Decline
-            button.button.button-royal(
-              ng-click="vm.inviteActions.message($event, vm.event, $post)"
-              )
-              i.icon.ion-chatbox(
-              ) &nbsp; Message
-            button.button.button-royal(
-              ng-click="vm.inviteActions.accept($event, vm.event, $post)"
-              )
-              i.icon.ion-checkmark-circled &nbsp; Accept 
+      ion-item.item-divider.item-royal
+        div Invitation Actions
+      ion-item.item-text-wrap
+        b.padding-right {{$postHead.$$owner.displayName}} 
+        span.padding-right has invited you to join this table.
+      div.item.item-complex.item-balanced.button-bar.condensed
+        button.button.button-royal(
+          ng-click="vm.inviteActions.reject($event, vm.event, $post)"
+          )
+          i.icon.ion-close-circled &nbsp; Decline
+        button.button.button-royal(
+          ng-click="vm.inviteActions.message($event, vm.event, $post)"
+          )
+          i.icon.ion-chatbox(
+          ) &nbsp; Message
+        button.button.button-royal(
+          ng-click="vm.inviteActions.accept($event, vm.event, $post)"
+          )
+          i.icon.ion-checkmark-circled &nbsp; Accept 
                     
     //- Moderator Actions
-    div.item-body.moderator-actions(
+    div.card.moderator-actions(
       ng-show='vm.moderatorActions.requiresAction($post)'
       )
-      div
-        div.card
-          ion-item.item-divider.item-balanced
-            div Moderator Actions
-          ion-item.item-text-wrap
-            b.padding-right {{$postHead.$$owner.displayName}} 
-            span.padding-right has requested {{$postBody.seats}} seats at the table.
-          div.item.item-complex.item-balanced.button-bar.condensed
-            button.button.button-balanced(
-              ng-click="vm.moderatorActions.reject($event, vm.event, $post)"
-              )
-              i.icon.ion-close-circled &nbsp; Decline
-            button.button.button-balanced(
-              ng-click="vm.moderatorActions.message($event, vm.event, $post)"
-              )
-              i.icon.ion-chatbox(
-              ) &nbsp; Message
-            button.button.button-balanced(
-              ng-click="vm.moderatorActions.accept($event, vm.event, $post)"
-              )
-              i.icon.ion-checkmark-circled &nbsp; Accept
+      ion-item.item-divider.item-balanced
+        div Moderator Actions
+      ion-item.item-text-wrap
+        b.padding-right {{$postHead.$$owner.displayName}} 
+        span.padding-right has requested {{$postBody.seats}} seats at the table.
+      div.item.item-complex.item-balanced.button-bar.condensed
+        button.button.button-balanced(
+          ng-click="vm.moderatorActions.reject($event, vm.event, $post)"
+          )
+          i.icon.ion-close-circled &nbsp; Decline
+        button.button.button-balanced(
+          ng-click="vm.moderatorActions.message($event, vm.event, $post)"
+          )
+          i.icon.ion-chatbox(
+          ) &nbsp; Message
+        button.button.button-balanced(
+          ng-click="vm.moderatorActions.accept($event, vm.event, $post)"
+          )
+          i.icon.ion-checkmark-circled &nbsp; Accept
            
 
     div.item.item-avatar
