@@ -33,7 +33,9 @@ EventDetailCtrl = (
         'map':false
     }
 
-    vm.lookup = {}
+    vm.lookup = {
+      colors: ['royal', 'positive', 'calm', 'balanced', 'energized', 'assertive']
+    }
 
     vm.event = {}
 
@@ -86,7 +88,7 @@ EventDetailCtrl = (
         return $q.when()
         .then ()->
           invitation.body.status='viewed'
-          return vm.post.showCommentForm($event)
+          return vm.postActions.showCommentForm($event)
 
       reject: ($event, event, invitation)->
         return $q.when()
@@ -98,6 +100,8 @@ EventDetailCtrl = (
           # append a log as a comment to invitation
           return vm.inviteActions._logAction(event, invitation, vm)
         .then (result)->
+
+          # show Post.comments
           target = $event.target
           $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
           $wrap.removeClass('hide')
@@ -123,7 +127,21 @@ EventDetailCtrl = (
           else
             return
 
-        return vm.post.postComment(null, invitation, options)
+        # TODO set 'moderatorId' to new participantId
+        #   log/add notification to feed (dismissable), '[person] accepted your invitation'
+        # NOTE:
+        #   Notifcations can be dismissed. offer hints for next action
+        #   Comments are persistent, they can be favorited or commented on by others
+        # other notification templates:
+        #   Comment: a menuItem was added to this event.
+        return vm.postActions.postComment(null, invitation, options)
+        .then (result)->
+          notify = {
+            ownerId: invitation.head.ownerId
+            recipientIds: vm.event.participantIds
+            message: options.message
+          }
+          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
 
 
         # action = {
@@ -182,7 +200,7 @@ EventDetailCtrl = (
         return $q.when()
         .then ()->
           participation.body.status='pending'
-          return vm.post.showCommentForm($event)
+          return vm.postActions.showCommentForm($event)
 
       reject: ($event, event, participation)->
         return $q.when()
@@ -235,7 +253,7 @@ EventDetailCtrl = (
     }
 
     # TODO: make directive
-    vm.post = {
+    vm.postActions = {
       acl : {
         isModerator: (event, post)->
           return true if event.moderatorId == vm.me.id
@@ -244,6 +262,15 @@ EventDetailCtrl = (
           # console.info "DEMO: isModerator() == true"
           # return true
       }
+      dismissItem: ($event, item)->
+        item.head['dismissedBy'] ?= []
+        item.head['dismissedBy'].push vm.me.id
+        return FeedResource.update(item.id, item)
+        .then (result)->
+          # TODO: animate offscreen before removal
+          found = _.findIndex vm.event.feed, {id: result.id}
+          vm.event.feed[found] = result if ~found
+          return
       like: ($event, post)->
         post.head.likes ?= []
         #TODO: should add Ids to the array, not object
@@ -286,6 +313,7 @@ EventDetailCtrl = (
         .then ()->
           from = vm.me
           if options?['log'] == true
+            # TODO: ???: has post from syslog("feed") been replaced by "Notifications"?
             from = {
               id: 'log'
               displayName: 'feed:'
@@ -298,7 +326,7 @@ EventDetailCtrl = (
               id: Date.now()
               ownerId: from.id + ''
               $$owner: from
-              target:
+              target: # parent post for this comment
                 id: post.head.id
                 class: post.type
               createdAt: new Date()
@@ -350,33 +378,52 @@ EventDetailCtrl = (
 
     }
 
-    loginByRole = (event, forceRole)->
-      userId = null
-      $rootScope.demoRole = forceRole if forceRole
-      switch $rootScope.demoRole
-        when 'host'
-          userId = event.ownerId
-        when 'participant' # userId < 4
-          userId = _.sample event.participantIds[1...event.participantIds.length]
-        when 'booking'
-          userId = '5'
-        when 'invited'
-          userId = '6'
-        when 'visitor'
-          userId = '7'
-      return $q.when() if !userId
-      return devConfig.loginUser(userId, 'force')
-      .then (user)->
-        vm.me = user
-        $rootScope.$emit 'demo-role:changed', $rootScope.demoRole if forceRole
-        return user
-      .finally ()->
-        toastr.info [
-          "You are now "
-          vm.me.displayName
-          ", role="
-          $rootScope.demoRole.toUpperCase()
-        ].join('')
+    vm.dev = {
+      loginByRole : (event, forceRole)->
+        userId = null
+        $rootScope.demoRole = forceRole if forceRole
+        switch $rootScope.demoRole
+          when 'host'
+            userId = event.ownerId
+          when 'participant' # userId < 4
+            userId = _.sample event.participantIds[1...event.participantIds.length]
+          when 'booking'
+            userId = '5'
+          when 'invited'
+            userId = '6'
+          when 'visitor'
+            userId = '7'
+        return $q.when() if !userId
+        return devConfig.loginUser(userId, 'force')
+        .then (user)->
+          vm.me = user
+          $rootScope.$emit 'demo-role:changed', $rootScope.demoRole if forceRole
+          return user
+        .finally ()->
+          toastr.info [
+            "You are now "
+            vm.me.displayName
+            ", role="
+            $rootScope.demoRole.toUpperCase()
+          ].join('')
+
+      addRoleToUser : ()->
+        return devConfig.dataReady.finally ()->
+          return if !vm.event.participantIds
+          if vm.me.id == vm.event.ownerId
+            role = 'host'
+          else if ~vm.event.participantIds.indexOf vm.me.id
+            role = 'participant'
+          else if vm.me.id == '5'
+            role = 'booking'
+          else if vm.me.id == '6'
+            role = 'invitation'
+          else
+            role = 'visitor'
+          vm.me.role = role
+          console.info "addRoleToUser(), role="+role
+          setFabIcon()
+    }
 
 
     getData = ()->
@@ -412,28 +459,13 @@ EventDetailCtrl = (
         _.each events, (event, i)->
           console.warn("TESTDATA: using currentUser as event Moderator")
           event.visibleAddress = event.address
-          event.isPostModerator = vm.post.acl.isModerator
+          event.isPostModerator = vm.postActions.acl.isModerator
           event.moderatorId = event.ownerId
           vm.events.push event
           return
         return events
 
-    addRoleToUser = ()->
-      return devConfig.dataReady.finally ()->
-        return if !vm.event.participantIds
-        if vm.me.id == vm.event.ownerId
-          role = 'host'
-        else if ~vm.event.participantIds.indexOf vm.me.id
-          role = 'participant'
-        else if vm.me.id == '5'
-          role = 'booking'
-        else if vm.me.id == '6'
-          role = 'invitation'
-        else
-          role = 'visitor'
-        vm.me.role = role
-        console.info "addRoleToUser(), role="+role
-        setFabIcon()
+
 
     setFabIcon = ()->
       vm.settings.show.fabIcon = 'ion-load-d' if !vm.me
@@ -491,6 +523,8 @@ EventDetailCtrl = (
       'postCommentToFeed': (comment)->
         data = {
           type: 'Comment'
+          head:
+            isPublic: true
           body: comment
         }
         return EventActionHelpers.FeedHelpers.post(vm.event, data, vm)
@@ -528,7 +562,7 @@ EventDetailCtrl = (
       .finally ()->
         index = $stateParams.id
         vm.event = vm.events[index]
-        loginByRole(vm.event).then addRoleToUser
+        vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
       .then ()->
         event = vm.event
         event.feed = vm.lookup.feed
@@ -566,12 +600,12 @@ EventDetailCtrl = (
     $rootScope.$on 'demo-role:changed', (ev, newV)->
       return if !newV
       # $rootScope.demoRole = newV
-      return loginByRole(vm.event) if vm.event
+      return vm.dev.loginByRole(vm.event) if vm.event
 
     $scope.$watch 'vm.me', (newV)->
       return if !newV
       vm.me.role = null
-      addRoleToUser()
+      vm.dev.addRoleToUser()
 
     $scope.$on '$ionicView.leave', (e) ->
       resetMaterialMotion('fadeSlideInRight')

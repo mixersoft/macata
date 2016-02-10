@@ -6,6 +6,17 @@ FeedResource = (Resty, $q, openGraphSvc) ->
   # coffeelint: disable=max_line_length
   RAW_FEED = [
     {
+      type:"Notification"
+      head:
+        id: Date.now()
+        "createdAt": moment()
+        "expiresAt": null
+        "eventId":"1"
+        "ownerId": "6"
+      body:
+        message: "<b>Hello!</b> This is a notification. It might be appear as a mobile notification in the App."
+    }
+    {
       # NOTE: for invitation by link, we only know from the invite token
       #   vm.me may be undefined
       "type":"Invitation"
@@ -51,7 +62,8 @@ FeedResource = (Resty, $q, openGraphSvc) ->
         "id":"1453991861983",
         "createdAt":"2016-01-28T14:37:41.983Z",
         "ownerId": "0"
-        "eventId":"1",
+        "eventId":"1"
+        "isPublic": true
       body:
         "type":"Comment"
         "message":"This is what I've been waiting for. I'm on it.",

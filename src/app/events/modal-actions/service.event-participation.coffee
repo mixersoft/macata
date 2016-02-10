@@ -5,6 +5,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
   $location, $state, $stateParams, $ionicPopup
   $log, toastr
   # TokensResource, ParticipationsResource, ContributionsResource, MenuItemsResource
+  FeedResource
   AAAHelpers, $filter
   appModalSvc, utils, exportDebug
   )->
@@ -53,21 +54,24 @@ EventActionHelpers = ($rootScope, $q, $timeout
         if _.isArray post.body.message
           post.body.message = post.body.message.join(' ')
 
-        if not _.isEmpty post.head.recipientIds
-          post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
-          # post.body.message += ' (This should be a private notification.)'
+        if post.type != "Notification"
+          if not _.isEmpty post.head.recipientIds
+            post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
+            # post.body.message += ' (This should be a private notification.)'
 
-        # testData
-        post.head['$$owner'] = vm.me
-        if 'for-demo-only' && post.type != 'Comment' && _.isEmpty post.head.recipientIds
-          post.head['likes'] = [_.sample(vm.lookup.users)]
-        return $q.when(post)
+          # testData
+          post.head['$$owner'] = vm.me
+
+        return FeedResource.save(post, post.head.id)
         .then (post)->
           event.feed ?= []
           switch post.type
+            when "Notification"
+              event.feed.unshift(post)
             when "Invitation"
               event.feed.unshift(post)
             when "Participation"
+              post.head['likes'] = [_.sample(vm.lookup.users)]
               event.feed.unshift(post)
             when "Comment"
               event.feed.unshift(post)
@@ -76,7 +80,25 @@ EventActionHelpers = ($rootScope, $q, $timeout
           exportDebug.set('feed', event.feed)
           return post
 
+      ###
+      # @description post notification to feed, appear as colored tile with dismiss
+      #     ng-bind-html allows for basic html markup
+      # @params data object {ownerId, recipientIds, role, message, expiresAt, delay }
+      ###
+      notify: (event, data={}, vm)->
+        # format notification as a Post
+        post = {}
+        post.type = 'Notification'
+        post.head = _.pick data, ['ownerId', 'recipientIds', 'expiresAt']
+        post.body = {
+          message: data.message
+        }
+        $timeout(1000).then ()->
+          FeedHelpers.post(event, post, vm)
+
+
       # TODO: should we make these logs Notifications?
+      # @deprecate use FeedHelpers.notify() instead
       log: (event, data, vm)->
         type = data.type || data.body.type
         method = '_log_' + type
@@ -764,6 +786,7 @@ EventActionHelpers.$inject = ['$rootScope', '$q', '$timeout'
 '$location', '$state', '$stateParams', '$ionicPopup'
 '$log', 'toastr'
 # 'TokensResource', 'ParticipationsResource', 'ContributionsResource', 'MenuItemsResource'
+'FeedResource'
 'AAAHelpers', '$filter'
 'appModalSvc', 'utils', 'exportDebug'
 ]

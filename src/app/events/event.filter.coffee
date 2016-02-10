@@ -12,6 +12,7 @@
         eventId:
         ownerId:
         recipientIds: [userId], private chat if set, see head.$$chatWith
+        isPublic: boolean
         ??moderatorIds: []  who can/should take next action???
         nextActionBy: String [owner, recipient, moderator, depending on post.type]
         token: TODO. invitation token?
@@ -55,9 +56,10 @@ EventFeedFilter = ()->
       head = post.head
       check = {
         eventId: head.eventId == event.id
+        address: head.isPublic ||
+          (me && ~[head.ownerId].concat(head.recipientIds || []).indexOf me.id)
+        expiration: !head.expiresAt || new Date().toJSON() <= head.expiresAt
       }
-      if not _.isEmpty(head.recipientIds)
-        check['isRecipient'] = me && ~head.recipientIds.concat(head.ownerId).indexOf me.id
 
       switch post.type
         when 'Invitation'
@@ -76,6 +78,9 @@ EventFeedFilter = ()->
           'none'
         when 'Comment'
           'TODO:allow recipientIds for comments' if head.recipientIds
+        when 'Notification'
+          check['notDismissed'] = not (head.dismissedBy && ~head.dismissedBy.indexOf me.id)
+          # console.log ['check Notification', check]
         else
           'skip'
       result.push post if _.reject(check).length == 0

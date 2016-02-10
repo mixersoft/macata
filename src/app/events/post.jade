@@ -2,7 +2,25 @@
 div.hide 
   {{vm=$parent.$parent.vm;''}}
 div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
-  ion-item.item-complex.item-post 
+  ion-item.item-notification.tile.item-complex(
+     ng-if="$post.type==='Notification'"
+    )
+    div.card
+      ion-item.item-calm.item-button-right(
+        )
+        button.button.close.button-clear.button-icon.ion-close-circled.button-dark(
+          ng-click="vm.postActions.dismissItem($event, $post)"
+          )
+        div.item-text-wrap.dark(
+          ng-bind-html="$post.body.message"
+          )
+      
+    
+    
+    
+  ion-item.item-complex.item-post(
+     ng-if="$post.type!='Notification'"
+    ) 
     div.hide
       {{vm=$parent.$parent.$parent.vm;''}}
       {{$postHead = $post.head;$postBody=$post.body;''}}
@@ -138,17 +156,17 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
         a(
           ng-show="$postBody.comments.length"
           ng-class="{'padding-left': $postHead.likes.length}"
-          ng-click="vm.post.showCommentForm($event)"
+          ng-click="vm.postActions.showCommentForm($event)"
           )
           {{$postBody.comments.length}} comment.
 
       div.button-bar.condensed.positive 
         button.button.button-icon.ion-heart.positive(
-          ng-click="vm.post.like($event, $post)"
+          ng-click="vm.postActions.like($event, $post)"
           ng-class="{'balanced': $postHead.likes.indexOf(vm.me) >= 0, 'disabled':$postHead.$$chatWith }"
           ) &nbsp; Like
         button.button.button-icon.ion-chatbox.positive(
-          ng-click="vm.post.showCommentForm($event)"
+          ng-click="vm.postActions.showCommentForm($event)"
           ) &nbsp; Comment
         button.button.button-icon.ion-share.positive(
           ng-class="{'disabled':$postHead.$$chatWith }"
@@ -181,7 +199,7 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
                     ) {{person.displayName}}
                 span  &nbsp;likes this. &mdash;&nbsp;
               a(
-                ng-click="vm.post.like($event, $comment); $event.preventDefault()"
+                ng-click="vm.postActions.like($event, $comment); $event.preventDefault()"
                 href="#"
                 ng-bind="$comment.head.likes.indexOf(vm.me)===-1 ? 'like' : 'unlike'"
               )
@@ -202,6 +220,6 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
             )
         div.actions.text-right
           button.button.button-small.button-clear.button-outline.button-positive(
-            ng-click="vm.post.postComment($event, $post)"
+            ng-click="vm.postActions.postComment($event, $post)"
             )
             span.padding-horizontal Post
