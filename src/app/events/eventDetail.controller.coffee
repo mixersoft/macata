@@ -7,7 +7,7 @@ EventDetailCtrl = (
   appModalSvc, tileHelpers, openGraphSvc
   uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc
   UsersResource, EventsResource, IdeasResource, FeedResource
-  EventActionHelpers, $filter
+  EventActionHelpers, $filter, notificationTemplates
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
@@ -67,7 +67,7 @@ EventDetailCtrl = (
           return vm.on.beginBooking(vm.me, event)
         .then (participation)->
           return if !participation
-          invitation.body.status='closed' # ???: accepted, rejected?
+          invitation.body.status='closed'
           invitation.body.response = 'accepted'
           # append a log as a comment to invitation
           invitation.body.seats = participation.body.seats
@@ -90,7 +90,7 @@ EventDetailCtrl = (
           invitation.body.status='viewed'
           return vm.postActions.showCommentForm($event)
 
-      reject: ($event, event, invitation)->
+      decline: ($event, event, invitation)->
         return $q.when()
         .then ()->
           return if invitation.type != 'Invitation'
@@ -136,30 +136,13 @@ EventDetailCtrl = (
         #   Comment: a menuItem was added to this event.
         return vm.postActions.postComment(null, invitation, options)
         .then (result)->
+          message = notificationTemplates.get('invitation.decline.ownerId', invitation)
           notify = {
             ownerId: invitation.head.ownerId
-            recipientIds: vm.event.participantIds
-            message: options.message
+            # role: 'participants'
+            message: message
           }
           return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
-
-
-        # action = {
-        #   head:
-        #     ownerId: invitation.head.recipientIds
-        #     recipientIds: [invitation.head.ownerId]
-        #   body:
-        #     type: 'Comment'
-        #     message: [
-        #       vm.me.displayName
-        #       'has', invitation.body.response ,'your invitation.'
-        #     ].join(' ')
-        # }
-        # ???: post or log?
-        # return EventActionHelpers.FeedHelpers.post(event, action, vm)
-        # .then (feed)->
-        #   $scope.$emit 'event:feed-changed', [event, action]
-        #   # return event.feed = $filter('feedFilter')(event, FEED)
 
 
     }
@@ -202,12 +185,12 @@ EventDetailCtrl = (
           participation.body.status='pending'
           return vm.postActions.showCommentForm($event)
 
-      reject: ($event, event, participation)->
+      decline: ($event, event, participation)->
         return $q.when()
         .then ()->
           return if participation.type != 'Participation'
 
-          participation.body.status='rejected'
+          participation.body.status='declined'
           # update participation, post to Server
           return participation
         .then (participation)->
@@ -220,18 +203,24 @@ EventDetailCtrl = (
             ownerId: vm.me.id
           body:
             type: 'ParticipationResponse'
-            action: participation.body.status  # ['accepted', 'rejected']
+            action: participation.body.status  # ['accepted', 'declined']
             participationId: participation.id
             $$participation: participation
             comment: ''
         }
-        if participation.body.status=='rejected'
+        if participation.body.status=='declined'
           # make rejected private (Notification?)
           action.head['recipientIds'] = [participation.head.ownerId]
         $scope.$emit 'event:feed-changed', [event, action]
         return EventActionHelpers.FeedHelpers.log(event, action, vm)
-        # .then (feed)->
-        #   return event.feed = $filter('feedFilter')(event, FEED)
+        .then (result)->
+          message = notificationTemplates.get('booking.decline.ownerId', participation)
+          notify = {
+            ownerId: participation.head.ownerId
+            # role: 'participants'
+            message: message
+          }
+          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
 
     }
 
@@ -315,7 +304,7 @@ EventDetailCtrl = (
           if options?['log'] == true
             # TODO: ???: has post from syslog("feed") been replaced by "Notifications"?
             from = {
-              id: 'log'
+              id: 'syslog'
               displayName: 'feed:'
               face: unsplashItSvc.getImgSrc(0,'syslog',{face:true})
             }
@@ -629,7 +618,7 @@ EventDetailCtrl.$inject = [
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc'
   'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource'
-  'EventActionHelpers', '$filter'
+  'EventActionHelpers', '$filter', 'notificationTemplates'
   'utils', 'devConfig', 'exportDebug'
 ]
 

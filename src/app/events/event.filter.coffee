@@ -11,6 +11,7 @@
         modifiedAt:  TODO
         eventId:
         ownerId:
+        role: string, add recipientIds by role
         recipientIds: [userId], private chat if set, see head.$$chatWith
         isPublic: boolean
         ??moderatorIds: []  who can/should take next action???
@@ -30,7 +31,7 @@
         seats:
 
   additional Notes:
-    ParticipationResponse[status='rejected']
+    ParticipationResponse[status='declined']
       should we make this a Notification?
     Notification:
       created by system
@@ -54,6 +55,13 @@ EventFeedFilter = ()->
 
       # all check properties must be truthy for true
       head = post.head
+      switch head.role
+        when 'participants'
+          head.recipientIds = event['participantIds']
+        when 'contributors'
+          head.recipientIds = event['contributorIds']
+        when 'moderators'
+          head.recipientIds = event['moderatorIds']
       check = {
         eventId: head.eventId == event.id
         address: head.isPublic ||
@@ -70,6 +78,7 @@ EventFeedFilter = ()->
           #   need to notify event.moderatorId, or head.moderatorIds
           check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
           check['acl'] = event.isPostModerator(event, post)
+          check.address =  true if check.acl
         when 'ParticipationResponse'
           # from action=Participation[status='accepted']
           # ??: automatically accept from invitation[status=accept>join]
@@ -96,7 +105,7 @@ EventFeedFilter.$inject = []
 #     [ host, $participant, $participant, ..., 'placeholder', 'placeholder'..]
 ###
 EventParticipantsFilter = ()->
-  return (event)->
+  return (event, padding)->
     return [] if not (event.$$participations && event.$$host)
     MAX_VISIBLE_PARTICIPANTS = 12
     total = Math.min event.seatsTotal, MAX_VISIBLE_PARTICIPANTS

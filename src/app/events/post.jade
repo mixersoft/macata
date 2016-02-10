@@ -36,7 +36,7 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
         span.padding-right has invited you to join this table.
       div.item.item-complex.item-balanced.button-bar.condensed
         button.button.button-royal(
-          ng-click="vm.inviteActions.reject($event, vm.event, $post)"
+          ng-click="vm.inviteActions.decline($event, vm.event, $post)"
           )
           i.icon.ion-close-circled &nbsp; Decline
         button.button.button-royal(
@@ -60,7 +60,7 @@ div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
         span.padding-right has requested {{$postBody.seats}} seats at the table.
       div.item.item-complex.item-balanced.button-bar.condensed
         button.button.button-balanced(
-          ng-click="vm.moderatorActions.reject($event, vm.event, $post)"
+          ng-click="vm.moderatorActions.decline($event, vm.event, $post)"
           )
           i.icon.ion-close-circled &nbsp; Decline
         button.button.button-balanced(

@@ -202,20 +202,21 @@ ion-input {
   }
 }
 
-ion-item {
-  &.item-post, &.item-notification {
-    padding: 0;
-    margin: 2px 2px 8px 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-}
+
 ion-item.item-notification {
   border:none;
+  padding: 0 2px;
   .card {
-    margin:0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    margin: 2px 2px 8px 4px;
   }
 }
 ion-item.item-post {
+  padding: 0;
+  border-radius: 2px;
+  border-color: transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  margin: 2px 2px 8px 4px;
   .item.item-avatar {
     border-color: transparent;
   }

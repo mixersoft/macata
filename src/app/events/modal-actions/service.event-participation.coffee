@@ -89,7 +89,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         # format notification as a Post
         post = {}
         post.type = 'Notification'
-        post.head = _.pick data, ['ownerId', 'recipientIds', 'expiresAt']
+        post.head = _.pick data, ['ownerId', 'recipientIds', 'role', 'expiresAt']
         post.body = {
           message: data.message
         }
@@ -131,7 +131,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
             if event.seatsOpen
               message.push 'There are', event.seatsOpen, 'seats remaining.'
             participationResponse.body.message = message
-          when 'rejected'
+          when 'declined'
             message = [
               'Sorry'
               participation.head.$$owner.displayName+','
