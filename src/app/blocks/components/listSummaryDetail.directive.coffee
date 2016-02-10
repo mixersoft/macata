@@ -22,8 +22,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
 
         _styleEl = """
           <style class="item-style">
-          .list-item-summary .list-item-wrap > .item,
-          .list-item-summary .item.item-complex > .item-content {
+            \#{id}.list-item-summary .list-item-wrap > .item {
             min-height: 160px; }
         </style>
         """
@@ -151,10 +150,11 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
         ## layout methods
         ##
         vm.setItemHeight = ($container, h)->
+          return if !vm.$summaryEl
           h ?= vm.itemHeight
           styleEl = $container[0].querySelector('style')
           if !styleEl
-            $container.prepend( _styleEl )
+            $container.prepend( _styleEl.replace(/{id}/g, vm.$summaryEl.attr('id')) )
             styleEl = $container[0].querySelector('style')
           styleEl.innerHTML = styleEl.innerHTML
             .replace(/(min-height:.)(\d+)(px)/, "$1"+h+"$3").trim()
@@ -296,6 +296,7 @@ ListSummaryDirective = ($filter, $window, $controller, $ionicScrollDelegate)->
       link = {
         pre: (scope, element, attrs, controller, transclude) ->
           controller['$summaryEl'] = element
+          controller['$summaryEl'].attr('id', 'list-item-container-'+element.scope().$id)
           return
         post: (scope, element, attrs, controller, transclude) ->
           scope.$listItemDelegate = controller['$listItemDelegate']
