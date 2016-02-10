@@ -45,9 +45,9 @@ Resty = ($q) ->
       return $q.when result
     return $q.reject false
 
-  RestyClass::post = (o)->
+  RestyClass::post = (o, id)->
     return $q.reject false if `o==null`
-    id = _.keys( @_data ).length
+    id = id || _.keys( @_data ).length
     o.id = id
     return $q.when @_data[id] = o
 
