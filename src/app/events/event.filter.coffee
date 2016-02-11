@@ -41,9 +41,10 @@
       offer hints for next Action
 
 ###
-EventFeedFilter = ()->
-  return (event, me, feed)->
-    return [] if !event.feed
+EventFeedFilter = ($rootScope)->
+
+  getPersonalizedFeed = (event, me, feed)->
+
     feed ?= event.feed
     # console.info "user NOT set" if !me
 
@@ -97,7 +98,41 @@ EventFeedFilter = ()->
     , []
     return feed
 
-EventFeedFilter.$inject = []
+  memoized_getPersonalizedFeed = _.memoize( getPersonalizedFeed
+    , (event, me, feed)->
+      return [event.id, me.id].join(':')
+    )
+
+  resetMemo = (event, me)->
+    cache = memoized_getPersonalizedFeed.cache
+    if !event && !me
+      return cache.__data__ = {}
+    if event && me
+      return cache.delete([event.id, me.id].join(':'))
+    toDelete = []
+    if (event && !me) || (me && !event)
+      _.each _.keys(cache.__data__), (k)->
+        [eid, uid] = k.split(':')
+        toDelete.push k if event && eid == event.id
+        toDelete.push k if me && uid == me.id
+        return
+      toDelete.forEach (k)->
+        cache.delete k
+
+
+  $rootScope.$on 'event:feed-changed', (ev, event, user)->
+    resetMemo event, user
+
+  $rootScope.$on 'user:event-role-changed', (ev, user, event)->
+    resetMemo event, user
+
+
+  return (event, me, feed)->
+    return [] if !event.feed
+
+    return memoized_getPersonalizedFeed(event, me, feed)
+
+EventFeedFilter.$inject = ['$rootScope']
 
 
 ###

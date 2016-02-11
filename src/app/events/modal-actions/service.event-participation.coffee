@@ -77,7 +77,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
               event.feed.unshift(post)
             when "ParticipationResponse"
               event.feed.unshift(post)
-          exportDebug.set('feed', event.feed)
+          $rootScope.$emit 'event:feed-changed', event
           return post
 
       ###

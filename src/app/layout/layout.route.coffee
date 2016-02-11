@@ -32,9 +32,11 @@ getStates = ->
             'visitor': 'Visitor'
           }
           $rootScope.$watch '$rootScope.demoRole', (newV)->
+            return if !newV
             vm.demoRole = $rootScope.demoRole
 
           vm.roleChanged = ($event, role)->
+            return if !role
             $rootScope.demoRole = role
             # $emit or $watch('$rootScope.demoRole')
             $rootScope.$emit 'demo-role:changed', role

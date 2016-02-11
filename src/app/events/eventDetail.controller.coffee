@@ -172,7 +172,7 @@ EventDetailCtrl = (
           # update event to include participation
           return EventActionHelpers.createBooking(event, participation, vm)
         .then (event)->
-          $scope.$emit 'user:role-changed', event
+          $scope.$emit 'user:event-role-changed', participation.head.$$owner, event
           return vm.moderatorActions._logAction(event, participation, vm)
         .then ()->
           promises = []
@@ -303,6 +303,8 @@ EventDetailCtrl = (
           # TODO: animate offscreen before removal
           found = _.findIndex vm.event.feed, {id: result.id}
           vm.event.feed[found] = result if ~found
+          $rootScope.$emit 'event:feed-changed', vm.event, vm.me
+
           return
       like: ($event, post)->
         post.head.likes ?= []
