@@ -24,7 +24,7 @@ ion-view#event-detail(view-title="{{vm.title}}")
               list-item-summary {{vm=$parent.$parent.vm;''}}
                 div.tile.recipe.item.item-complex.content.ink(
                   ng-click="$event.stopImmediatePropagation()"
-                  ui-sref="app.recipe({id:{{$item.id}}})"
+                  ui-sref="app.recipe({id:$item.id})"
                 )
                   //- TODO: event-detail-hero.template.html
                   div.hero.content
@@ -34,7 +34,7 @@ ion-view#event-detail(view-title="{{vm.title}}")
                       img.ink(
                         ng-src="{{$item.$$owner.face}}"
                         ng-click="$event.stopImmediatePropagation()"
-                        ui-sref="app.profile({'id':{{$item.ownerId}}})"
+                        ui-sref="app.profile({'id':$item.ownerId})"
                       )
                     
                     div.icon-bar.bottom-toolbar.condensed.light(
@@ -46,7 +46,7 @@ ion-view#event-detail(view-title="{{vm.title}}")
                         ng-click="$item.favorite = !$item.favorite"
                         )
                       i.button.button-clear.larger.ion-map.ink(
-                        ui-sref="app.map({'id':{{$item.id}} })"
+                        ui-sref="app.map({'id':$item.id })"
                         )
                       i.button.button-clear.larger.ink(
                         ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"

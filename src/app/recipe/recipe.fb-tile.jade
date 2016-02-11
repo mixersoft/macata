@@ -16,7 +16,7 @@ list-item-summary.animate-fade-slide-in-right(
           placeholder-data="img" group="face" size="200" index="{{$index}}"
           xxx-ng-src="{{$item.$$host.face}}"
           ng-click="$event.stopImmediatePropagation()"
-          ui-sref="app.profile({'id':{{$index}}})"
+          ui-sref="app.profile({'id':$item.ownerId})"
         )
       div.icon-bar.bottom-toolbar.condensed.light(
         ng-show="$item['title']"
@@ -27,7 +27,7 @@ list-item-summary.animate-fade-slide-in-right(
           ng-click="$item.favorite = !$item.favorite"
           )
         i.button.button-clear.larger.ion-map.ink(
-          ui-sref="app.map({'id':{{$index}}})"
+          ui-sref="app.map({'id':$item.id})"
           )
         i.button.button-clear.larger.ink(
           ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
@@ -67,7 +67,9 @@ list-item-detail
         i.icon.positive.ink(
         ng-class=" $item.favorite ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
         )
-      button.button
+      button.button(
+        ui-sref="app.map({'id':$item.id })"
+        )
         i.icon.positive.ion-map.ink(
         )
       button.button(

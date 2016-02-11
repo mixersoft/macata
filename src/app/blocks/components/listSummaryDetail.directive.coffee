@@ -17,8 +17,8 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
     }
     controllerAs: '$listItemDelegate'
     controller: [
-      '$scope', '$window', '$ionicScrollDelegate', '$timeout'
-      ($scope, $window, $ionicScrollDelegate, $timeout)->
+      '$compile', '$scope', '$window', '$ionicScrollDelegate', '$timeout'
+      ($compile, $scope, $window, $ionicScrollDelegate, $timeout)->
 
         _styleEl = """
           <style class="item-style">
@@ -97,12 +97,15 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
               if $scope.showDetailInline == false
                 vm.$summaryEl.children().addClass('hide')
 
+              # $compile(vm.$detailEl.children())($scope)
+
               ngRepeatGridSvc.clearColSpec($selectedElContainer)
                 .removeClass('hide')
                 .addClass('selected')
                 .addClass(ngRepeatGridSvc.calcColWidth(null, $scope.detailMaxWidth))
                 # append $detailEl to $selectedElContainer
                 .append(vm.$detailEl)
+
 
               unSelectSummaryEl = vm.getAllSelected vm.$summaryEl, $selectedElContainer
               ngRepeatGridSvc.clearColSpec( unSelectSummaryEl )
@@ -355,16 +358,11 @@ ListDetailDirective = ()->
     scope: {}
     link:
       pre: (scope, element, attrs, controller, transclude) ->
+        scope.$item = {}
         controller['$detailEl'] = element
         return
       post: (scope, element, attrs, controller, transclude) ->
         scope.$listItemDelegate = controller['$listItemDelegate']
-        scope.dbg = {
-          'click': (event)->
-            event.stopImmediatePropagation()
-            console.log ['ListDetailDirective.dbg.click', scope.$item.name]
-          'close': controller.close
-        }
         scope.$watch '$listItemDelegate.selected()', (newV, oldV)->
           scope.$item = newV
           # console.log [ "watch detail selected", newV]
