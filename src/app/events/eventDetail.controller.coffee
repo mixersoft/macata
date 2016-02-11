@@ -445,6 +445,7 @@ EventDetailCtrl = (
       addRoleToUser : ()->
         return devConfig.dataReady.finally ()->
           return if !vm.event.participantIds
+
           if vm.me.id == vm.event.ownerId
             role = 'host'
           else if ~vm.event.participantIds.indexOf vm.me.id
@@ -582,19 +583,18 @@ EventDetailCtrl = (
     }
 
     initialize = ()->
-      return viewLoaded = $q.when()
-      .then ()->
-        if $rootScope.user?
-          return vm.me = $rootScope.user
-        $rootScope.demoRole = 'invited'
-      .then ()->
-        getData()
+      # BUG: $ionicView.loaded is being called once for each event.id
+      return
 
 
     activate = ()->
       return $q.reject("ERROR: expecting event.id") if not $stateParams.id
       return devConfig.dataReady
       .finally ()->
+        getData()
+      .then (events)->
+        vm.me = $rootScope.user
+        $rootScope.demoRole = 'invited'
         index = $stateParams.id
         vm.event = vm.events[index]
         vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
@@ -632,37 +632,46 @@ EventDetailCtrl = (
         .removeClass('in')
         .removeClass('done')
 
-    $rootScope.$on 'demo-role:changed', (ev, newV)->
-      return if !newV
-      # $rootScope.demoRole = newV
-      ev.stopPropagation()
-      ev.preventDefault()
-      return vm.dev.loginByRole(vm.event) if vm.event
-
-    $rootScope.$on 'user:role-changed', (ev, newV)->
-      return if !newV
-      # $rootScope.demoRole = newV
-      ev.stopPropagation()
-      ev.preventDefault()
-      return vm.dev.addRoleToUser()
-
-
     $scope.$watch 'vm.me', (newV)->
       return if !newV
       vm.me.role = null
       vm.dev.addRoleToUser()
 
-    $scope.$on '$ionicView.leave', (e) ->
-      resetMaterialMotion('fadeSlideInRight')
-
     $scope.$on '$ionicView.loaded', (e)->
-      $log.info "viewLoaded for EventDetailCtrl"
-      initialize()
+      # BUG: $ionicView.loaded is being called once for each event.id, WHY?
+      $log.info "viewLoaded for EventDetailCtrl, $scope.$id=" + e.currentScope.$id
+
 
     $scope.$on '$ionicView.enter', (e)->
       # $log.info "viewEnter for EventDetailCtrl"
-      return viewLoaded.finally ()->
-        activate()
+      activate()
+
+    $scope.$on '$ionicView.leave', (e) ->
+      resetMaterialMotion('fadeSlideInRight')
+
+
+    loadOnce = ()->
+      return if ~$rootScope['loadOnce'].indexOf 'EventDetailCtrl'
+
+      $rootScope['loadOnce'].push 'EventDetailCtrl'
+
+      initialize()
+      # load $rootScope listeners only once
+      $rootScope.$on 'demo-role:changed', (ev, newV)->
+        console.info ['demo-role:changed', newV]
+        return if !newV
+        # $rootScope.demoRole = newV
+        # ev.stopPropagation()
+        # ev.preventDefault()
+        return vm.dev.loginByRole(vm.event) if vm.event
+
+      $rootScope.$on 'user:event-role-changed', (ev, user, event)->
+        console.info ['user:event-role-changed', user.id]
+        # ev.stopPropagation()
+        ev.preventDefault()
+        return vm.dev.addRoleToUser()
+
+    loadOnce()
 
     return vm  # end EventDetailCtrl
 

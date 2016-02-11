@@ -6,6 +6,8 @@ appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
 
   devConfig.loadData()
 
+  $rootScope['loadOnce'] = []
+
   $ionicPlatform.ready ->
     # Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     # for form inputs)
