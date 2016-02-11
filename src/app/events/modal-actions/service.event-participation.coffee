@@ -543,11 +543,13 @@ EventActionHelpers = ($rootScope, $q, $timeout
       createBooking: (event, particip, vm)->
 
         _participation2menuItem = (participation, item)->
-          menuItem = _.extend item.body.attachment, {
+          menuItem = angular.copy item.body.attachment
+          menuItem = _.extend menuItem, {
             id: Date.now()
             $$owner: participation.$$owner
             ownerId: participation.ownerId
           }
+          menuItem['recipeId'] = item.body.attachment.id
           return menuItem
 
         event.participantIds ?= []

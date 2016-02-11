@@ -77,9 +77,9 @@ EventDetailCtrl = (
             $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
             $wrap.removeClass('hide')
           .then (invitation)->
-            return $timeout(8000)
+            toastr.info("DEMO: invitation responses will be automatically accepted.")
+            return $timeout(3000)
           .then ()->
-            # ???: auto accept invitation request
             # TODO: need to change ParticipationResponse.head.ownerId
             vm.moderatorActions.accept($event, event, participation)
 
@@ -100,11 +100,18 @@ EventDetailCtrl = (
           # append a log as a comment to invitation
           return vm.inviteActions._logAction(event, invitation, vm)
         .then (result)->
+          message = notificationTemplates.get('invitation.declined.ownerId', invitation)
+          notify = {
+            ownerId: invitation.head.ownerId
+            # role: 'participants'
+            message: message
+          }
+          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
 
-          # show Post.comments
-          target = $event.target
-          $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
-          $wrap.removeClass('hide')
+          # # show Post.comments
+          # target = $event.target
+          # $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
+          # $wrap.removeClass('hide')
 
 
       _logAction: (event, invitation, vm)->
@@ -129,20 +136,8 @@ EventDetailCtrl = (
 
         # TODO set 'moderatorId' to new participantId
         #   log/add notification to feed (dismissable), '[person] accepted your invitation'
-        # NOTE:
-        #   Notifcations can be dismissed. offer hints for next action
-        #   Comments are persistent, they can be favorited or commented on by others
-        # other notification templates:
-        #   Comment: a menuItem was added to this event.
         return vm.postActions.postComment(null, invitation, options)
-        .then (result)->
-          message = notificationTemplates.get('invitation.decline.ownerId', invitation)
-          notify = {
-            ownerId: invitation.head.ownerId
-            # role: 'participants'
-            message: message
-          }
-          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
+
 
 
     }
@@ -177,7 +172,57 @@ EventDetailCtrl = (
           # update event to include participation
           return EventActionHelpers.createBooking(event, participation, vm)
         .then (event)->
+          $scope.$emit 'user:role-changed', event
           return vm.moderatorActions._logAction(event, participation, vm)
+        .then ()->
+          promises = []
+          notify = {
+            ownerId: participation.head.ownerId
+            message: notificationTemplates.get('booking.accepted.ownerId', participation)
+          }
+          if _.isEmpty participation.body.attachment
+            notify.message = [
+              notify.message
+              '<br /><br />'
+              notificationTemplates.get('event.contributions.reminder', participation)
+            ]
+          promises.push notifyNewBooking = EventActionHelpers.FeedHelpers.notify(event, notify, vm)
+
+          notify = {
+            ownerId: event.ownerId
+            # role: 'participants'
+            recipientIds: _.difference event.participantIds, [participation.head.ownerId]
+            message: notificationTemplates.get('booking.accepted.participantIds', participation)
+            contribution: participation.body.attachment
+          }
+          if not _.isEmpty participation.body.attachment
+            notify.message = [
+              notify.message
+              '<br /><br />'
+              notificationTemplates.get('event.contributions.notify', participation)
+            ]
+          promises.push notifyOthers = EventActionHelpers.FeedHelpers.notify(event, notify, vm)
+
+          return $q.all(promises)
+          .then ()->
+            if event.seatsOpen > 0
+              event.moderatorId = participation.head.ownerId
+              post = {
+                ownerId: participation.head.ownerId
+                displayName: participation.head.$$owner.displayName
+                seatsOpen: event.seatsOpen
+                toNow: moment(event.startTime).fromNow()
+              }
+              post.message = notificationTemplates.get('event.booking.sendInvites', post)
+              promises.push sendInvites = EventActionHelpers.FeedHelpers.notify(event, post, vm)
+            else
+              post = {
+                hostName: event.$$host.displayName
+                role: 'participants'
+              }
+              post.message = notificationTemplates.get('event.booking.fullyBooked', post)
+              promises.push fullyBooked = EventActionHelpers.FeedHelpers.notify(event, post, vm)
+            return $q.all(promises)
 
       message: ($event, event, participation)->
         return $q.when()
@@ -195,6 +240,13 @@ EventDetailCtrl = (
           return participation
         .then (participation)->
           return vm.moderatorActions._logAction(event, participation, vm)
+        .then ()->
+          notify = {
+            ownerId: participation.head.ownerId
+            # role: 'participants'
+            message: notificationTemplates.get('booking.decline.ownerId', participation)
+          }
+          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
 
       _logAction: (event, participation, vm)->
         # log ParticipationResponse
@@ -213,14 +265,6 @@ EventDetailCtrl = (
           action.head['recipientIds'] = [participation.head.ownerId]
         $scope.$emit 'event:feed-changed', [event, action]
         return EventActionHelpers.FeedHelpers.log(event, action, vm)
-        .then (result)->
-          message = notificationTemplates.get('booking.decline.ownerId', participation)
-          notify = {
-            ownerId: participation.head.ownerId
-            # role: 'participants'
-            message: message
-          }
-          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
 
     }
 
@@ -589,7 +633,17 @@ EventDetailCtrl = (
     $rootScope.$on 'demo-role:changed', (ev, newV)->
       return if !newV
       # $rootScope.demoRole = newV
+      ev.stopPropagation()
+      ev.preventDefault()
       return vm.dev.loginByRole(vm.event) if vm.event
+
+    $rootScope.$on 'user:role-changed', (ev, newV)->
+      return if !newV
+      # $rootScope.demoRole = newV
+      ev.stopPropagation()
+      ev.preventDefault()
+      return vm.dev.addRoleToUser()
+
 
     $scope.$watch 'vm.me', (newV)->
       return if !newV
