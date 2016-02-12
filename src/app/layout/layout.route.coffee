@@ -31,7 +31,7 @@ getStates = ->
             'invited': 'Invited'
             'visitor': 'Visitor'
           }
-          $rootScope.$watch '$rootScope.demoRole', (newV)->
+          $rootScope.$watch 'demoRole', (newV)->
             return if !newV
             vm.demoRole = $rootScope.demoRole
 

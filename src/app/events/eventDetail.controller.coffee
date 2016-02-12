@@ -282,6 +282,10 @@ EventDetailCtrl = (
           location: null
         }
         this.show.messageComposer = true
+        $timeout().then ()->
+          textbox = document.querySelector('#event-detail message-composer textarea')
+          textbox.focus()
+          textbox.scrollIntoViewIfNeeded()
         return
     }
 
@@ -510,7 +514,7 @@ EventDetailCtrl = (
       switch vm.me?.role
         when 'host', 'participant', 'booking'
           # edit event
-          icon = 'ion-edit'
+          icon = 'ion-chatbox'
         when 'invitation','visitor'
           # join
           icon = 'ion-plus'
@@ -533,15 +537,10 @@ EventDetailCtrl = (
 
       fabClick: ()->
         switch vm.me.role
-          when 'host'
+          when 'host', 'participant', 'booking'
             # edit event
-            return vm.on.notReady 'Edit'
-          when 'participant'
-            # edit participation, contribution
-            return vm.on.notReady 'Edit'
-          when 'booking'
-            # edit booking
-            return vm.on.notReady 'Edit'
+            return vm.feed.showMessageComposer()
+
           when 'invitation','visitor'
             # join
             return vm.on['beginBooking'](vm.me, vm.event)
