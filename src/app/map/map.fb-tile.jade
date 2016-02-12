@@ -48,16 +48,19 @@ list-item-detail
       ng-show="true"
       ng-click="$event.stopImmediatePropagation()"
       )
+      a.button.disabled(
+        ng-if="1"
+        xx-ng-click="$listItemDelegate.select(null)"
+        )
+        i.icon.positive.ion-forward.ink(
+        )
+        
       a.button(
         href="{{$item['url']}}" target="_blank"
         )
         i.icon.positive.ion-android-open.ink(
         )
-      button.button(
-        ng-click="dvm.on.gotoTarget($event,$item)"
-        )
-        i.icon.positive.ion-forward.ink(
-        )  
+        
       button.button(
         ng-click="$item.favorite = !$item.favorite"
         )

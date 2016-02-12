@@ -70,8 +70,8 @@ MapCtrl = (
           return
         # update history url
         $state.transitionTo($state.current.name
-        , {id: $item && $item.id || $index}
-        , {notify:false}
+          , {id: [$item.id,$item.className].join(':') }
+          , {notify:false}
         )
         console.log ["selected", $index, $item]
         return if silent
@@ -232,15 +232,13 @@ MapCtrl = (
       vm.rows = []
       return $q.when()
       .then ()->
-        promises=[]
-        promises.push IdeasResource.query()  # recipes/ideas
-        promises.push EventsResource.query().then (result)->
+        recipes = IdeasResource.query()  # recipes/ideas
+        events = EventsResource.query().then (result)->
           return result[0...3]
-        return $q.all(promises)
+        return $q.all([recipes, events])
         .then (results)->
-          data = []
-          _.each results, (result)->
-            data = data.concat( result )
+          [recipes, events] = results
+          data = [].concat recipes, events
           return data
       .then (data)->
         vm.rows = data
@@ -267,18 +265,28 @@ MapCtrl = (
         return getData()
 
     activate = ()->
-      if index = $stateParams.id
+      vm.listItemDelegate = $listItemDelegate.getByHandle('map-list-scroll')
+      return getData()
+      .then (mapData)->
+        return if not $stateParams.id
+        index = _.findIndex vm.rows, (o)->
+          return true if [o.id,o.className].join(':') == $stateParams.id
+        return if not ~index
         stop = $scope.$on 'map-ready', (ev, map)->
-          vm.listItemDelegate.select(null, vm.rows[index], index)
           stop?()
+          # select $item.id when 'map-ready'
+          vm.listItemDelegate.select(null, vm.rows[index], index)
           return
-      showMap()
-      # // Set Ink
-      ionic.material?.ink.displayEffect()
-      ionic.material?.motion.fadeSlideInRight({
-        startVelocity: 2000
-        })
-      return
+        return
+      .then ()->
+        setMapHeight()
+        showMap()
+        # // Set Ink
+        ionic.material?.ink.displayEffect()
+        ionic.material?.motion.fadeSlideInRight({
+          startVelocity: 2000
+          })
+        return
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -297,12 +305,31 @@ MapCtrl = (
 
     $scope.$on '$ionicView.loaded', (e)->
       $log.info "viewLoaded for MapCtrl"
-      initialize()
+      # initialize()
 
     $scope.$on '$ionicView.enter', (e)->
-      # $log.info "viewEnter for MapCtrl"
-      return viewLoaded.finally ()->
-        activate()
+      $log.info "viewEnter for MapCtrl"
+      activate()
+
+
+    loadOnce = ()->
+      return if ~$rootScope['loadOnce'].indexOf 'MapCtrl'
+      $rootScope['loadOnce'].push 'MapCtrl'
+
+      return $q.when()
+      .then ()->
+        if $rootScope.user?
+          vm.me = $rootScope.user
+        else
+          DEV_USER_ID = '0'
+          devConfig.loginUser( DEV_USER_ID ).then (user)->
+            # loginUser() sets $rootScope.user
+            vm.me = $rootScope.user
+            toastr.info "Login as userId=0"
+            return vm.me
+      .then ()->
+        vm.listItemDelegate = $listItemDelegate.getByHandle('map-list-scroll')
+        setMapHeight()
 
     return vm  # end MapCtrl
 

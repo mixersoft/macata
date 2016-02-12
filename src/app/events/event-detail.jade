@@ -46,7 +46,7 @@ ion-view#event-detail(view-title="{{vm.title}}")
                         ng-click="$item.favorite = !$item.favorite"
                         )
                       i.button.button-clear.larger.ion-map.ink(
-                        ui-sref="app.map({'id':$item.id })"
+                        ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"
                         )
                       i.button.button-clear.larger.ink(
                         ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"

@@ -202,6 +202,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
               $selectedElContainer =  angular.element target # .list-item-wrap
 
             # console.log $selectedElContainer
+            return if _.isEmpty $selectedElContainer
 
 
             # event=null if vm.listItemDelegate.select() on activate()

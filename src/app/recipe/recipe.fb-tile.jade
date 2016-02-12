@@ -27,7 +27,7 @@ list-item-summary.animate-fade-slide-in-right(
           ng-click="$item.favorite = !$item.favorite"
           )
         i.button.button-clear.larger.ion-map.ink(
-          ui-sref="app.map({'id':$item.id})"
+          ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"
           )
         i.button.button-clear.larger.ink(
           ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
@@ -68,7 +68,7 @@ list-item-detail
         ng-class=" $item.favorite ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
         )
       button.button(
-        ui-sref="app.map({'id':$item.id })"
+        ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"
         )
         i.icon.positive.ion-map.ink(
         )
