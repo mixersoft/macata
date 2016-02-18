@@ -7,6 +7,7 @@ getStates = ->
   [
     state: 'app.recipe'
     config:
+      cache: true
       url: '/recipe?id'
       views:
         'menuContent':

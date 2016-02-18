@@ -1,7 +1,7 @@
 'use strict'
 
 # helper functions to set up dev testing
-DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
+DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
   UsersResource, EventsResource, IdeasResource
 )->
 
@@ -20,6 +20,16 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
         $rootScope['user'] = user
         $rootScope.$emit 'user:sign-in', $rootScope['user']
         return $rootScope['user']
+
+    getDevUser : (defaultUserId)->
+      return $q.when()
+      .then ()->
+        return $rootScope['user'] if $rootScope['user']?
+        return self.loginUser( defaultUserId || "0" )
+        .then (user)->
+          toastr.info "Login as userId="+$rootScope['user'].id
+          return $rootScope['user']
+
 
     dataReady: null # promise
 
@@ -91,7 +101,7 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug
   return self # DevConfig
 
 
-DevConfig.$inject = ['$rootScope', '$q', '$log', 'openGraphSvc', 'exportDebug'
+DevConfig.$inject = ['$rootScope', '$q', '$log', 'openGraphSvc', 'exportDebug', 'toastr'
   'UsersResource', 'EventsResource', 'IdeasResource'
 ]
 

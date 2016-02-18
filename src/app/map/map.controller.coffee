@@ -9,8 +9,6 @@ MapCtrl = (
   utils, devConfig, exportDebug
   )->
 
-    viewLoaded = null   # promise
-
     MAP_VIEW = {
       DISPLAY_LIMIT: 20                # limit multiple results
       OFFSET_HEIGHT: 420              # offsetH = ion-modal-view.modal.height - mapH

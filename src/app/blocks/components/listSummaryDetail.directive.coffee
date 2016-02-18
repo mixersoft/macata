@@ -388,7 +388,7 @@ ListItemDelegate = ()->
           done = !checkScope || checkScope == parentScope
 
         return parentEl if checkScope
-        # console.warn ["ListItemDelegate.getByHandle() handle from cached $ionicView"
+        # console.warn ["ListItemDelegate.getByHandle() WRONG handle from cached $ionicView"
         #   parentScope.$id
         #   angular.element(parentEl).scope().$id
         # ]

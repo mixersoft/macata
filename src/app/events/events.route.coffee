@@ -7,6 +7,7 @@ getStates = ->
   [
     state: 'app.events'
     config:
+      cache: true
       url: '/events/:filter'
       views:
         'menuContent':

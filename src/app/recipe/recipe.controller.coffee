@@ -8,10 +8,9 @@ RecipeCtrl = (
   utils, devConfig, exportDebug
   )->
 
-    viewLoaded = null   # promise
-
     vm = this
     vm.title = "Ideas"
+    vm.viewId = ["recipe-view",$scope.$id].join('-')
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
     vm.acl = {
@@ -101,31 +100,26 @@ RecipeCtrl = (
     }
 
     initialize = ()->
-      return viewLoaded = $q.when()
-      .then ()->
-        if $rootScope.user?
-          vm.me = $rootScope.user
-        else
-          DEV_USER_ID = '0'
-          devConfig.loginUser( DEV_USER_ID ).then (user)->
-            # loginUser() sets $rootScope.user
-            vm.me = $rootScope.user
-            toastr.info "Login as userId=0"
-            return vm.me
-      .then ()->
-        vm.listItemDelegate = $listItemDelegate.getByHandle('recipe-list-scroll')
-      .then ()->
-        return getData()
+      return
 
     activate = ()->
-      if index = $stateParams.id
-        vm.listItemDelegate.select(null, vm.rows[index], index)
-      # // Set Ink
-      ionic.material?.ink.displayEffect()
-      ionic.material?.motion.fadeSlideInRight({
-        startVelocity: 2000
-        })
-      return
+      vm.listItemDelegate = $listItemDelegate.getByHandle('recipe-list-scroll', $scope)
+      return $q.when()
+      .then ()->
+        return devConfig.getDevUser("0").then (user)->
+          return vm.me = user
+      .then ()->
+        return getData()
+      .then ()->
+        # // Set Ink
+        ionic.material?.ink.displayEffect()
+        ionic.material?.motion.fadeSlideInRight({
+          startVelocity: 2000
+          })
+        return
+      .then ()->
+        if index = $stateParams.id
+          vm.listItemDelegate.select(null, vm.rows[index], index)
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -143,13 +137,12 @@ RecipeCtrl = (
       resetMaterialMotion('fadeSlideInRight')
 
     $scope.$on '$ionicView.loaded', (e)->
-      $log.info "viewLoaded for RecipeCtrl"
+      # $log.info "viewLoaded for RecipeCtrl"
       initialize()
 
     $scope.$on '$ionicView.enter', (e)->
       $log.info "viewEnter for RecipeCtrl"
-      return viewLoaded.finally ()->
-        activate()
+      activate()
 
     return vm  # end RecipeCtrl
 

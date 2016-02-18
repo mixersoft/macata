@@ -9,10 +9,9 @@ EventCtrl = (
   utils, devConfig, exportDebug
   )->
 
-    viewLoaded = null   # promise
-
     vm = this
     vm.title = "Events"
+    vm.viewId = ["events-view",$scope.$id].join('-')
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
     vm.acl = {
@@ -65,31 +64,26 @@ EventCtrl = (
     }
 
     initialize = ()->
-      return viewLoaded = $q.when()
-      .then ()->
-        if $rootScope.user?
-          vm.me = $rootScope.user
-        else
-          DEV_USER_ID = '0'
-          devConfig.loginUser( DEV_USER_ID ).then (user)->
-            # loginUser() sets $rootScope.user
-            vm.me = $rootScope.user
-            toastr.info "Login as userId=0"
-            return vm.me
-      .then ()->
-        vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll')
-      .then ()->
-        getData()
+      return
 
     activate = ()->
-      if index = $stateParams.filter
-        console.warn 'TODO: set filter on viewEnter'
-      # // Set Ink
-      ionic.material?.ink.displayEffect()
-      ionic.material?.motion.fadeSlideInRight({
-        startVelocity: 2000
-        })
-      return
+      vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
+      return $q.when()
+      .then ()->
+        return devConfig.getDevUser("0").then (user)->
+          return vm.me = user
+      .then ()->
+        return getData()
+      .then ()->
+        # // Set Ink
+        ionic.material?.ink.displayEffect()
+        ionic.material?.motion.fadeSlideInRight({
+          startVelocity: 2000
+          })
+        return
+      .then ()->
+        if index = $stateParams.filter
+          console.warn 'TODO: set filter on viewEnter'
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -107,13 +101,12 @@ EventCtrl = (
       resetMaterialMotion('fadeSlideInRight')
 
     $scope.$on '$ionicView.loaded', (e)->
-      $log.info "viewLoaded for EventCtrl"
+      # $log.info "viewLoaded for EventCtrl"
       initialize()
 
     $scope.$on '$ionicView.enter', (e)->
-      # $log.info "viewEnter for EventCtrl"
-      return viewLoaded.finally ()->
-        activate()
+      $log.info "viewEnter for EventCtrl"
+      activate()
 
     return vm  # end EventCtrl
 
