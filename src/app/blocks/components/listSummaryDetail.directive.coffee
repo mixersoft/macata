@@ -36,7 +36,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
         vm.$detailEl = null   # set in postLink
         vm.selected = (item, $el)->
           if item?
-            console.log ["setSelected", item.id || item.name || item.title]
+            # console.log ["$listItemDelegate.setSelected()", item.id || item.name || item.title]
             vm._selected =
               if $scope.detailByReference
               then item
@@ -372,11 +372,27 @@ ListDetailDirective = ()->
 ListDetailDirective.$inject = []
 
 ListItemDelegate = ()->
-  this.getByHandle = (handle)->
+  this.getByHandle = (handle, parentScope)->
     parents = document.getElementsByTagName('LIST-ITEM-CONTAINER')
     found = _.find parents, (parentEl)->
-      return parentEl if parentEl.getAttribute('handle') == handle
-      return parentEl if parentEl.getAttribute('scroll-handle') == handle
+      foundHandle = parentEl.getAttribute('handle') == handle ||
+        parentEl.getAttribute('scroll-handle') == handle
+      if foundHandle
+        return parentEl if !parentScope
+        # $ionicView caching will create multiple ion-scroll parents with same handle
+        # check that the <list-item-container> is a child of the given parentScope
+        checkScope = angular.element(parentEl).scope()
+        done = !checkScope || checkScope == parentScope
+        while not done
+          checkScope = checkScope.$parent
+          done = !checkScope || checkScope == parentScope
+
+        return parentEl if checkScope
+        # console.warn ["ListItemDelegate.getByHandle() handle from cached $ionicView"
+        #   parentScope.$id
+        #   angular.element(parentEl).scope().$id
+        # ]
+        return
       return
     return angular.element(found).scope?().$listItemDelegate
   this.getByChildEl = (child)->
