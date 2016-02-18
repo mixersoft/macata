@@ -105,6 +105,7 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
 
               return result
             .then (result)->
+              # result.isRecipe = true
               $mc.scope.attachment = result
               return
 
@@ -133,7 +134,7 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
             console.log ['submitNewTile', result]
             $mc.settings.show.newTile = false
             if result
-              return IdeasResource.post(result)
+              return IdeasResource.save(result)
         }
 
         $mc.LOCATION = {

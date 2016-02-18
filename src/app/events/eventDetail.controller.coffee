@@ -13,10 +13,9 @@ EventDetailCtrl = (
     # coffeelint: disable=max_line_length
     # coffeelint: enable=max_line_length
 
-    viewLoaded = null   # promise
-
     vm = this
     vm.title = "Event Detail"
+    vm.viewId = ["event-detail-view",$scope.$id].join('-')
     vm.me = null      # current user, set in initialize()
     vm.acl = {
       isVisitor: ()->
@@ -582,7 +581,8 @@ EventDetailCtrl = (
     }
 
     initialize = ()->
-      # BUG: $ionicView.loaded is being called once for each event.id
+      # $ionicView.loaded: called once for EACH cached $ionicView,
+      #   i.e. each instance of vm
       return
 
 
@@ -593,10 +593,11 @@ EventDetailCtrl = (
         getData()
       .then (events)->
         vm.me = $rootScope.user
-        $rootScope.demoRole = 'invited'
         index = $stateParams.id
         vm.event = vm.events[index]
-        vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
+        if !$rootScope.demoRole
+          $rootScope.demoRole = 'invited'
+        return vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
       .then ()->
         event = vm.event
         $scope.$emit 'user:event-role-changed', null, event
@@ -638,8 +639,8 @@ EventDetailCtrl = (
       vm.dev.addRoleToUser()
 
     $scope.$on '$ionicView.loaded', (e)->
-      # BUG: $ionicView.loaded is being called once for each event.id, WHY?
-      $log.info "viewLoaded for EventDetailCtrl, $scope.$id=" + e.currentScope.$id
+      # $log.info "viewLoaded for EventDetailCtrl, $scope.$id=" + e.currentScope.$id
+      initialize()
 
 
     $scope.$on '$ionicView.enter', (e)->
@@ -667,10 +668,7 @@ EventDetailCtrl = (
 
     loadOnce = ()->
       return if ~$rootScope['loadOnce'].indexOf 'EventDetailCtrl'
-
       $rootScope['loadOnce'].push 'EventDetailCtrl'
-
-      initialize()
       # load $rootScope listeners only once
 
     loadOnce()

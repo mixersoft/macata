@@ -46,10 +46,9 @@ list-item-detail
     div.button-bar.condensed.positive(
       ng-show="true"
       ng-click="$event.stopImmediatePropagation()"
-      )
-      a.button.disabled(
-        ng-if="1"
-        xx-ng-click="$listItemDelegate.select(null)"
+      ) {{vm=$parent.$parent.$parent.vm;''}}
+      a.button(
+        ng-click="vm.on.gotoTarget($item)"
         )
         i.icon.positive.ion-forward.ink(
         )

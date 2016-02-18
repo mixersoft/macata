@@ -1,5 +1,8 @@
 // recipe/recipe.jade
-ion-view#event-detail(view-title="{{vm.title}}") 
+ion-view.event-detail(
+  view-title="{{vm.title}}"
+  id="{{vm.viewId}}"
+  )
   div.hide {{ show=vm.settings.show;'' }}
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")

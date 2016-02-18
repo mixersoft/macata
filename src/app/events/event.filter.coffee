@@ -41,7 +41,7 @@
       offer hints for next Action
 
 ###
-EventFeedFilter = ($rootScope)->
+EventFeedFilter = ($rootScope, exportDebug)->
 
   getPersonalizedFeed = (event, me, feed)->
 
@@ -126,13 +126,13 @@ EventFeedFilter = ($rootScope)->
   $rootScope.$on 'user:event-role-changed', (ev, user, event)->
     resetMemo event, user
 
-
+  exportDebug.set('memoCache',  memoized_getPersonalizedFeed.cache)
   return (event, me, feed)->
     return [] if !event.feed
-
     return memoized_getPersonalizedFeed(event, me, feed)
 
-EventFeedFilter.$inject = ['$rootScope']
+
+EventFeedFilter.$inject = ['$rootScope', 'exportDebug']
 
 
 ###
