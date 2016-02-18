@@ -15,6 +15,7 @@ getStates = ->
   ,
     state: 'app.event-detail'
     config:
+      cache: true
       url: '/event-detail/:id'
       views:
         'menuContent':

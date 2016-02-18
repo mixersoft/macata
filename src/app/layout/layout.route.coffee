@@ -39,7 +39,7 @@ getStates = ->
             return if !role
             $rootScope.demoRole = role
             # $emit or $watch('$rootScope.demoRole')
-            $rootScope.$emit 'demo-role:changed', role
+            $rootScope.$broadcast 'demo-role:changed', role
             $ionicSideMenuDelegate.toggleLeft(false)
             return
           return vm

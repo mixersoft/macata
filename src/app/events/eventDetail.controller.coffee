@@ -436,7 +436,7 @@ EventDetailCtrl = (
         return devConfig.loginUser(userId, 'force')
         .then (user)->
           vm.me = user
-          $rootScope.$emit 'demo-role:changed', $rootScope.demoRole if forceRole
+          $scope.$broadcast 'demo-role:changed', $rootScope.demoRole if forceRole
           return user
         .finally ()->
           toastr.info [
@@ -599,6 +599,7 @@ EventDetailCtrl = (
         vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
       .then ()->
         event = vm.event
+        $scope.$emit 'user:event-role-changed', null, event
         event.feed = vm.lookup.feed
         # event.feed = $filter('feedFilter')(event, FEED)
         event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
@@ -648,6 +649,21 @@ EventDetailCtrl = (
     $scope.$on '$ionicView.leave', (e) ->
       resetMaterialMotion('fadeSlideInRight')
 
+    $scope.$on 'demo-role:changed', (ev, newV)->
+      console.info ['demo-role:changed', newV]
+      return if !newV
+      # $rootScope.demoRole = newV
+      # ev.stopPropagation()
+      # ev.preventDefault()
+      return vm.dev.loginByRole(vm.event) if vm.event
+
+    $scope.$on 'user:event-role-changed', (ev, user, event)->
+      return !user
+      console.info ['user:event-role-changed', user.id]
+      # ev.stopPropagation()
+      ev.preventDefault()
+      return vm.dev.addRoleToUser()
+
 
     loadOnce = ()->
       return if ~$rootScope['loadOnce'].indexOf 'EventDetailCtrl'
@@ -656,19 +672,6 @@ EventDetailCtrl = (
 
       initialize()
       # load $rootScope listeners only once
-      $rootScope.$on 'demo-role:changed', (ev, newV)->
-        console.info ['demo-role:changed', newV]
-        return if !newV
-        # $rootScope.demoRole = newV
-        # ev.stopPropagation()
-        # ev.preventDefault()
-        return vm.dev.loginByRole(vm.event) if vm.event
-
-      $rootScope.$on 'user:event-role-changed', (ev, user, event)->
-        console.info ['user:event-role-changed', user.id]
-        # ev.stopPropagation()
-        ev.preventDefault()
-        return vm.dev.addRoleToUser()
 
     loadOnce()
 

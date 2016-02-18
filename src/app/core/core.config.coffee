@@ -53,6 +53,7 @@ toastrConfig = (toastrConfig) ->
 ionicConfig = ($ionicConfigProvider)->
   $ionicConfigProvider.backButton.text('')
   $ionicConfigProvider.backButton.previousTitleText(false)
+  $ionicConfigProvider.views.forwardCache(true)
   return
 
 ionicConfig.$inject = ['$ionicConfigProvider']

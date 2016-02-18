@@ -7,6 +7,7 @@ getStates = ->
   [
     state: 'app.map'
     config:
+      cache: false
       url: '/map?id'
       views:
         'menuContent':
