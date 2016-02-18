@@ -4,7 +4,6 @@
 //-   ionicMaterial CSS.  use div.item instead
 
 list-item-summary.animate-fade-slide-in-right(
-  opt-collection="vm.rows"
 ) {{vm=$parent.$parent.vm;''}}
   div.tile.recipe.item.item-complex.content.ink(
     ng-class="[$item.color,'bg'].join('-')"
@@ -38,7 +37,7 @@ list-item-summary.animate-fade-slide-in-right(
 
 list-item-detail 
   //- $item == $listItemDelegate.selected(), e.g. selected model
-  div.tile.tile-detail(ng-controller="RecipeDetailCtrl as dvm")
+  div.tile.tile-detail
     ion-item.item-complex.in.done
       div.item-body.padding
         div.title {{$item['title']}}

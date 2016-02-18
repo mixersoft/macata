@@ -4,7 +4,7 @@ MapCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  uiGmapGoogleMapApi, openGraphSvc, geocodeSvc
+  uiGmapGoogleMapApi, geocodeSvc
   EventsResource, IdeasResource
   utils, devConfig, exportDebug
   )->
@@ -26,8 +26,49 @@ MapCtrl = (
 
     vm = this
     vm.title = "Map View"
+    vm.viewId = ["map-view",$scope.$id].join('-')
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
+
+    # gMap initialization & methods
+    # vm.gMap.Control, vm.gMap.MarkersControl:
+    #   set on each controller load
+    #   see: map.jade, angular-google-maps
+    # map-ready on each $ionicView.load, but NOT $ionicView.enter
+    vm.gMap = {
+      Control : {}
+      MarkersControl : {}
+      Dfd : $q.defer()
+      ControlsReady : 'promise'
+      renderSelectedMarker: (marker, markers)->
+        _.each markers, (m)->
+          if m.resetIcon?
+            m.setIcon(m.resetIcon)
+            # m.set('labelContent', ' ' )
+            m.set('labelVisible', false)
+            delete m.resetIcon
+          return
+        # set selected marker
+        index = marker.model.id
+        label = marker.model.title[0...20]
+        label += '...' if marker.model.title.length>20
+        marker.set('labelContent', label )
+        marker.set('labelVisible', true)
+        # marker.set('labelStyle', {color: 'white'})
+        marker.resetIcon = marker.getIcon()
+        marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
+
+      setMapBounds: (map, markers)->
+        # console.info ["setMapBounds for ", markers]
+        latlngbounds = new google.maps.LatLngBounds()
+        markers.forEach (m)->
+          latlngbounds.extend(m.getPosition())
+          return
+        map.fitBounds(latlngbounds)
+        return
+    }
+    vm.gMap['ControlsReady'] = vm.gMap['Dfd'].promise
+
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -59,8 +100,24 @@ MapCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      #  list-item-container[on-select]
+      'gotoTarget':(item)->
+        switch item.className
+          when 'Events'
+            return $state.go('app.event-detail', {id:item.id})
+            # return "app.events({id:'" + item.id + "'})"
+          when 'Recipe'
+            return  $state.go('app.recipe', {id:item.id})
+            # return "app.recipe({id:'" + item.id + "'})"
+          else
+            return
+
+      # list-item-container[on-select='&']
+      # called by: vm.listItemDelegate.select()
       select: ($item, $index, silent)->
+        # if $item == null
+        #   $item = vm.listItemDelegate.selected()
+        #   return vm.on['gotoTarget']($item)
+
         if $item == null
           # unSelect
           $state.transitionTo($state.current.name
@@ -76,12 +133,19 @@ MapCtrl = (
         console.log ["selected", $index, $item]
         return if silent
 
-        config = vm['map'].options.manyMarkers
-        if _.isEmpty config.control
-          return console.warn ["markers.control NOT AVAILABLE yet"]
-        markers = config.control.getGMarkers()
-        marker = markers[$index]
-        config.events.click marker, null, null, null, 'silent'
+        $timeout(0).then ()->
+          # select marker by $index
+          markers = vm.gMap.MarkersControl.getGMarkers()
+          marker = markers[$index]
+          vm.gMap.renderSelectedMarker(marker, markers)
+
+          map = vm.gMap.Control.getGMap()
+          markerPosition = marker.getPosition()
+          if not map.getBounds().contains markerPosition
+            # scrollIntoView if out of bounds
+            vm.gMap.setMapBounds(map, markers)
+          # map.panTo(markerPosition)
+          return
         return
     }
 
@@ -115,17 +179,18 @@ MapCtrl = (
       mapH = Math.max( MAP_VIEW.MAP_MIN_HEIGHT , mapH)
       # console.log ["height=",$window.innerHeight , contentH,mapH]
 
-
       styleH = """
-        #map-view-map .wrap {height: %height%px;}
-        #map-view-map .angular-google-map-container {height: %height%px;}
+        #%viewId% .map-view-search { min-width:32.5px; }
+        #%viewId% .map-view-search svg {width: 26px; height: 26px; margin: 5px 0;}
+        #%viewId% .map-view-map .wrap {height: %height%px;}
+        #%viewId% .map-view-map .angular-google-map-container {height: %height%px;}
       """
       styleH = styleH.replace(/%height%/g, mapH)
       # .has-header offset
       mapBot = mapH + 44
-      styleH += "#map-view-list {top: %top%px;}".replace('%top%', mapBot)
-
-      angular.element(document.getElementById('map-view-style')).append(styleH)
+      styleH += "#%viewId% .map-view-list {top: %top%px;}".replace('%top%', mapBot)
+      styleH = styleH.replace(/%viewId%/g, vm.viewId)
+      angular.element(document.querySelector('#'+vm.viewId+' .map-view-style')).html(styleH)
       return mapH
 
 
@@ -135,18 +200,18 @@ MapCtrl = (
       return uiGmapGoogleMapApi
       .then ()->
 
-        if markerCount == 0
-          return
-
-        if markerCount == 1
-          selectedLocation = rows[0]
-          mapOptions = {
-            type: 'oneMarker'
-            location: [selectedLocation.lat, selectedLocation.lon]
-            draggableMarker: false
-            dragendMarker: (marker, eventName, args)->
-              return
-          }
+        # if markerCount == 0
+        #   return
+        #
+        # if markerCount == 1
+        #   selectedLocation = rows[0]
+        #   mapOptions = {
+        #     type: 'oneMarker'
+        #     location: [selectedLocation.lat, selectedLocation.lon]
+        #     draggableMarker: false
+        #     dragendMarker: (marker, eventName, args)->
+        #       return
+        #   }
 
         if markerCount > 1
           mapOptions = {
@@ -160,53 +225,27 @@ MapCtrl = (
               # labelStyle:
               #   color: 'white'
               # labelContent: 'title'
-            control: {}
+            # control: {}   # see: vm.gMap.MarkersControl
             clickMarker: (marker, eventName, model, skip, silent)->
               # console.log ["clicked, i="+index, vm.rows[index]]
-              # reset markers
-              markers = mapOptions.control.getGMarkers()
-              _.each markers, (m)->
-                if m.resetIcon?
-                  m.setIcon(m.resetIcon)
-                  # m.set('labelContent', ' ' )
-                  m.set('labelVisible', false)
-                  delete m.resetIcon
-                return
-              # set selected marker
-              index = marker.model.id
-              label = marker.model.title[0...20]
-              label += '...' if marker.model.title.length>20
-              marker.set('labelContent', label )
-              marker.set('labelVisible', true)
-              # marker.set('labelStyle', {color: 'white'})
-              marker.resetIcon = marker.getIcon()
-              marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
+              # render selected marker, reset others
+              markers = vm.gMap.MarkersControl.getGMarkers()
+              vm.gMap.renderSelectedMarker(marker, markers)
 
               # silent if called by list-summary-detail: $listItemDelegate.selected()
-              if silent
-                # scrollIntoView if out of bounds
-                _setMapBounds = (map, markers)->
-                  latlngbounds = new google.maps.LatLngBounds()
-                  markers.forEach (m)->
-                    latlngbounds.extend(m.getPosition())
-                    return
-                  map.fitBounds(latlngbounds)
-                  return
-
-                map = vm.map.control.getGMap()
-                markerPosition = marker.getPosition()
-                if not map.getBounds().contains markerPosition
-                  _setMapBounds(map, markers)
-                # map.panTo(markerPosition)
+              # not silent if marker was clicked by user
+              if not silent
+                # select matching item in list-summary-detail
+                index = marker.model.id
+                vm.listItemDelegate.select(null, vm.rows[index], index, 'silent')
                 return
-
-              # select matching item in list-summary-detail
-              vm.listItemDelegate.select(null, vm.rows[index], index, 'silent')
 
           }
         mapOptions = _.extend mapOptions, {
-          'control' : {}
+          # 'control' : {}  # see: vm.gMap.Control
           'mapReady' : (map, eventName)->
+            # TODO: deprecate
+            # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
             $scope.$broadcast 'map-ready', map
         }
         mapConfig = geocodeSvc.getMapConfig mapOptions
@@ -224,7 +263,7 @@ MapCtrl = (
         setupMap(vm.rows)
       .then (config)->
         vm['map'] = config
-        exportDebug.set 'mapConfig', config
+        # exportDebug.set 'mapConfig', config
         return
 
 
@@ -241,43 +280,36 @@ MapCtrl = (
           data = [].concat recipes, events
           return data
       .then (data)->
+        # strip $$ keys, searching for gMap bug
+        if true
+          data = _.map data, (o)->
+            return _.omit o, (v,k)->
+              return true if k.slice(0,2)=='$$'
+        return data
+      .then (data)->
         vm.rows = data
-        exportDebug.set('rows', vm.rows)
+        # exportDebug.set('mapData', vm.rows)
         return vm.rows
 
     initialize = ()->
-      return viewLoaded = $q.when()
-      .then ()->
-        if $rootScope.user?
-          vm.me = $rootScope.user
-        else
-          DEV_USER_ID = '0'
-          devConfig.loginUser( DEV_USER_ID ).then (user)->
-            # loginUser() sets $rootScope.user
-            vm.me = $rootScope.user
-            toastr.info "Login as userId=0"
-            return vm.me
-      .then ()->
-        vm.listItemDelegate = $listItemDelegate.getByHandle('map-list-scroll')
-        setMapHeight()
-        return
-      .then ()->
-        return getData()
+      # $ionicView.loaded: called once for EACH cached $ionicView,
+      #   i.e. each instance of vm
+      unwatch_gMapMarkersControl = $scope.$watch 'vm.gMap.MarkersControl.getGMarkers', (newV)->
+        if newV && vm.gMap['Control'].getGMap
+          unwatch_gMapMarkersControl?()
+          console.log "gMap && gMap Markers ready"
+          vm.gMap.Dfd.resolve('gMapControls ready')
+      # NOTE: 'map-ready' fired once for each $ionicView.loaded ONLY
+      # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
 
     activate = ()->
-      vm.listItemDelegate = $listItemDelegate.getByHandle('map-list-scroll')
-      return getData()
-      .then (mapData)->
-        return if not $stateParams.id
-        index = _.findIndex vm.rows, (o)->
-          return true if [o.id,o.className].join(':') == $stateParams.id
-        return if not ~index
-        stop = $scope.$on 'map-ready', (ev, map)->
-          stop?()
-          # select $item.id when 'map-ready'
-          vm.listItemDelegate.select(null, vm.rows[index], index)
-          return
-        return
+      # $ionicView.enter
+      vm.listItemDelegate = $listItemDelegate.getByHandle('map-list-scroll', $scope)
+      return $q.when()
+      .then ()->
+        return devConfig.getDevUser("0").then (user)->
+          return vm.me = user
+      .then getData
       .then ()->
         setMapHeight()
         showMap()
@@ -287,6 +319,23 @@ MapCtrl = (
           startVelocity: 2000
           })
         return
+      .then ()->
+        return if not $stateParams.id
+        index = _.findIndex vm.rows, (o)->
+          return true if [o.id,o.className].join(':') == $stateParams.id
+        return if not ~index
+
+        # select active marker
+        vm.gMap.ControlsReady.finally ()->
+          # need to wait for a non-existent 'markers-ready' event
+          # on $ionicView.load, using $watch + promise instead
+          $timeout(0).then ()->
+            # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
+            # using $timeout(0) instead
+            vm.listItemDelegate.select(null, vm.rows[index], index)
+          return
+        return
+
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -305,7 +354,7 @@ MapCtrl = (
 
     $scope.$on '$ionicView.loaded', (e)->
       $log.info "viewLoaded for MapCtrl"
-      # initialize()
+      initialize()
 
     $scope.$on '$ionicView.enter', (e)->
       $log.info "viewEnter for MapCtrl"
@@ -313,24 +362,18 @@ MapCtrl = (
 
 
     loadOnce = ()->
+      # called once for each Controller load
       return if ~$rootScope['loadOnce'].indexOf 'MapCtrl'
       $rootScope['loadOnce'].push 'MapCtrl'
+      $log.info "Controller Loaded for MapCtrl"
 
-      return $q.when()
-      .then ()->
-        if $rootScope.user?
-          vm.me = $rootScope.user
-        else
-          DEV_USER_ID = '0'
-          devConfig.loginUser( DEV_USER_ID ).then (user)->
-            # loginUser() sets $rootScope.user
-            vm.me = $rootScope.user
-            toastr.info "Login as userId=0"
-            return vm.me
-      .then ()->
-        vm.listItemDelegate = $listItemDelegate.getByHandle('map-list-scroll')
-        setMapHeight()
+      ###
+      # put all gmap init routines here.
+      # DO NOT: init and vm attrs here, do in activate()
+      ###
 
+
+    loadOnce()
     return vm  # end MapCtrl
 
 
@@ -338,7 +381,7 @@ MapCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'uiGmapGoogleMapApi', 'openGraphSvc', 'geocodeSvc'
+  'uiGmapGoogleMapApi', 'geocodeSvc'
   'EventsResource', 'IdeasResource'
   'utils', 'devConfig', 'exportDebug'
 ]
@@ -351,7 +394,7 @@ MapCtrl.$inject = [
 
 MapDetailCtrl = (
   $scope, $rootScope, $q
-  tileHelpers, openGraphSvc
+  tileHelpers
   $log, toastr
   ) ->
     vm = this
@@ -388,7 +431,7 @@ MapDetailCtrl = (
 
 MapDetailCtrl.$inject = [
   '$scope', '$rootScope', '$q'
-  'tileHelpers', 'openGraphSvc'
+  'tileHelpers'
   '$log', 'toastr'
 ]
 
