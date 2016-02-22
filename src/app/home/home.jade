@@ -1,34 +1,34 @@
 // home/home.jade
-ion-view(view-title="{{vm.title}}")
-  ion-content(delegate-handle="collection-repeat-wrap")
-    div.content.row.responsive-sm
-      div.col.col-offset-25.col-50
-        div.card
-          div.item.item-icon-right.item-positive.light
-            h2.light Welcome {{vm.title}}
-            i.icon(
-              ng-class="vm.settings.show=='less' ? 'ion-arrow-down-b' : 'ion-arrow-up-b' "
-              ng-click="vm.on.setView()"
+ion-view(
+  id="home"
+  view-title="{{vm.title}}"
+  )
+  ion-content(
+    delegate-handle="home-list-scroll"
+    scroll-sista="header"
+    )
+    list-item-container.content.condensed(
+      collection="vm.rows"
+      scroll-handle="home-list-scroll"
+      summary-min-width="320"
+      detail-max-width="720"
+      show-detail-inline="false"
+      item-height="160"
+      detail-by-reference="true"
+    )
+    
+      list-item-summary.animate-fade-slide-in-right
+        div.item.summary.card.ink(
+          ng-class="[$item.color || 'dark','bg'].join('-')"
+          ui-sref="{{$item.target}}"
+        )
+          div.bg-image.mask( 
+            ng-style="{'background-image': 'url(' + $item.heroPic + ')'}"
+          )
+          div.has-mask-wrap(
+            ng-class="$item.layout"
             )
+            h2 {{$item.title}}
+            p {{$item.description}}
 
-          div(ng-switch="vm.settings.show")
-            div(ng-switch-when="less")
-              div.item.item-text-wrap
-                p Hello 
-                  a.capitalize(
-                    ng-show="vm.acl.isUser()"
-                    ui-sref="app.profile({id:'{{vm.me.id}}'})"
-                  ) {{vm.me.displayName}}
-            div(ng-switch-when="more")                
-              div.item.item-avatar(ng-show="vm.me")
-                img(
-                  ng-src="{{vm.me.face}}"
-                  ui-sref="app.profile({id:'{{vm.me.id}}'})"
-                )
-                {{vm.me.firstname}} {{vm.me.lastname}}
-              div.item(ng-hide="vm.me") You are not signed in
-
-          div.item
-            button.button.button-full.button-balanced(ng-click="vm.on.click($event)").
-              Show Dialog
-
+  ion-infinite-scroll(on-infinite="vm.on.loadMore()" ng-if="vm.settings.loadMore")

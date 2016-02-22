@@ -14,6 +14,29 @@ EventCtrl = (
     vm.viewId = ["events-view",$scope.$id].join('-')
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
+
+
+    vm.filter = {}
+    _filters = {
+      'comingSoon':
+        label: "Coming Soon"
+        sortBy: 'startTime'  # ASC
+        filterBy: (o)->
+          return o.startTime > new Date().toJSON()
+      'nearby':
+        label: "Events Near Me"
+        sortBy: 'location'
+      'recent':
+        label: "Recent Events"
+        sortBy: (o)->
+          return -1 * o.startTime  # DESC
+        filterBy: (o)->
+          return o.startTime < new Date().toJSON()
+      'all':
+        label: "Events"
+    }
+
+
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -42,12 +65,19 @@ EventCtrl = (
         vm.lookup.users = users
       .then ()->
         return EventsResource.query()
-        .then (events)->
-          _.each events, (o, i)->
-            o['image'] = o['heroPic']
-            return
-          vm.rows = events
-          return vm.rows
+      .then (events)->
+        events = sortEvents(events, vm.filter)
+        _.each events, (o, i)->
+          o['image'] = o['heroPic']
+          return
+        vm.rows = events
+        return vm.rows
+
+    sortEvents = (items, options)->
+      collection = _.chain(items)
+      collection = collection.filter(options.filterBy) if options.filterBy
+      collection = collection.sortBy(options.sortBy) if options.sortBy
+      return items = collection.value()
 
     vm.on = {
       scrollTo: (anchor)->
@@ -68,6 +98,8 @@ EventCtrl = (
 
     activate = ()->
       vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
+      vm.filter = _filters[ $stateParams.filter ] || _filters[ 'all' ]
+      vm.title = vm.filter.label
       return $q.when()
       .then ()->
         return devConfig.getDevUser("0").then (user)->
