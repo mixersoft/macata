@@ -1,0 +1,26 @@
+// onboard/onboard.jade
+ion-view(view-title="{{vm.title}}")
+  ion-content#how-it-works.has-header(
+    scroll="false"
+    )
+    ion-slides(
+      options="vm.settings.slider.HowItWorks"
+      slider="vm.slider"
+      )
+      ion-slide-page(ng-repeat="slide in vm.cards") 
+        div.box.text-center.content(
+          style="height:100%;"
+          ng-click="vm.on.slideClick()"
+          ) 
+          div.row.light(
+            style="height:100%;"
+            class="{{vm.lookup.colors[$index % vm.lookup.colors.length]}}-bg"
+            )
+            div.col.col-center
+              div.slide-content
+                h1.light {{slide.title}}
+                h3.light(ng-bind-html="slide.subTitle")
+                p.larger(ng-bind-html="slide.content")
+                div(ng-show='slide.title=="Elevate"')
+                  button.button.button-balanced.button-flat.ink(ng-click="vm.on.getStarted()") Get Started
+      div.swiper-pagination
