@@ -51,6 +51,7 @@ EventCtrl = (
         newTile: false
         spinner:
           newTile: false
+        fabIcon: 'ion-plus'
     }
 
     vm.lookup = {}
@@ -90,6 +91,18 @@ EventCtrl = (
           next = if vm.settings.show == 'grid' then 'list' else 'grid'
           return vm.settings.view.show = next
         return vm.settings.view.show = value
+
+      createNewTile: ()->
+        vm.on.notReady('Create Event')
+
+      fabClick: ()->
+        return vm.on['createNewTile']()
+
+      notReady: (value)->
+        toastr.info "Sorry, " + value + " is not available yet"
+        return false
+
+
 
     }
 

@@ -117,6 +117,7 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
     padding-left: 2px;
   }
 }
+
 ion-input {
   &.flex-item-wrap {
     // same as .item-stacked-label
@@ -200,6 +201,10 @@ ion-input {
   .list {
     background-color: #EEE;
   }
+}
+
+ion-item > a {
+  cursor: pointer;
 }
 
 

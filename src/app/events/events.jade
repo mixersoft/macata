@@ -1,12 +1,6 @@
 // recipe/recipe.jade
 ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
 
-  ion-nav-buttons(side="secondary") 
-    button.button.button-icon.button-clear.ion-plus(
-      ng-class="show.newTile ? 'ion-close': 'ion-plus'"
-      ng-click="vm.on.createNewTile()"
-    )
-
   div(
     ng-show="show.newTile"
   )
@@ -31,6 +25,7 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
 
 
   ion-content(
+    fab-scroll-container
     delegate-handle="events-list-scroll"
     scroll-sista="header-subheader"
   ) 
@@ -47,3 +42,11 @@ ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
     )
 
       ng-include(src="'events/events.fb-tile.html'" )
+      
+  ion-fab(
+    animation="fade"
+    ng-click="vm.on.fabClick($event, vm)"
+    )
+    i.icon.ion(
+      ng-class="vm.settings.show.fabIcon"
+      )      

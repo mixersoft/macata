@@ -281,8 +281,9 @@ EventDetailCtrl = (
           location: null
         }
         this.show.messageComposer = true
+        parent = ionic.DomUtil.getParentWithClass($event.target, 'event-detail')
         $timeout().then ()->
-          textbox = document.querySelector('#event-detail message-composer textarea')
+          textbox = parent.querySelector('message-composer textarea')
           textbox.focus()
           textbox.scrollIntoViewIfNeeded()
         return

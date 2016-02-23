@@ -11,7 +11,7 @@ list-item-summary.animate-fade-slide-in-right(
     ng-click="$event.stopImmediatePropagation()"
     ui-sref="app.event-detail({'id':$item.id})"
   )
-    div.hero.content(style="height:160px;")
+    div.hero.content.has-mask(style="height:160px;")
       div.item-avatar-right.ink
         img.ink(
           xxx-placeholder-data="img" group="face" size="200" index="{{$index}}"

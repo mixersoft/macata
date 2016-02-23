@@ -93,7 +93,7 @@ UsersResource = (Resty, $q, unsplashItSvc) ->
   $q.all(promises).then (result)->
     [users, list] = result
     _.each users, (user)->
-      user.face = unsplashItSvc.getImgSrc(user.id, 'people', {face:true} )
+      user.face = unsplashItSvc.getImgSrc(user.id, 'people-1', {face:true} )
     return users
 
 

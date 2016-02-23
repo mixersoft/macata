@@ -119,7 +119,8 @@ RecipeCtrl = (
         return
       .then ()->
         if index = $stateParams.id
-          vm.listItemDelegate.select(null, vm.rows[index], index)
+          $timeout(0).then ()->
+            vm.listItemDelegate.select(null, vm.rows[index], index)
 
     resetMaterialMotion = (motion, parentId)->
       className = {

@@ -18,7 +18,7 @@ EventsResource = (Resty, amMoment) ->
       inspiration: "Just because I miss my days in Tokyo"
       aspiration: 2           # 0-3 stars
 
-      heroPic: "http://vignette2.wikia.nocookie.net/ramen/images/c/c2/Tonkotsu_ramen_640.jpg/revision/latest?cb=20150514230437"
+      heroPic: "http://vignette2.wikia.nocookie.net/ramen/images/c/c2/Tonkotsu_ramen_640.jpg"
 
       # when: 4=Thur
       startTime: moment().weekday(7).add(14,'d').hour(20).startOf('hour').toJSON() # search/filter
