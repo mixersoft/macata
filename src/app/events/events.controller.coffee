@@ -26,6 +26,8 @@ EventCtrl = (
       'nearby':
         label: "Events Near Me"
         sortBy: 'location'
+        filterBy: (o)->
+          return o.startTime > new Date().toJSON()
       'recent':
         label: "Recent Events"
         sortBy: (o)->
