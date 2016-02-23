@@ -29,7 +29,7 @@ OnboardCtrl = (
       auto: true
       slider:
         'HowItWorks':
-          autoplay: 1000
+          autoplay: 4000
           autoplayStopOnLast: true
           slidesPerView: 3
           keyboardControl: true
@@ -73,9 +73,9 @@ OnboardCtrl = (
       title   : "Contribute"
       subTitle: "to the shared experience"
       content : """
-      Show some pluck, give it your best shot.
-      Bring something special and shout it out.
-      Or just bring dough.
+      What will you bring to the Table?
+      Everyone has something to offer&mdash;wits, charm, a bottle of wine...
+      <br />and there is always cash.
       """
     ,
       title   : "Host"
