@@ -42,7 +42,7 @@ Resty = ($q) ->
     result = @_data[id]
     if result?
       result.id = id
-      return $q.when result
+      return $q.when angular.copy result
     return $q.reject false
 
   RestyClass::post = (o, id)->
@@ -51,11 +51,14 @@ Resty = ($q) ->
     o.id = id
     return $q.when @_data[id] = o
 
-  RestyClass::put = (id, o) ->
+  RestyClass::put = (id, o, update) ->
     return $q.reject false if `o==null`
     if @_data[id]?
       o.id = id
-      return $q.when @_data[id] = o
+      if update
+        return $q.when angular.extend @_data[id], o
+      else  # replace
+        return $q.when @_data[id] = o
     return $q.reject false
 
   RestyClass::delete = (id)->
