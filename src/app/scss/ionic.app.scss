@@ -209,11 +209,13 @@ ion-item > a {
 
 
 ion-item.item-notification {
-  border:none;
-  padding: 0 2px;
+  border-radius: 2px;
+  border-width: 0;
+  padding: 0;
+  margin: 2px 2px 8px 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   .card {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-    margin: 2px 2px 8px 4px;
+    margin: 0;
   }
 }
 ion-item.item-post {
@@ -321,9 +323,10 @@ ion-item.item-post {
 }
 
 
- /*
-  * end .item-feed
-  */
+/*
+* end .item-feed
+*/
+
 .autocomplete-wrapper {
   $condensed-height: 28px;
   width: 100%;
@@ -372,6 +375,11 @@ ion-item.item-post {
   }
 }
 
+@media(max-width: $grid-responsive-sm-break) {
+  .responsive-sm .col {
+    margin-bottom: 0;
+  }
+}
 // used by .event-detail .participants to show inline list of avatars
 .item.item-avatar-list {
   min-height: 72px;
@@ -397,6 +405,41 @@ ion-item.item-post {
   }
 }
 
+
+ion-list.condensed, .list.condensed {
+  .item {
+    /* row spacing reduced by 1/2 */
+    padding-top: 8px;
+    padding-bottom: 8px;
+    min-height: 32px;
+  }
+  .toggle {
+    top: 6px;
+    .track {
+      height: 25px;
+      .handle {
+        height: 21px;
+      };
+    }
+  }
+  .item-radio {
+    padding: 0;
+  }
+  .radio-content {
+    .item-content {
+      padding-top: 8px;
+      padding-bottom: 8px;
+      color: #444;
+    }
+    .radio-icon {
+      padding: 0 14px;
+    }
+  }
+  label.inline-field {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
 
 
 /* Begin required CSS., see: http://codepen.io/siiron/details/jfBhy  */
@@ -862,6 +905,12 @@ eventDetail View
  */
 
 .event-detail {
+  .col > ion-list > * > .item.item-divider {
+    background-color: $royal;
+    p, button {
+      color: $light;
+    }
+  }
   .menu-items {
     .list-item-summary {
       .col {
@@ -888,6 +937,12 @@ eventDetail View
         }
       }
     }
+    .event-detail-map {
+      border-color: transparent;
+      .wrap, .angular-google-map-container {
+        min-height: 200px;
+      }
+    }
   }
   .participants {
     .participant-list.line-clamp-1 {
@@ -895,6 +950,22 @@ eventDetail View
     }
     .avatar-wrap .item-image.empty {
       border: 1px solid $dark;
+    }
+  }
+  .invitations {
+    .invitation-links {
+      .truncate {
+        width:100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .link-label {
+        font-size: 14px;
+      }
+      .link-owner {
+        width: 60%;
+      }
     }
   }
 }

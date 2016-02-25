@@ -64,7 +64,7 @@ ion-view.event-detail(
     div.row.responsive-sm.no-padding.row-reverse-m
       div.col.col-33
 
-        ion-list.details.list.has-icon-avatar.condensed
+        ion-list.details.list.has-icon-avatar.xxx-condensed
           div.hide {{host=vm.event.$$host;''}}
           ion-item.item-divider.item-button-right(
             ng-click="show.hideDetails = !show.hideDetails"
@@ -103,21 +103,19 @@ ion-view.event-detail(
               //- feastly: Exact addr will be shared upon purchase
               //- eatwith: exact location provided upon booking
               span {{ event['visibleAddress']}} &nbsp;
-          ion-item#event-detail-map.item-complex
-            style#event-detail-map-style.
-              #event-detail-map .wrap {min-height: 200px;}
-              #event-detail-map .angular-google-map-container {min-height: 200px;}
+          ion-item.event-detail-map.item-complex
             div.hide
               {{map=vm.location.map;''}}
               {{opt=map.options;''}}
             div.wrap(
-              ng-if="show.map && map"
+              ng-if="map && !show.hideMap"
             )
               ui-gmap-google-map( 
                 center='map.center'
                 zoom='map.zoom'
                 options='opt.map.options'
-                control='map.control'
+                xxcontrol='map.control'
+                control='vm.location.gMap.Control'
                 events='map.events'
               )
                 ui-gmap-circle(
@@ -143,6 +141,7 @@ ion-view.event-detail(
               )
           
           ion-item.participant-list.item-avatar-list.item-text-wrap(
+            ng-hide="show.hideParticipants"
             ng-class="{'line-clamp-1': show.hideParticipants}"
             )
             div.avatar-wrap(ng-repeat="person in event.$$paddedParticipants track by person.trackBy")
@@ -159,10 +158,79 @@ ion-view.event-detail(
                 ng-click="vm.on.beginBooking(vm.me, event)"
                 )
 
-                
-        ion-list.invitations
-          ion-item.item-divider
-            p invitations (participants can view invitations)
+        ion-list.share-links(
+          ng-if="vm.acl.isParticipant()"
+          )
+          ion-item.item-divider.item-button-right(
+            ng-click="show.hideInvitations = !show.hideInvitations"
+            )
+            p share event: {{event.title}}
+            button.button.button-icon.button-clear(
+              ng-class="{'ion-arrow-down-b':show.hideInvitations, 'ion-arrow-up-b':!show.hideInvitations}"
+              )
+          div(
+            ng-hide="show.hideInvitations"
+            )
+            {{shareLinks = event.shareLinks;''}}
+            //- # Share event  
+            div(ng-show="shareLinks.event===false")  
+              ion-item
+                div.larger Share Event
+                div.fine.text-wrap This event is by invitation only. The host has asked that you not share the direct link to this event.
+            div(ng-show="shareLinks.event")  
+              ion-item.item-body
+                div.larger Share Event
+                div.fine.text-wrap Share a public link to this event and let others join.
+                div.share-link.item-input.item-icon-right.item-stacked-label
+                  input.selectable(type="text" name="share" ng-model="shareLinks.event" onclick="this.select()" readonly)
+                  a(ng-href="{{shareLinks.event}}" target="_system" ng-click="vm.on.goShareLink($event, shareLinks.event)")
+                    i.icon.ion-ios-upload(
+                      xxx-on-hold="vm.on.goShareLink( 'event', item.id )"
+                      )
+
+            //- # Share Invitation
+            div(ng-show="shareLinks.invitations===false")  
+              ion-item
+                div.larger Share Event
+                div.fine.text-wrap The host has asked that you not share invitations to this event.
+            div(ng-show="shareLinks.invitations")
+              ion-item.item-body
+                div.larger Share Invitation
+                div.fine.text-wrap Share an invitation to this event and track responses, including 'no' and 'maybe'.
+                div.share-link.item-input.item-icon-right.item-stacked-label(ng-repeat="invite in shareLinks.invitations")
+                  a(ng-href="{{invite.link}}" target="_system" ng-click="vm.on.goShareLink($event, invite.link)")
+                    i.icon.ion-ios-upload(
+                      xxx-on-hold="vm.on.goShareLink( 'invitation', invite.id );"
+                      )
+                  input.selectable.truncate(type="text" name="share" ng-model="invite.link" onclick="this.select()" readonly)
+                  div.fine.text-wrap.
+                    Views: {{invite.views}}. Expires {{invite.expires}} or {{invite.remaining}} views.
+                //- div.new-invitation.padding-left
+                //-   button.button.button-small.button-positive.padding-horizontal(
+                //-     ng-click="vm.on.createInvitation($event)"
+                //-     )
+                //-     i.icon.ion-plus
+                //-       span.padding-left New
+
+                    
+        ion-list.control-panel(
+          ng-if="vm.acl.isAdmin()"
+          )
+          ion-item.item-divider.item-button-right(
+            ng-click="show.hideControlPanel = !show.hideControlPanel"
+            )
+            p control panel
+            button.button.button-icon.button-clear(
+              ng-class="{'ion-arrow-down-b':show.hideControlPanel, 'ion-arrow-up-b':!show.hideControlPanel}"
+              )
+          mt-event-settings(
+            ng-hide="show.hideControlPanel"
+            event="event"
+            on-change="vm.on.updateSettings(eventSetting, eventIsPublic)"
+            type="Progressive"
+            )
+            
+            
       div.col.col-67
         ion-list.feed {{feed=vm.feed;''}}
           ion-item.item-divider.item-button-right 
@@ -183,9 +251,7 @@ ion-view.event-detail(
           ng-include(src="'events/post.html'")  
 
         
-    ion-list.control-panel
-      ion-item.item-divider
-        p control panel
+    
                   
   ion-fab(
     animation="fade"

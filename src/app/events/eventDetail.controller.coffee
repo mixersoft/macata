@@ -6,7 +6,7 @@ EventDetailCtrl = (
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
   uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc
-  UsersResource, EventsResource, IdeasResource, FeedResource
+  UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
   EventActionHelpers, $filter, notificationTemplates
   utils, devConfig, exportDebug
   )->
@@ -22,14 +22,28 @@ EventDetailCtrl = (
         return true if !$rootScope.user
       isUser: ()->
         return true if $rootScope.user
+      isParticipant: ()->
+        return false if vm.acl.isVisitor()
+        return true if $rootScope.user.id == vm.event.ownerId
+        return true if ~vm.event.participantIds.indexOf $rootScope.user.id
+      isModerator: ()->
+        return false if vm.acl.isVisitor()
+        return true if $rootScope.user.id == vm.event.ownerId
+        return true if ~vm.event.moderatorIds.indexOf $rootScope.user.id
+      isAdmin: ()->
+        return false if vm.acl.isVisitor()
+        return true if $rootScope.user.id == vm.event.ownerId
     }
     vm.settings = {
       view:
         show: 'grid'
         'new': false
       show:
-        'hideDetails': true
-        'map':false
+        'hideDetails': false
+        'hideMap':true
+        'hideParticipants': false
+        'hideInvitations': false
+        'hideControlPanel': true
     }
 
     vm.lookup = {
@@ -37,6 +51,22 @@ EventDetailCtrl = (
     }
 
     vm.event = {}
+
+    vm.isInvitation = ()->
+      return !!$state.params.invitation
+
+    isInvitationRequired = (event)->
+      return $q.when()
+      .then ()->
+        return true if $state.is('app.event-detail.invitation')
+        if event.setting['isExclusive'] || $state.params.invitation
+          return TokensResource.isValid($state.params.invitation, 'Event', event.id)
+      .catch (result)->
+        $log.info "Token check, value="+result
+        toastr.info "Sorry, this event is by invitation only." if result=='INVALID'
+        if result=='EXPIRED'
+          toastr.warning "Sorry, this invitation has expired. Please contact the host for another."
+        return $q.reject(result)
 
     vm.inviteActions = {
       requiresAction: (post, event, me)->
@@ -50,7 +80,7 @@ EventDetailCtrl = (
         switch nextAction
           when 'owner'
             check['nextAction'] = me && event.$$owner == me
-            # check['nextAction'] = me && event.moderatorId == me.id
+            # check['nextAction'] = me && ~event.moderatorIds.indexOf me.id
           when 'recipient'
             check['nextAction'] = me && ~post.head.recipientIds.indexOf me.id
         return _.reject(check).length == 0
@@ -133,7 +163,7 @@ EventDetailCtrl = (
           else
             return
 
-        # TODO set 'moderatorId' to new participantId
+        # TODO set 'moderatorIds' to new participantId
         #   log/add notification to feed (dismissable), '[person] accepted your invitation'
         return vm.postActions.postComment(null, invitation, options)
 
@@ -155,7 +185,7 @@ EventDetailCtrl = (
         switch nextAction
           when 'moderator', 'owner'
             check['nextAction'] = me && event.ownerId == me.id
-            # check['nextAction'] = me && event.moderatorId == me.id
+            check['nextAction'] = me && ~event.moderatorIds.indexOf me.id
           when 'recipient'
             check['nextAction'] = me && ~post.head.recipientIds.indexOf me.id
         return _.reject(check).length == 0
@@ -205,15 +235,21 @@ EventDetailCtrl = (
           return $q.all(promises)
           .then ()->
             if event.seatsOpen > 0
-              event.moderatorId = participation.head.ownerId
+              event.moderatorIds = [participation.head.ownerId]
               post = {
                 ownerId: participation.head.ownerId
                 displayName: participation.head.$$owner.displayName
                 seatsOpen: event.seatsOpen
                 toNow: moment(event.startTime).fromNow()
               }
-              post.message = notificationTemplates.get('event.booking.sendInvites', post)
-              promises.push sendInvites = EventActionHelpers.FeedHelpers.notify(event, post, vm)
+
+              if event.setting.isExclusive
+                shareTemplate = 'event.booking.sendInvites'
+                vm.settings.show.hideInvitations = false
+              else
+                shareTemplate = 'event.booking.shareEvent'
+              post.message = notificationTemplates.get(shareTemplate, post)
+              promises.push share = EventActionHelpers.FeedHelpers.notify(event, post, vm)
             else
               post = {
                 hostName: event.$$host.displayName
@@ -293,7 +329,7 @@ EventDetailCtrl = (
     vm.postActions = {
       acl : {
         isModerator: (event, post)->
-          return true if event.moderatorId == vm.me.id
+          return true if ~event.moderatorIds.indexOf vm.me.id
           return true if post.head.moderatorIds? && ~post.head.moderatorIds.indexOf vm.me.id
           return true if event.ownerId == vm.me.id
           # console.info "DEMO: isModerator() == true"
@@ -385,6 +421,9 @@ EventDetailCtrl = (
 
     vm.location = {
       GRID_RESPONSIVE_SM_BREAK: 680
+      gMap:  # controls
+        Control: {}
+        MarkersControl: {}
       map: null
       prepareMap: (event, options)->
         return $q.when() if !event.location
@@ -395,12 +434,13 @@ EventDetailCtrl = (
           mapOptions = {
             type: 'oneMarker'
             location: event.location
+            # draggableMap: true  # set in activate()
             draggableMarker: false
             dragendMarker: (marker, eventName, args)->
               return
           }
           mapOptions = _.extend mapOptions, {
-            'control' : {}
+            # 'control' : {}
             'mapReady' : (map, eventName)->
               $scope.$broadcast 'map-ready', map
           }, options
@@ -411,7 +451,7 @@ EventDetailCtrl = (
         return vm.location.prepareMap(event, options)
         .then (config)->
           vm.location.map = config
-          vm.settings.show.map = true if options.visible
+          vm.settings.show.hideMap = false if options.visible
           exportDebug.set 'mapConfig', config
           return
 
@@ -500,7 +540,7 @@ EventDetailCtrl = (
           console.warn("TESTDATA: using currentUser as event Moderator")
           event.visibleAddress = event.address
           event.isPostModerator = vm.postActions.acl.isModerator
-          event.moderatorId = event.ownerId
+          event.moderatorIds = [event.ownerId]
           vm.events.push event
           return
         return events
@@ -535,16 +575,24 @@ EventDetailCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      fabClick: ()->
+      fabClick: ($event)->
         switch vm.me.role
           when 'host', 'participant', 'booking'
             # edit event
-            return vm.feed.showMessageComposer()
+            return vm.feed.showMessageComposer($event)
 
           when 'invitation','visitor'
             # join
             return vm.on['beginBooking'](vm.me, vm.event)
         return
+
+      'updateSettings': (setting, isPublic)->
+        fields = []
+        fields.push 'setting' if setting?
+        fields.push 'isPublic' if isPublic?
+        data = _.pick vm.event, fields
+        EventsResource.update(vm.event.id, data).then (result)->
+          $log.info "Event updated, result=" + JSON.stringify _.pick result, fields
 
       # TODO: change params to (event, person)
       'beginBooking': (person, event)->
@@ -568,13 +616,42 @@ EventDetailCtrl = (
           # reset message-console and hide
           vm.feed.show.messageComposer = false
           vm.feed.post={}
-      'toggleMap': ($event)->
-        $event.preventDefault()
-        event.stopImmediatePropagation()
-        vm.settings.show.map = !vm.settings.show.map
 
-        # console.log ['toggleMap', vm.settings.show.map]
-      notReady: (value)->
+      'toggleMap': ($event)->
+        # $event.preventDefault()
+        $event.stopImmediatePropagation()
+        vm.settings.show.hideMap = !vm.settings.show.hideMap
+        # if not vm.settings.show.hideMap
+        #   $timeout(0).then ()->
+        #     # vm.location.gMap.Control.refresh()
+        #     console.info "Map refresh called"
+
+      'createInvitation': ($event)->
+        vm.event.invitations ?= []
+        now = Date.now()
+        baseurl =
+          if $location.host() == 'localhost'
+          then $location.absUrl().split('#').shift()
+          else 'http://app.snaphappi.com/foodie.App/'
+        vm.event.invitations.push {
+          id: now
+          owner: vm.me.displayName
+          ownerId: vm.me.id
+          link: [
+            baseurl
+            '#/app/invitation/'
+            now
+          ].join('')
+          description: null
+          views: 0
+        }
+        return
+
+      'getShareLink': ()->EventActionHelpers.getShareLink.apply(vm, arguments)
+      'showShareLink': ()->EventActionHelpers.showShareLink.apply(vm, arguments)
+      'goShareLink': ()->EventActionHelpers.goShareLink.apply(vm, arguments)
+
+      'notReady': (value)->
         toastr.info "Sorry, " + value + " is not available yet"
         return false
 
@@ -588,14 +665,36 @@ EventDetailCtrl = (
 
 
     activate = ()->
-      return $q.reject("ERROR: expecting event.id") if not $stateParams.id
+      # return $q.reject("ERROR: expecting event.id") if not $stateParams.id
       return devConfig.dataReady
       .finally ()->
         getData()
-      .then (events)->
+      .then ()->
+        if !$state.params.id
+          eventId = null
+          # BUG: $stateParams.invitation != $state.params.invitation
+          return $q.reject('MISSING_ID') if !$state.params.invitation
+          return TokensResource.get($state.params.invitation)
+          .then (token)->
+            # return $q.reject('INVALID') if !token
+            [className, eventId] = token?.target.split(':')
+            return TokensResource.isValid(token, 'Event', eventId)
+          .then ()->
+            return eventId
+          .catch (err)->
+            if err=='EXPIRED'
+              toastr.warning "Sorry, this invitation has expired. " +
+              "Please contact the host for another."
+            if err=='INVALID'
+              toastr.warning "Sorry, this event is by invitation only"
+            return $q.reject(err)
+        return eventId = $state.params.id
+      .catch (err)->
+        $rootScope.goBack('app.events')
+        return $q.reject()
+      .then (eventId)->
         vm.me = $rootScope.user
-        index = $stateParams.id
-        vm.event = vm.events[index]
+        vm.event = _.find vm.events, {id: eventId}
         if !$rootScope.demoRole
           $rootScope.demoRole = 'invited'
         return vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
@@ -613,6 +712,11 @@ EventDetailCtrl = (
         }
         promise = vm.location.showOnMap(event, mapOptions)
         return event
+      .then (event)->
+        if vm.acl.isModerator()
+          EventActionHelpers.getShareLinks(event, vm)
+          .then (sharelinks)->
+            vm.event.shareLinks = sharelinks
       .then (event)->
         exportDebug.set('event', event)
         # // Set Ink
@@ -657,7 +761,9 @@ EventDetailCtrl = (
       # $rootScope.demoRole = newV
       # ev.stopPropagation()
       # ev.preventDefault()
-      return vm.dev.loginByRole(vm.event) if vm.event
+      if vm.event
+        return vm.dev.loginByRole(vm.event)
+        .then activate
 
     $scope.$on 'user:event-role-changed', (ev, user, event)->
       return !user
@@ -665,6 +771,8 @@ EventDetailCtrl = (
       # ev.stopPropagation()
       ev.preventDefault()
       return vm.dev.addRoleToUser()
+      .then activate
+
 
 
     loadOnce = ()->
@@ -683,7 +791,7 @@ EventDetailCtrl.$inject = [
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc'
-  'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource'
+  'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
   'EventActionHelpers', '$filter', 'notificationTemplates'
   'utils', 'devConfig', 'exportDebug'
 ]

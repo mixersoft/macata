@@ -138,7 +138,7 @@ EventsResource = (Resty, amMoment) ->
       address: 'Ulitsa Bogatitsa'
       location: [42.671027, 23.316299] # search/filter
 
-      seatsTotal: 20
+      seatsTotal: 12
       seatsOpen: 4
 
       # host:
@@ -149,7 +149,7 @@ EventsResource = (Resty, amMoment) ->
       # menu:    # menu ideas
 
       setting:
-        isExclusive: false   # invite Only
+        isExclusive: true   # invite Only
         denyGuestShare: false # guests can share event, same as denyForward
         denyRsvpFriends: false # guests can rsvp friends
         rsvpFriendsLimit: 12 # guests rsvp limit for friends

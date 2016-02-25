@@ -1,0 +1,35 @@
+//- events/partial.eventSettings.html
+ion-list.condensed.event-settings-control-panel
+  //- ion-item.item-divider.header.item-dark.light
+  //-   div.text-center Event Settings
+  //- # use humanizeSettings()  item
+  ion-toggle(ng-model="event.isPublic" toggle-class="toggle-balanced") Is Public and Searchable
+  ion-toggle(ng-model="humanizedSetting.isExclusive" toggle-class="toggle-balanced") Is Invitation Only
+  ion-toggle(ng-model="humanizedSetting.allowGuestShare" toggle-class="toggle-balanced") Guests Can Forward Invitations
+  ion-toggle(ng-model="humanizedSetting.allowRsvpFriends" toggle-class="toggle-balanced") Guests Can Bring Friends
+  //- label.item.item-input
+  //-   span.input-label RSVP Guest Limit
+  //-   input(type="text" name="portions" min="1" max="999" 
+  //-     ng-model="humanizedSetting.rsvpFriendsLimit"
+  //-     ng-disabled="disableRsvpFriendsLimit"
+  //-     )
+  //- ion-item.item-floating-label.range.range-positive
+  //-   i.icon.ion-ios-person.positive
+  //-   input(type="range" name="portions" min="0" max="20" 
+  //-     ng-model="humanizedSetting.rsvpFriendsLimit"
+  //-     ng-disabled="disableRsvpFriendsLimit"
+  //-     )
+  //-   i.icon.ion-ios-people.positive
+  ion-toggle(ng-model="humanizedSetting.allowPublicAddress" toggle-class="toggle-balanced") Show Exact Location To Visitors 
+  
+  
+  //- ion-toggle(ng-model="humanizedSetting.allowParticipantList" toggle-class="toggle-balanced") Show Guest List
+  //- ion-toggle(ng-model="humanizedSetting.allowMaybeNoResponseList" toggle-class="toggle-balanced") Show Maybe and No Responses
+
+  //- ion-toggle(ng-model="humanizedSetting.allowAddMenu" toggle-class="toggle-balanced") Guests Can Add New Menu Items
+  ion-item Feed Visibility
+    ion-radio.balanced(ng-model="humanizedSetting.feedVisibility" ng-value="'public'") Public
+    ion-radio.balanced(ng-model="humanizedSetting.feedVisibility" ng-value="'participants'") Participants
+    ion-radio.balanced(ng-model="humanizedSetting.feedVisibility" ng-value="'host'") Host
+  //- ion-toggle(ng-model="humanizedSetting.allowSuggestedFee" toggle-class="toggle-balanced") Show Suggested Contribution
+  //- ion-toggle(ng-model="humanizedSetting.allowWaitlist" toggle-class="toggle-balanced") Use Waitlist

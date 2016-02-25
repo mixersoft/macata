@@ -56,6 +56,11 @@ ACTION = {
         There are <b>%post.seatsOpen%</b> seats remaining and the event begins <b>%post.toNow%</b>. Remember, with great power comes great responsibility.
         <br /><br />Now go send some invitations.
         """
+      shareEvent: """
+        <b>%post.displayName%</b>&mdash;Congratulations, you are now in control of the guest list.
+        There are <b>%post.seatsOpen%</b> seats remaining and the event begins <b>%post.toNow%</b>. Remember, with great power comes great responsibility.
+        <br /><br />Now go share this Table with your friends.
+        """
       fullyBooked: """
         All right! This event is now fully booked&mdash;take a moment to see who's coming! <b>&mdash;%post.hostName%</b>
         """

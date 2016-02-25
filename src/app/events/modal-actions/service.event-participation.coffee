@@ -5,7 +5,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
   $location, $state, $stateParams, $ionicPopup
   $log, toastr
   # TokensResource, ParticipationsResource, ContributionsResource, MenuItemsResource
-  FeedResource
+  FeedResource, IdeasResource, TokensResource
   AAAHelpers, $filter
   appModalSvc, utils, exportDebug
   )->
@@ -157,8 +157,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
       'FeedHelpers': FeedHelpers  # make a service
 
-      getShareLinks: (event)->
-        vm = this
+      getShareLinks: (event, vm)->
+        vm ?= this
         target = null
         return $q.when()
         .then ()->
@@ -185,13 +185,17 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return TokensResource.post(token).then (token)->
             return [token]
         .then (tokens)->
-          if ionic.Platform.isWebView()
-            origin = "http://app.snaphappi.com/pluckie.App/#"
-          else
-            path = $location.path()
-            origin = $location.absUrl().slice(0, $location.absUrl().indexOf(path))
-
-          eventLink = origin + '/app/event-detail/' + event.id
+          baseurl =
+            if $location.host() == 'localhost'
+            then $location.absUrl().split('#').shift()
+            else 'http://app.snaphappi.com/foodie.App/'
+          # if ionic.Platform.isWebView()
+          #   baseurl = "http://app.snaphappi.com/foodie.App/#"
+          # else
+          #   path = $location.path()
+          #   baseurl = $location.absUrl().slice(0, $location.absUrl().indexOf(path))
+          baseurl += '#'
+          eventLink = baseurl + '/app/event-detail/' + event.id
           shareLinks = {
             'event': if event.setting['isExclusive'] then false else eventLink
           }
@@ -200,7 +204,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           else
             shareLinks['invitations'] = _.map tokens, (token)->
               return {
-                link: origin + '/app/invitation/' + token.id
+                link: baseurl + '/app/invitation/' + token.id
                 id: token.id
                 views: token.views
                 remaining: token.expireCount - token.views
@@ -208,13 +212,14 @@ EventActionHelpers = ($rootScope, $q, $timeout
               }
           return shareLinks
 
-      showShareLink: (event)->
+      # NOTE: this method is used for display by modal
+      showShareLinksByModal: (event)->
         vm = this
         return $q.when()
         .then ()->
           return self.getShareLinks.call(vm, event)
         .then (shareLinks)->
-          utils.ga_PageView('/share', '.share', 'append')
+          # utils.ga_PageView('/share', '.share', 'append')
           # modalAfterShow()
           return appModalSvc.show('events/sharing.modal.html', vm, {
             mm:
@@ -229,8 +234,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
                     if /invitation/.test(target)
                     then 'invitation'
                     else 'event'
-                  utils.ga_Send('send'
-                    , 'event', 'social', 'sharing', label, 20)
+                  # utils.ga_Send('send'
+                  #   , 'event', 'social', 'sharing', label, 20)
                   if ionic.Platform.isWebView()
                     #  we might want to open with inAppBrowser
                     ev.preventDefault()
@@ -244,13 +249,13 @@ EventActionHelpers = ($rootScope, $q, $timeout
                 if type == 'invitation' # goto Invite
                   state = 'app.event-detail.invitation'
                   params = {invitation: id}
-                  utils.ga_Send('send'
-                    , 'event', 'social', 'sharing', 'invitation', 20)
+                  # utils.ga_Send('send'
+                  #   , 'event', 'social', 'sharing', 'invitation', 20)
                 if type == 'event' # goto Event
                   state = 'app.event-detail'
-                  params = {id: id}
-                  utils.ga_Send('send'
-                    , 'event', 'social', 'sharing', 'event', 20)
+                  # params = {id: id}
+                  # utils.ga_Send('send'
+                  #   , 'event', 'social', 'sharing', 'event', 20)
 
                 if utils.isDev()
                   $log.info "TESTING: manually transition to state=" + JSON.stringify [state,id]
@@ -264,6 +269,44 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject('CANCELED') if `result==null` || result == 'CANCELED'
           return $q.reject(result) if result?['isError']
           return result
+
+      goShareLink: (type, id)->
+        if type.currentTarget
+          ev = type
+          target = id
+          # emulate SocialSharing with browser tab
+          label =
+            if /invitation/.test(target)
+            then 'invitation'
+            else 'event'
+          # utils.ga_Send('send'
+          #   , 'event', 'social', 'sharing', label, 20)
+          if ionic.Platform.isWebView()
+            #  we might want to open with inAppBrowser
+            ev.preventDefault()
+            window.open(target, '_system')
+            return false
+          return true
+
+
+
+
+        if type == 'invitation' # goto Invite
+          state = 'app.event-detail.invitation'
+          params = {invitation: id}
+          # utils.ga_Send('send'
+          #   , 'event', 'social', 'sharing', 'invitation', 20)
+        if type == 'event' # goto Event
+          state = 'app.event-detail'
+          params = {id: id}
+          # utils.ga_Send('send'
+          #   , 'event', 'social', 'sharing', 'event', 20)
+
+        if utils.isDev()
+          $log.info "TESTING: manually transition to state=" + JSON.stringify [state,id]
+          # $state.transitionTo(state, params)
+          return true # continue
+
 
       ###
       # @description show invitation response modal and handle response
@@ -479,7 +522,6 @@ EventActionHelpers = ($rootScope, $q, $timeout
         options = {}
         return $q.when()
         .then ()->
-          return 'skip'
           return self.isInvitationValid(event)
         .then ()->
           # utils.ga_PageView('/booking', '.booking', 'append')
@@ -788,7 +830,7 @@ EventActionHelpers.$inject = ['$rootScope', '$q', '$timeout'
 '$location', '$state', '$stateParams', '$ionicPopup'
 '$log', 'toastr'
 # 'TokensResource', 'ParticipationsResource', 'ContributionsResource', 'MenuItemsResource'
-'FeedResource'
+'FeedResource', 'IdeasResource', 'TokensResource'
 'AAAHelpers', '$filter'
 'appModalSvc', 'utils', 'exportDebug'
 ]
