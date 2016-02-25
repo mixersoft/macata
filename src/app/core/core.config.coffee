@@ -47,7 +47,7 @@ appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
 toastrConfig = (toastrConfig) ->
   angular.extend toastrConfig, {
     timeOut: 4000
-    positionClass: 'toast-bottom-right'
+    positionClass: 'toast-bottom-left'
   }
 
 ionicConfig = ($ionicConfigProvider)->

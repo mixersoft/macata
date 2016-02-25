@@ -39,6 +39,17 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   }
 }
 
+.nowrap {
+  white-space: nowrap !important;
+}
+.text-wrap {
+  white-space: normal !important;
+}
+.fine {
+  font-size: smaller;
+  line-height: 1;
+}
+
 @media(min-width: $grid-responsive-sm-break) {
   .row-reverse-m {
     flex-direction: row-reverse;
@@ -441,6 +452,9 @@ ion-list.condensed, .list.condensed {
   }
 }
 
+ion-view .fab {
+  background-color: $positive;
+}
 
 /* Begin required CSS., see: http://codepen.io/siiron/details/jfBhy  */
 .line-clamp
@@ -950,6 +964,19 @@ eventDetail View
     }
     .avatar-wrap .item-image.empty {
       border: 1px solid $dark;
+    }
+  }
+  .share-links {
+    .item-body {
+      padding-right: 0;
+    }
+    .share-link {
+      input {
+        padding-right: 51px;
+      }
+      .fine {
+        margin-top: -6px;
+      }
     }
   }
   .invitations {
