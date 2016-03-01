@@ -25,14 +25,14 @@ vendor      = require './vendor.json'
 paths =
   sass: ['src/app/**/*.scss']
   jade: ['src/app/**/*.jade']
-  coffee: ['src/app/**/*.coffee']
+  coffee: ['src/app/**/*.coffee', 'src/both/**/*.coffee']
   img: './src/app/img/**/*.*'
   dest: './www/'
   vendor: './www/lib/'
   index: './www/index.html'
   sources: [ './www/**/*.js', './www/**/*.css', '!./www/**/*.module.js', '!./www/blocks/router/*', '!./www/core/*', '!./www/layout/*', '!./www/lib/**/*.js']
   modules: ['./www/**/*.module.js', '!./www/blocks/router/*', '!./www/core/*', '!./www/layout/*']
-  meteor_coffee: ['./meteor/**/*.coffee']
+  meteor_coffee: ['src/**/*.coffee', '!src/app/**/*.coffee']
   meteor_dest: './meteor/'
 
 # Add your bower_components vendors to vendor.js
@@ -105,7 +105,7 @@ gulp.task 'clean', (done) ->
 
 gulp.task 'sass-watch', ['sass'], -> browserSync.reload()
 gulp.task 'jade-watch', ['jade'], -> browserSync.reload()
-gulp.task 'coffee-watch', ['coffee']
+gulp.task 'coffee-watch', ['coffee', 'meteor_coffee']
 
 gulp.task 'serve', ->
   browserSync.init
@@ -125,14 +125,11 @@ gulp.task 'bowerInstall',  ->
   .on 'log', (data) ->
     gutil.log 'bower', gutil.colors.cyan(data.id), data.message
 
-gulp.task 'meteor', (done) ->
-  runSequence 'meteor_coffee', 'coffee', done
-
 gulp.task 'dev', (done) ->
   runSequence 'build', 'serve', done
 
 gulp.task 'build', (done) ->
-  runSequence 'clean', 'bowerInstall', 'vendor', ['sass', 'jade', 'coffee', 'images'], 'index', done
+  runSequence 'clean', 'bowerInstall', 'vendor', ['sass', 'jade', 'coffee', 'meteor_coffee', 'images'], 'index', done
 
 # Default task: development build
 gulp.task 'default', ['build']

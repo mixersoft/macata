@@ -4,7 +4,8 @@ RecipeCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  appModalSvc, tileHelpers, openGraphSvc, IdeasResource
+  appModalSvc, tileHelpers, openGraphSvc
+  $reactive
   utils, devConfig, exportDebug
   )->
 
@@ -32,13 +33,6 @@ RecipeCtrl = (
     vm.lookup = {
       colors: ['positive', 'calm', 'balanced', 'energized', 'assertive', 'royal', 'dark', 'stable']
     }
-
-    getData = ()->
-      vm.rows = []
-      return IdeasResource.query()
-      .then (data)->
-        vm.rows = data
-        return vm.rows
 
     vm.on = {
       scrollTo: (anchor)->
@@ -90,16 +84,21 @@ RecipeCtrl = (
         # console.log "newTile=" + JSON.stringify result
         # check result.body for details
         if result
-          return IdeasResource.post(result)
-          .then ()->
-            return IdeasResource.query()
-          .then (result)->
-            vm.rows = result
+          result.ownerId = vm.me.id
+          mcRecipes.insert(result)
+          return
 
 
     }
 
     initialize = ()->
+      $reactive(vm).attach($scope)
+      vm.subscribe 'all-recipes'
+      vm.helpers {
+        'rows': ()->
+          mcRecipes.find({})
+      }
+
       return
 
     activate = ()->
@@ -108,8 +107,6 @@ RecipeCtrl = (
       .then ()->
         return devConfig.getDevUser("0").then (user)->
           return vm.me = user
-      .then ()->
-        return getData()
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()
@@ -152,7 +149,8 @@ RecipeCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'IdeasResource'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc'
+  '$reactive'
   'utils', 'devConfig', 'exportDebug'
 ]
 
