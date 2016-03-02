@@ -117,6 +117,12 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         vm.closeModal(result)
         return result
       .catch (err)->
+        if err.errorType == "Meteor.Error"
+          switch err.reason
+            when 'User not found' # err.error==403
+              vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+              data.password = null
+
         if err == 'NOT FOUND'
           vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
         return $q.reject(err)
@@ -141,6 +147,11 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         vm.closeModal(result)
         return result
       .catch (err)->
+        if err.errorType == "Meteor.Error"
+          switch err.reason
+            when 'Username already exists.' # err.error==403
+              vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
+
         if err == 'REQUIRED VALUE'
           vm['error']['username'] = MODAL_VIEW.ERROR.REQUIRED
         if err == 'DUPLICATE USERNAME'

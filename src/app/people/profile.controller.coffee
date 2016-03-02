@@ -3,7 +3,7 @@
 ProfileCtrl = (
   $scope, $rootScope, $q, $location, $state, $stateParams, $timeout
   $ionicScrollDelegate
-  AAAHelpers, UsersResource
+  AAAHelpers, $reactive
   $log, toastr
   utils, devConfig, exportDebug
   )->
@@ -57,6 +57,7 @@ ProfileCtrl = (
           $log.info vm.me
 
       signOut: ()->
+        Meteor.logout()
         $rootScope.user = null
         vm.me = null
         $rootScope.$emit 'user:sign-out'
@@ -64,16 +65,12 @@ ProfileCtrl = (
     }
 
     initialize = ()->
-      if $rootScope.user?
-        vm.me = $rootScope.user
-      else
-        devConfig.loginUser( DEV_USER_ID ).then (user)->
-          # loginUser() sets $rootScope.user
-          vm.me = $rootScope.user
-          toastr.info ["Login", vm.me]
+      $reactive(vm).attach($scope)
+      vm.subscribe 'userProfiles'
       return
 
     activate = ()->
+      vm.me = $rootScope.user
       if $state.is('app.me')
         # console.log vm.me
         vm.person = angular.copy(vm.me)
@@ -87,21 +84,27 @@ ProfileCtrl = (
         return
 
       if $state.is('app.profile')
-        userid = $stateParams.id
-        if !userid
+        username = $stateParams.username
+        if !username
           toastr.warning "Sorry, that profile was not found."
           $rootScope.goBack()
           return
-        else if userid == vm.me?.id
+        else if username == vm.me?.username
           # looking at my own profile
-          vm.person = vm.me
-          promise = $q.when vm.person
+          return vm.person = vm.me
         else
           # viewing someone else's profile
-          promise = UsersResource.get(userid)
-          .then (user)->
-            return vm.person = user
-        return promise
+          return $q.when()
+          .then ()->
+            return Meteor.users.findOne({username:username})
+          .then (found)->
+            if !found
+              toastr.info "Sorry, that profile was not found"
+              $state.go('app.me')
+            vm.person = found
+            AAAHelpers._backwardCompatibleMeteorUser(vm.person)
+            return vm.person
+
       return
 
     $scope.$on '$ionicView.loaded', (e)->
@@ -118,7 +121,7 @@ ProfileCtrl = (
 ProfileCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$state', '$stateParams', '$timeout'
   '$ionicScrollDelegate'
-  'AAAHelpers', 'UsersResource'
+  'AAAHelpers', '$reactive'
   '$log', 'toastr'
   'utils', 'devConfig', 'exportDebug'
 ]

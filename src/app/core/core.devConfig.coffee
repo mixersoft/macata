@@ -22,8 +22,13 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
         return $rootScope['user']
 
     getDevUser : (defaultUserId)->
+
       return $q.when()
       .then ()->
+        if Meteor.user()
+          $rootScope.user = Meteor.user()
+          AAAHelpers._backwardCompatibleMeteorUser($rootScope.user)
+          return $rootScope.user
         return $rootScope['user'] if $rootScope['user']?
         return self.loginUser( defaultUserId || "0" )
         .then (user)->

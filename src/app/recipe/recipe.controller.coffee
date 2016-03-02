@@ -98,15 +98,13 @@ RecipeCtrl = (
         'rows': ()->
           mcRecipes.find({})
       }
-
       return
 
     activate = ()->
       vm.listItemDelegate = $listItemDelegate.getByHandle('recipe-list-scroll', $scope)
       return $q.when()
       .then ()->
-        return devConfig.getDevUser("0").then (user)->
-          return vm.me = user
+        vm.me = $rootScope.user
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()

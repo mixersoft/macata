@@ -1,12 +1,15 @@
 'use strict'
 
 appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
-  $log, devConfig
+  $log, devConfig, AAAHelpers
 ) ->
 
   devConfig.loadData()
 
   $rootScope['loadOnce'] = []
+
+  $rootScope.user = Meteor.user()
+  AAAHelpers._backwardCompatibleMeteorUser($rootScope.user)
 
   $ionicPlatform.ready ->
     # Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -63,7 +66,7 @@ ionicConfig.$inject = ['$ionicConfigProvider']
 
 
 appRun.$inject = ['$ionicPlatform', '$ionicHistory', '$rootScope', '$location',
-  '$log', 'devConfig'
+  '$log', 'devConfig', 'AAAHelpers'
 ]
 
 angular

@@ -18,5 +18,8 @@
     "angular": "1.4.4",
     "angular-animate": "1.4.3",
     "angular-sanitize": "1.4.3"
+  },
+  "dependencies": {
+    "accounts-password-client-side": "^0.3.1"
   }
 }

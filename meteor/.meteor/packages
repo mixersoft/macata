@@ -25,3 +25,10 @@ npm-container
 simple:rest
 simple:json-routes
 angular-meteor-auth
+angular
+
+accounts-password
+#accounts-facebook
+#accounts-twitter
+#okland:accounts-phone
+#reywood:publish-composite
