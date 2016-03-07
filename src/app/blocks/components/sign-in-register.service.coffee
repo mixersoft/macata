@@ -104,7 +104,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
       .then ()->
         return $q.reject('NOT FOUND') if !data.username
         data.username = data.username.toLowerCase().trim()
-        return CALLBACKS.signIn(data)
+        return CALLBACKS.signIn(data) # from AAAHelpers
       .then (results)->
         person =
           if _.isArray results
@@ -125,6 +125,8 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
         if err == 'NOT FOUND'
           vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+          data.password = null
+
         return $q.reject(err)
 
     register: (data={}, fnComplete)->
@@ -136,12 +138,12 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
         return CALLBACKS.checkIfUserExists(data)
       .then (results)->
-        person =
+        found =
           if _.isArray results
           then results.shift()
           else results
-        return $q.reject('DUPLICATE USERNAME') if !_.isEmpty( person )
-        return CALLBACKS.register(data)
+        return $q.reject('DUPLICATE USERNAME') if !_.isEmpty( found )
+        return CALLBACKS.register(data) # from AAAHelpers
       .then (result)->
         # success
         vm.closeModal(result)

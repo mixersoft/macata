@@ -4,6 +4,8 @@ style#sign-in-register-style.
     #sign-in-register-modal-view.modal { top: 10%; bottom: 10%; height:424px;}
   }
   #sign-in-register-modal-view.modal .item { border-color: transparent;}
+  #sign-in-register-modal-view.modal .error {padding-left: 24px;}
+  #sign-in-register-modal-view.modal a {cursor: pointer;}
 ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
   ion-slide-box(
     delegate-handle="sign-in-register"
@@ -25,19 +27,19 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
             div.text-center.larger &mdash; or &mdash;
           div.padding-horizontal
             form(name="registerForm" novalidate="" ng-submit="vm.on.register(person)")
-              label.item.item-input
+              ion-item.item-input
                 i.icon.ion-person.padding-horizontal.larger
                 input(type="text" name="Username" placeholder="Username" ng-model="person.username" required)
               div.error(ng-show="vm['error']['username']")
                 span.assertive {{vm['error']['username']}}
 
-              label.item.item-input
+              ion-item.item-input
                 i.icon.ion-email.padding-horizontal.larger
                 input(type="text" name="Email" placeholder="Email" ng-model="person.email" required)
-              label.item.item-input
+              ion-item.item-input
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="Password" placeholder="Password" ng-model="person.password" required)
-              label.item.item-input.hide
+              ion-item.item-input.hide
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="PasswordRepeat" placeholder="Again" ng-model="person.passwordRepeat")
               div.error(ng-show="vm['error']['passwordRepeat']")
