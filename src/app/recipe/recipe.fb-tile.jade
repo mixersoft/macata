@@ -11,12 +11,12 @@ list-item-summary.animate-fade-slide-in-right(
     ng-click="$listItemDelegate.select($event, $item, $index)"
   )
     div.hero.content(style="height:160px;")
+      {{ $$owner=$item.fetchOwner();'' }}
       div.item-avatar-right.ink
         img.ink(
-          placeholder-data="img" group="face" size="200" index="{{$index}}"
-          xxx-ng-src="{{$item.$$host.face}}"
+          ng-src="{{$$owner.profile.face}}"
           ng-click="$event.stopImmediatePropagation()"
-          ui-sref="app.profile({'id':$item.ownerId})"
+          ui-sref="app.profile({'username':$$owner.username})"
         )
       div.icon-bar.bottom-toolbar.condensed.light(
         ng-show="$item['title']"

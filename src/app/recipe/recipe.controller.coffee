@@ -93,7 +93,7 @@ RecipeCtrl = (
 
     initialize = ()->
       $reactive(vm).attach($scope)
-      vm.subscribe 'all-recipes'
+      vm.subscribe 'myVisibleRecipes'
       vm.helpers {
         'rows': ()->
           mcRecipes.find({})
