@@ -15,6 +15,7 @@
     "angular-google-maps/dist/angular-google-maps.js",
     "manual/ion-fab.css",
     "manual/ion-fab.js",
+    "manual/publish-counts.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [

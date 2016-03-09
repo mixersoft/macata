@@ -1,5 +1,5 @@
 // recipe/recipe.jade
-ion-view(view-title="{{vm.title}}") {{ show=vm.settings.show;'' }}
+ion-view#events(view-title="{{vm.title}} {{vm.showRowcount()}}") {{ show=vm.settings.show;'' }}
 
   div(
     ng-show="show.newTile"

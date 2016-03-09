@@ -6,18 +6,18 @@
 list-item-summary.animate-fade-slide-in-right(
   opt-collection="vm.rows"
 ) {{vm=$parent.$parent.vm;''}}
-  div.tile.recipe.item.item-complex.content.ink(
+  div.tile.event.item.item-complex.content.ink(
     xxx-ng-class="[$item.color,'bg'].join('-')"
     ng-click="$event.stopImmediatePropagation()"
-    ui-sref="app.event-detail({'id':$item.id})"
+    ui-sref="app.event-detail({'id':$item._id})"
   )
     div.hero.content.has-mask(style="height:160px;")
+      {{ $$host=$item.fetchHost();'' }}
       div.item-avatar-right.ink
         img.ink(
-          xxx-placeholder-data="img" group="face" size="200" index="{{$index}}"
-          ng-src="{{$item.$$host.face}}"
+          ng-src="{{$$host.profile.face}}"
           ng-click="$event.stopImmediatePropagation()"
-          ui-sref="app.profile({'id':$item.ownerId})"
+          ui-sref="app.profile({'username':$$host.username})"
         )
       
       div.icon-bar.bottom-toolbar.condensed.light(
@@ -40,6 +40,8 @@ list-item-summary.animate-fade-slide-in-right(
       div.feature.image(
         bg-image="{{$item['image']}}"
       )
+    div.has-mask-wrap()
+      h2.line-clamp-1 {{$item.title}}
 
 
 list-item-detail 

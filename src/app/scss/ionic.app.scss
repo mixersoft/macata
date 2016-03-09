@@ -714,6 +714,44 @@ ion-side-menu > ion-content {
 
 }
 
+
+.event {
+  &.tile.item {
+    border-color: transparent;
+    &.card.summary {
+      border: none;
+    }
+    .has-mask-wrap {
+      /*vertical-align text to bottom because has-mask-reverse bug in ionicMaterial*/
+      position: absolute;
+      bottom: 2px;
+      right: 135px;
+      left: 10px;
+      p {
+        text-overflow: ellipsis;
+      }
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #fff;
+      font-weight: bold;
+      position: relative;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+      z-index: 1;
+    }
+    h2 {
+      font-size: 24px;
+    }
+    p {
+      color: rgba(255, 255, 255, 1);
+      font-size: 17px;
+      position: relative;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.95);
+      z-index: 1;
+    }
+  }
+}
+
+
 /*
  * app.profile
  */

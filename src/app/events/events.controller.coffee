@@ -4,8 +4,8 @@ EventCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  appModalSvc, tileHelpers, openGraphSvc
-  UsersResource, EventsResource
+  appModalSvc, tileHelpers, openGraphSvc, eventUtils
+  $reactive, UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
 
@@ -15,30 +15,15 @@ EventCtrl = (
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
 
-
-    vm.filter = {}
-    _filters = {
-      'comingSoon':
-        label: "Coming Soon"
-        sortBy: 'startTime'  # ASC
-        filterBy: (o)->
-          return o.startTime > new Date().toJSON()
-      'nearby':
-        label: "Events Near Me"
-        sortBy: 'location'
-        filterBy: (o)->
-          return o.startTime > new Date().toJSON()
-      'recent':
-        label: "Recent Events"
-        sortBy: (o)->
-          return -1 * o.startTime  # DESC
-        filterBy: (o)->
-          return o.startTime < new Date().toJSON()
-      'all':
-        label: "Events"
+    vm.pg = {
+      perpage: 20
+      page: 1
+      sort:
+        startTime: -1
     }
-
-
+    # exportDebug.set 'pg', vm.pg
+    vm.filter = {
+    }
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -56,31 +41,66 @@ EventCtrl = (
         fabIcon: 'ion-plus'
     }
 
-    vm.lookup = {}
+
+    _filters = {
+      CONST:
+        COMING_SOON_DAYS: 21
+        NEARBY: 10000 # meters
+
+      # TODO: set here from geolocation
+      here: [42.629065, 23.316998]
 
 
-    getData = ()->
-      vm.rows = []
-      return $q.when()
-      .then ()->
-        return UsersResource.query()
-      .then (users)->
-        vm.lookup.users = users
-      .then ()->
-        return EventsResource.query()
-      .then (events)->
-        events = sortEvents(events, vm.filter)
-        _.each events, (o, i)->
-          o['image'] = o['heroPic']
-          return
-        vm.rows = events
-        return vm.rows
-
-    sortEvents = (items, options)->
-      collection = _.chain(items)
-      collection = collection.filter(options.filterBy) if options.filterBy
-      collection = collection.sortBy(options.sortBy) if options.sortBy
-      return items = collection.value()
+      'comingSoon': ()->
+        now = moment()
+        return {
+          label: "Coming Soon"
+          sortBy: {'startTime' : 1}  # ASC
+          filterBy: {
+            $and: [
+              {'startTime': {$gt: now.toJSON()}}
+              {'startTime': {$lt: now.add(_filters.CONST.COMING_SOON_DAYS, 'd').toJSON()}}
+            ]
+          }
+        }
+      'nearby': (latlon)->
+        ###
+        TODO: don't forget to create index in mongo
+          $ meteor mongo
+          > db.events.createIndex({geojson:"2dsphere"})
+        ###
+        latlon ?= _filters.here
+        return {
+          label: "Events Near Me"
+          sortBy: {}  # $near is already sorted
+          filterBy: {
+            'geojson':
+              $near:
+                $geometry:
+                  type: "Point"
+                  coordinates: [latlon[1], latlon[0]] # [lon,lat]
+                $maxDistance: _filters.CONST.NEARBY
+          }
+        }
+      'recent': ()->
+        now = moment()  # .subtract(event.duration)
+        return {
+          label: "Recent Events"
+          sortBy: {'startTime' : -1}  # DESC
+          filterBy: {
+            $and: [
+              {'startTime': {$lt: now.toJSON()}}
+              {'startTime': {$gt: now.subtract(_filters.CONST.COMING_SOON_DAYS, 'd').toJSON()}}
+            ]
+          }
+        }
+      'all': ()->
+        return {
+          label: "Events"
+          sortBy: {'title' : 1}  # ASC
+          filterBy: {}
+      }
+    }
 
     vm.on = {
       scrollTo: (anchor)->
@@ -103,24 +123,57 @@ EventCtrl = (
       notReady: (value)->
         toastr.info "Sorry, " + value + " is not available yet"
         return false
-
-
-
     }
 
+
+    vm.showRowcount = ()->
+      formatted =
+        if vm.rowcount
+        then '(' + vm.rowcount + ')'
+        else null
+      return formatted
+
     initialize = ()->
+      $reactive(vm).attach($scope)
+      # vm.subscribe 'userProfiles'
+      vm.subscribe 'myVisibleEvents', ()->
+        return [
+          vm.getReactively('filter.filterBy')
+          ,{
+            limit: parseInt(vm.pg.perpage),
+            skip: parseInt((vm.getReactively('pg.page') - 1) * vm.pg.perpage),
+            sort: vm.getReactively('pg.sort')
+          }
+          #, vm.getReactively('searchText')
+        ]
+      vm.helpers {
+        'rows': ()->
+          return mcEvents.find(
+            vm.getReactively('filter.filterBy')
+            , {
+              sort : vm.getReactively('pg.sort')
+            })
+        'rowcount': ()->
+          # TODO: bug: vm.rowcount is not getting updated on client when filterBy changes
+          return Counts.get('countEvents')
+
+      }
+      # vm.autorun ()->
+      #   console.log ['autorun']
+      # exportDebug.set 'vm', vm
       return
+
 
     activate = ()->
       vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
-      vm.filter = _filters[ $stateParams.filter ] || _filters[ 'all' ]
+      vm.filter = _filters[ $stateParams.filter || 'all'  ]()
+      # exportDebug.set('filter', vm.filter)
       vm.title = vm.filter.label
+      vm.pg.sort = vm.filter.sortBy
+
       return $q.when()
       .then ()->
-        return devConfig.getDevUser("0").then (user)->
-          return vm.me = user
-      .then ()->
-        return getData()
+        vm.me = $rootScope.user
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()
@@ -128,9 +181,6 @@ EventCtrl = (
           startVelocity: 2000
           })
         return
-      .then ()->
-        if index = $stateParams.filter
-          console.warn 'TODO: set filter on viewEnter'
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -162,8 +212,8 @@ EventCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'openGraphSvc'
-  'UsersResource', 'EventsResource'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils'
+  '$reactive', 'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 
