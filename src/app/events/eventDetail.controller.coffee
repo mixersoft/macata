@@ -5,8 +5,8 @@ EventDetailCtrl = (
   $ionicScrollDelegate, $state, $stateParams
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
-  uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc
-  UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
+  uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc, eventUtils
+  $reactive, UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
   EventActionHelpers, $filter, notificationTemplates
   utils, devConfig, exportDebug
   )->
@@ -22,17 +22,7 @@ EventDetailCtrl = (
         return true if !$rootScope.user
       isUser: ()->
         return true if $rootScope.user
-      isParticipant: ()->
-        return false if vm.acl.isVisitor()
-        return true if $rootScope.user.id == vm.event.ownerId
-        return true if ~vm.event.participantIds.indexOf $rootScope.user.id
-      isModerator: ()->
-        return false if vm.acl.isVisitor()
-        return true if $rootScope.user.id == vm.event.ownerId
-        return true if ~vm.event.moderatorIds.indexOf $rootScope.user.id
-      isAdmin: ()->
-        return false if vm.acl.isVisitor()
-        return true if $rootScope.user.id == vm.event.ownerId
+
     }
     vm.settings = {
       view:
@@ -44,6 +34,7 @@ EventDetailCtrl = (
         'hideParticipants': false
         'hideInvitations': false
         'hideControlPanel': true
+        'fabIcon': 'ion-plus'
     }
 
     vm.lookup = {
@@ -426,14 +417,15 @@ EventDetailCtrl = (
         MarkersControl: {}
       map: null
       prepareMap: (event, options)->
-        return $q.when() if !event.location
+        markerLoc = event.visible?.marker || event.location
+        return $q.when() if !markerLoc
 
         return uiGmapGoogleMapApi
         .then ()->
           # markerCount==1
           mapOptions = {
             type: 'oneMarker'
-            location: event.location
+            location: markerLoc
             # draggableMap: true  # set in activate()
             draggableMarker: false
             dragendMarker: (marker, eventName, args)->
@@ -661,20 +653,38 @@ EventDetailCtrl = (
     initialize = ()->
       # $ionicView.loaded: called once for EACH cached $ionicView,
       #   i.e. each instance of vm
+      $reactive(vm).attach($scope)
+      vm.subscribe 'myVisibleEvents', ()->
+        return [
+          { _id: $stateParams.id}
+          ,{
+          }
+        ]
+      vm.helpers {
+        'event': ()->
+          return mcEvents.findOne(vm.getReactively('eventId'))
+        '$$host': ()->
+          return vm.getReactively('event')?.fetchHost?()
+        '$$menuItems': ()->
+          return vm.getReactively('event')?.findMenuItems?()
+        '$$participants': ()->
+          return vm.getReactively('event')?.findParticipants?()
+      }
       return
 
-
     activate = ()->
-      # return $q.reject("ERROR: expecting event.id") if not $stateParams.id
-      return devConfig.dataReady
-      .finally ()->
-        getData()
+      return $q.when()
       .then ()->
-        if !$state.params.id
+        vm.me = $rootScope.user
+      .then ()->
+        if $state.is('app.event-detail.invitation')
+          if !$stateParams.invitation
+            toastr.warning "Sorry, that invitation was not found."
+            return $q.reject('MISSING_INVITATION')
+
           eventId = null
           # BUG: $stateParams.invitation != $state.params.invitation
-          return $q.reject('MISSING_ID') if !$state.params.invitation
-          return TokensResource.get($state.params.invitation)
+          return TokensResource.get(stateParams.invitation)
           .then (token)->
             # return $q.reject('INVALID') if !token
             [className, eventId] = token?.target.split(':')
@@ -688,12 +698,77 @@ EventDetailCtrl = (
             if err=='INVALID'
               toastr.warning "Sorry, this event is by invitation only"
             return $q.reject(err)
-        return eventId = $state.params.id
+
+        else if $state.is('app.event-detail')
+          if !$stateParams.id
+            toastr.warning "Sorry, that event was not found."
+            return $q.reject('MISSING_ID')
+          return $stateParams.id
+
+        else
+          toastr.warning "Sorry, something went wrong..."
+          return $q.reject('INVALID')
+
       .catch (err)->
-        $rootScope.goBack('app.events')
-        return $q.reject()
+        $rootScope.goBack()
+        return $q.reject(err)
+
       .then (eventId)->
-        vm.me = $rootScope.user
+        # get event from eventId
+        return vm.eventId = eventId
+      .then ()->
+        # // Set Ink
+        ionic.material?.ink.displayEffect()
+        ionic.material?.motion.fadeSlideInRight({
+          startVelocity: 2000
+          })
+        return
+
+
+    $scope.$watch 'vm.event._id', (newV)->
+      return if !newV
+      return $q.when(vm.event)
+      .then (event)->
+        exportDebug.set 'event', event
+        exportDebug.set 'vm', vm
+
+        # TODO: getReactively
+        eventUtils.setVisibleLocation(event)
+
+        eventUtils.mockData(event, vm)
+        # event.feed = vm.lookup.feed
+        # # event.feed = $filter('feedFilter')(event, FEED)
+
+        # TODO: getReactively
+        vm.$$paddedParticipants = $filter('eventParticipantsFilter')(event, vm)
+        return event
+
+      .then (event)->
+        deviceW = $window.innerWidth < vm.location.GRID_RESPONSIVE_SM_BREAK
+        mapOptions = {
+          visible: not deviceW
+          draggableMap: not deviceW  # can't scroll in mobile view
+        }
+        # TODO: getReactively
+        promise = vm.location.showOnMap(event, mapOptions)
+        return event
+      .then (event)->
+        if event.isModerator()
+          # TODO: getReactively
+          EventActionHelpers.getShareLinks(event, vm)
+          .then (sharelinks)->
+            vm.event.shareLinks = sharelinks
+
+
+
+
+
+
+    activate0 = ()->
+      # # return $q.reject("ERROR: expecting event.id") if not $stateParams.id
+      return devConfig.dataReady
+      .then (eventId)->
+        # vm.me = $rootScope.user
         vm.event = _.find vm.events, {id: eventId}
         if !$rootScope.demoRole
           $rootScope.demoRole = 'invited'
@@ -703,28 +778,8 @@ EventDetailCtrl = (
         $scope.$emit 'user:event-role-changed', null, event
         event.feed = vm.lookup.feed
         # event.feed = $filter('feedFilter')(event, FEED)
-        event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
-
-        deviceW = $window.innerWidth < vm.location.GRID_RESPONSIVE_SM_BREAK
-        mapOptions = {
-          visible: not deviceW
-          draggableMap: not deviceW  # can't scroll in mobile view
-        }
-        promise = vm.location.showOnMap(event, mapOptions)
         return event
-      .then (event)->
-        if vm.acl.isModerator()
-          EventActionHelpers.getShareLinks(event, vm)
-          .then (sharelinks)->
-            vm.event.shareLinks = sharelinks
-      .then (event)->
-        exportDebug.set('event', event)
-        # // Set Ink
-        ionic.material?.ink.displayEffect()
-        ionic.material?.motion.fadeSlideInRight({
-          startVelocity: 2000
-          })
-        return
+
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -790,8 +845,8 @@ EventDetailCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
-  'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc'
-  'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
+  'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc', 'eventUtils'
+  '$reactive', 'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
   'EventActionHelpers', '$filter', 'notificationTemplates'
   'utils', 'devConfig', 'exportDebug'
 ]

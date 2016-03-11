@@ -18,8 +18,7 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
         participantIds: this.userId
       }
     , {
-        'setting.isExclusive':
-          $ne: true
+        'isPublic': {$eq: true}
       }
     ]
   }
@@ -31,8 +30,7 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
       ]
     }
 
-  console.log ['publish events', JSON.stringify( selector ), 'userId=' + this.userId ]
-
+  # console.log ['publish events', JSON.stringify( selector ), 'userId=' + this.userId ]
   result = {
     find: ()->
       found = global['mcEvents'].find(selector, options)
@@ -42,7 +40,10 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
       return global['mcEvents'].find(selector, options)
     children: [
       {
-        find: (event)-> return event.fetchParticipants()
+        find: (event)-> return event.findParticipants()
+      }
+      {
+        find: (event)-> return event.findMenuItems()
       }
     ]
   }

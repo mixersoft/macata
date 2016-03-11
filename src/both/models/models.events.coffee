@@ -7,27 +7,47 @@ options = {
     fields:
       username: 1
       profile: 1
+  'menuItem':
+    limit: 10
 }
 
 class EventModel
   constructor: (event)->
     _.extend(@, event)
 
+  isAdmin: (userId)=>
+    userId ?= Meteor.userId()
+    return true if @ownerId == userId
+    return false
+
   isModerator: (userId)=>
     userId ?= Meteor.userId()
-    return true if this.moderatorIds && ~this.moderatorIds.indexOf userId
-    return true if this.ownerId == userId
+    return true if @moderatorIds && ~@moderatorIds.indexOf userId
+    return true if @ownerId == userId
+    return false
+
+  isParticipant: (userId)=>
+    userId ?= Meteor.userId()
+    return true if @participantIds && ~@participantIds.indexOf userId
+    return true if @ownerId == userId
     return false
 
   fetchHost: =>
     return Meteor.users.findOne(@ownerId, options['profile'])
 
-  fetchParticipants: =>
+  findParticipants: =>
     return Meteor.users.find({
       _id:
         $in: [@ownerId].concat(@participantIds)
       }
       , options['profile'])
+
+  findMenuItems: =>
+    return global['mcRecipes'].find({
+      _id:
+        $in: @menuItemIds || []
+      }
+      , options['menuItem'])
 
 
 

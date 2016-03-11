@@ -140,22 +140,21 @@ EventFeedFilter.$inject = ['$rootScope', 'exportDebug']
 #     [ host, $participant, $participant, ..., 'placeholder', 'placeholder'..]
 ###
 EventParticipantsFilter = ()->
-  return (event, padding)->
-    return [] if not (event.$$participations && event.$$host)
+  return (event, vm)->
+    return [] if not (vm.$$participations && vm.$$host)
     MAX_VISIBLE_PARTICIPANTS = 12
     total = Math.min event.seatsTotal, MAX_VISIBLE_PARTICIPANTS
     padded = []
-    hostId = event.$$host.id
     now = Date.now() + '-'
-    h = _.findIndex event.$$participations, {ownerId: hostId}
+    h = _.findIndex vm.$$participations, {ownerId: event.ownerId}
     #move host to front
     if h > 0
-      host = event.$$participations.splice(h,1)
-      event.$$participations.unshift(host[0])
+      host = vm.$$participations.splice(h,1)
+      vm.$$participations.unshift(host[0])
 
-    _.each event.$$participations, (p, i)->
+    _.each vm.$$participations, (p, i)->
       _.each [0...p.seats], (i)->
-        face = _.pick p.$$owner, ['id', 'face', 'displayName']
+        face = _.pick p.$$owner, ['_id', 'username', 'profile']
         face['trackBy'] = now + padded.length
         padded.push face
         return
