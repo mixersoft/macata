@@ -6,22 +6,22 @@ EventDetailCtrl = (
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
   uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc, eventUtils
-  $reactive, UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
+  $reactive, ReactiveTransformSvc, $auth
+  UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
   EventActionHelpers, $filter, notificationTemplates
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
     # coffeelint: enable=max_line_length
-
+    $reactive(this).attach($scope)
     vm = this
     vm.title = "Event Detail"
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
-    vm.me = null      # current user, set in initialize()
     vm.acl = {
       isVisitor: ()->
-        return true if !$rootScope.user
+        return true if !$rootScope.currentUser
       isUser: ()->
-        return true if $rootScope.user
+        return true if $rootScope.currentUser
 
     }
     vm.settings = {
@@ -62,7 +62,7 @@ EventDetailCtrl = (
     vm.inviteActions = {
       requiresAction: (post, event, me)->
         event ?= vm.event
-        me ?= vm.me
+        me ?= $rootScope.currentUser
         check = {
           type: post.type == 'Invitation'
           status: ~['new', 'viewed'].indexOf(post.body.status)
@@ -84,7 +84,7 @@ EventDetailCtrl = (
           invitation.body.status='viewed'
           return invitation
         .then (invitation)->
-          return vm.on.beginBooking(vm.me, event)
+          return vm.on.beginBooking($rootScope.currentUser, event)
         .then (participation)->
           return if !participation
           invitation.body.status='closed'
@@ -138,7 +138,7 @@ EventDetailCtrl = (
         options = {
           log: true
           message: [
-            vm.me.displayName
+            $rootScope.currentUser.profile.displayName
             'has', invitation.body.response
           ]
         }
@@ -165,7 +165,7 @@ EventDetailCtrl = (
     vm.moderatorActions = {
       requiresAction: (post, event, me)->
         event ?= vm.event
-        me ?= vm.me
+        me ?= $rootScope.currentUser
         check = {
           type: post.type == 'Participation'
           status: ~['new', 'pending'].indexOf(post.body.status)
@@ -278,7 +278,7 @@ EventDetailCtrl = (
         # log ParticipationResponse
         action = {
           head:
-            ownerId: vm.me.id
+            ownerId: $rootScope.currentUser._id
           body:
             type: 'ParticipationResponse'
             action: participation.body.status  # ['accepted', 'declined']
@@ -320,31 +320,32 @@ EventDetailCtrl = (
     vm.postActions = {
       acl : {
         isModerator: (event, post)->
-          return true if ~event.moderatorIds.indexOf vm.me.id
-          return true if post.head.moderatorIds? && ~post.head.moderatorIds.indexOf vm.me.id
-          return true if event.ownerId == vm.me.id
+          return true if ~event.moderatorIds.indexOf $rootScope.currentUser._id
+          return true if post.head.moderatorIds? &&
+            ~post.head.moderatorIds.indexOf $rootScope.currentUser._id
+          return true if event.ownerId == $rootScope.currentUser._id
           # console.info "DEMO: isModerator() == true"
           # return true
       }
       dismissItem: ($event, item)->
         item.head['dismissedBy'] ?= []
-        item.head['dismissedBy'].push vm.me.id
+        item.head['dismissedBy'].push $rootScope.currentUser._id
         return FeedResource.update(item.id, item)
         .then (result)->
           # TODO: animate offscreen before removal
           found = _.findIndex vm.event.feed, {id: result.id}
           vm.event.feed[found] = result if ~found
-          $rootScope.$emit 'event:feed-changed', vm.event, vm.me
+          $rootScope.$emit 'event:feed-changed', vm.event, $rootScope.currentUser
 
           return
       like: ($event, post)->
         post.head.likes ?= []
         #TODO: should add Ids to the array, not object
-        found = post.head.likes.indexOf(vm.me)
+        found = post.head.likes.indexOf($rootScope.currentUser)
         if ~found
           post.head.likes.splice(found,1) # unlike
         else
-          post.head.likes.push(vm.me)
+          post.head.likes.push($rootScope.currentUser)
 
       showCommentForm: ($event)->
         target = $event.currentTarget
@@ -377,7 +378,7 @@ EventDetailCtrl = (
 
         return $q.when()
         .then ()->
-          from = vm.me
+          from = $rootScope.currentUser
           if options?['log'] == true
             # TODO: ???: has post from syslog("feed") been replaced by "Notifications"?
             from = {
@@ -473,84 +474,44 @@ EventDetailCtrl = (
         .finally ()->
           toastr.info [
             "You are now "
-            vm.me.displayName
+            vm.me.profile.displayName
             ", role="
             $rootScope.demoRole.toUpperCase()
           ].join('')
 
-      addRoleToUser : ()->
-        return devConfig.dataReady.finally ()->
-          return if !vm.event.participantIds
-
-          if vm.me.id == vm.event.ownerId
+      addRoleToUser : (user, event)->
+        $auth.waitForUser.then ()->
+          return if !user
+          if user._id == event.ownerId
             role = 'host'
-          else if ~vm.event.participantIds.indexOf vm.me.id
+          else if ~event.participantIds?.indexOf user._id
             role = 'participant'
-          else if vm.me.id == '5'
+          else if user._id == '5'
             role = 'booking'
-          else if vm.me.id == '6'
+          else if user._id == '6'
             role = 'invitation'
           else
             role = 'visitor'
-          vm.me.role = role
+          user.role = role
           console.info "addRoleToUser(), role="+role
           setFabIcon()
     }
 
 
-    getData = ()->
-      $q.when()
-      .then ()->
-        users = UsersResource.query()
-        menuItems = IdeasResource.query()
-        feed = FeedResource.query()
-        return $q.all([users, menuItems, feed])
-      .then (result)->
-        [users, menuItems, feed] = result
-        vm.lookup.users = users
-        vm.lookup.menuItems = menuItems
-        vm.lookup.feed = feed
-      .then ()->
-        # $filter('eventFeedFilter')(event, me)
-        _.each vm.lookup.feed, (post)->
-          # add $$owner to FEED posts
-          post.head ?= {}
-          post.head.$$owner = _.find(vm.lookup.users, {id: post.head.ownerId})
-          if _.isEmpty post.head.recipientIds
-            post.head.likes = [_.sample(vm.lookup.users)]
-
-          # chatWith
-          if post.head.recipientIds?[0]
-            post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
-          return
-
-      .then ()->
-        return EventsResource.query()
-      .then (events)->
-        vm.events = []
-        _.each events, (event, i)->
-          console.warn("TESTDATA: using currentUser as event Moderator")
-          event.visibleAddress = event.address
-          event.isPostModerator = vm.postActions.acl.isModerator
-          event.moderatorIds = [event.ownerId]
-          vm.events.push event
-          return
-        return events
-
 
 
     setFabIcon = ()->
-      vm.settings.show.fabIcon = 'ion-load-d' if !vm.me
+      vm.settings.show.fabIcon = 'ion-load-d' if !$rootScope.currentUser
 
       icon = null
-      switch vm.me?.role
+      switch $rootScope.currentUser?.role
         when 'host', 'participant', 'booking'
           # edit event
           icon = 'ion-chatbox'
         when 'invitation','visitor'
           # join
           icon = 'ion-plus'
-      # console.log ["FabIcon=" + icon, vm.me.role]
+      # console.log ["FabIcon=" + icon, $rootScope.currentUser.role]
       vm.settings.show.fabIcon = icon
 
 
@@ -568,14 +529,14 @@ EventDetailCtrl = (
         return vm.settings.view.show = value
 
       fabClick: ($event)->
-        switch vm.me.role
+        switch $rootScope.currentUser.role
           when 'host', 'participant', 'booking'
             # edit event
             return vm.feed.showMessageComposer($event)
 
           when 'invitation','visitor'
             # join
-            return vm.on['beginBooking'](vm.me, vm.event)
+            return vm.on['beginBooking']($rootScope.currentUser, vm.event)
         return
 
       'updateSettings': (setting, isPublic)->
@@ -627,8 +588,8 @@ EventDetailCtrl = (
           else 'http://app.snaphappi.com/foodie.App/'
         vm.event.invitations.push {
           id: now
-          owner: vm.me.displayName
-          ownerId: vm.me.id
+          owner: $rootScope.currentUser.profile.displayName
+          ownerId: $rootScope.currentUser._id
           link: [
             baseurl
             '#/app/invitation/'
@@ -650,32 +611,107 @@ EventDetailCtrl = (
 
     }
 
+    callbacks = {
+      'Event':
+        onLoad: (event)->
+          return $q.when(event)
+          .then (event)->
+            console.info ["load once for event=", event._id]
+            eventUtils.mockData(event, vm)
+            exportDebug.set 'vm', vm
+            exportDebug.set 'event', event
+            return event
+
+        onChange: (event)->
+          return $q.when(event)
+          .then (event)->
+            _getByIds = (ids)-> return {_id: {$in: ids}}
+            _lookups = {
+              '$$participants': (event)->
+                participantIds = [event['ownerId']].concat event['participantIds']
+                Meteor.users.find(_getByIds(participantIds)).fetch()
+              # '$$participations': mcRecipes.find(_getByIds(event['participationIds'])).fetch()
+            }
+            _.each _lookups, (get,key)->
+              vm[key] = get(event)
+              return
+            return event
+
+          .then (event)->
+            if vm.event != event
+              console.warn ['vm.event != event, reset']
+              vm.event = event
+
+            # render participations/participants
+            # mockData depends on vm.$$menuItems
+            vm['$$paddedParticipants'] = $filter('eventParticipantsFilter')(event, vm)
+            return event
+          .then (event)->
+            # render Map
+            eventUtils.setVisibleLocation(event)
+            deviceW = $window.innerWidth < vm.location.GRID_RESPONSIVE_SM_BREAK
+            mapOptions = {
+              visible: not deviceW
+              draggableMap: not deviceW  # can't scroll in mobile view
+            }
+            promise = vm.location.showOnMap(event, mapOptions)
+            return event
+          .then (event)->
+            # render shareLinks
+            if event.isPublic == false || event.setting.isExclusive
+              return event if not event.isParticipant()
+            EventActionHelpers.getShareLinks(event, vm)
+            .then (sharelinks)->
+              event.shareLinks = sharelinks
+            return event
+          .then (event)->
+            # NOTE: $timeout required when using getReactively with deep watch
+            $timeout().then ()->
+              callbacks['Event'].isRendering = false
+            return event
+
+    }
+
+
+
     initialize = ()->
       # $ionicView.loaded: called once for EACH cached $ionicView,
       #   i.e. each instance of vm
-      $reactive(vm).attach($scope)
-      vm.subscribe 'myVisibleEvents', ()->
-        return [
-          { _id: $stateParams.id}
-          ,{
-          }
-        ]
+      vm.subscribe 'myVisibleEvents'
+        ,()->
+          return [
+            { _id: $stateParams.id}
+            ,{} # options
+          ]
+        ,{
+          onReady: ()->
+            console.info ["EventDetailCtrl subscribe: Events onReady"]
+        }
+
+      eventTransforms = new ReactiveTransformSvc(vm, callbacks['Event'])
+
+      _getByIds = (ids)-> return {_id: {$in: ids}}
       vm.helpers {
         'event': ()->
-          return mcEvents.findOne(vm.getReactively('eventId'))
+          return mcEvents.findOne( vm.getReactively('eventId') )
         '$$host': ()->
-          return vm.getReactively('event')?.fetchHost?()
+          return Meteor.users.findOne( vm.getReactively('event.ownerId') )
         '$$menuItems': ()->
-          return vm.getReactively('event')?.findMenuItems?()
-        '$$participants': ()->
-          return vm.getReactively('event')?.findParticipants?()
+          menuItemIds = vm.getReactively('event.menuItemIds')
+          return [] if !menuItemIds
+          return mcRecipes.find( { _id: {$in: menuItemIds }} )
       }
-      return
+
+      vm.autorun (tracker)->
+        event = vm.getReactively('event' , true)
+        eventTransforms.onChange(event)
+        return
+
 
     activate = ()->
       return $q.when()
       .then ()->
-        vm.me = $rootScope.user
+        getData()
       .then ()->
         if $state.is('app.event-detail.invitation')
           if !$stateParams.invitation
@@ -714,8 +750,11 @@ EventDetailCtrl = (
         return $q.reject(err)
 
       .then (eventId)->
+        vm.eventId = eventId
+        console.info ["Event.id", eventId]
+        # return vm['event'] = mcEvents.findOne(eventId)
         # get event from eventId
-        return vm.eventId = eventId
+        # return vm.eventId = eventId
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()
@@ -725,60 +764,47 @@ EventDetailCtrl = (
         return
 
 
-    $scope.$watch 'vm.event._id', (newV)->
-      return if !newV
-      return $q.when(vm.event)
-      .then (event)->
-        exportDebug.set 'event', event
-        exportDebug.set 'vm', vm
-
-        # TODO: getReactively
-        eventUtils.setVisibleLocation(event)
-
-        eventUtils.mockData(event, vm)
-        # event.feed = vm.lookup.feed
-        # # event.feed = $filter('feedFilter')(event, FEED)
-
-        # TODO: getReactively
-        vm.$$paddedParticipants = $filter('eventParticipantsFilter')(event, vm)
-        return event
-
-      .then (event)->
-        deviceW = $window.innerWidth < vm.location.GRID_RESPONSIVE_SM_BREAK
-        mapOptions = {
-          visible: not deviceW
-          draggableMap: not deviceW  # can't scroll in mobile view
-        }
-        # TODO: getReactively
-        promise = vm.location.showOnMap(event, mapOptions)
-        return event
-      .then (event)->
-        if event.isModerator()
-          # TODO: getReactively
-          EventActionHelpers.getShareLinks(event, vm)
-          .then (sharelinks)->
-            vm.event.shareLinks = sharelinks
 
 
 
+    getData = ()->
+      $q.when()
+      .then ()->
+        users = UsersResource.query()
+        menuItems = IdeasResource.query()
+        feed = FeedResource.query()
+        return $q.all([users, menuItems, feed])
+      .then (result)->
+        [users, menuItems, feed] = result
+        vm.lookup.users = users
+        vm.lookup.menuItems = menuItems
+        vm.lookup.feed = feed
+      .then ()->
+        # $filter('eventFeedFilter')(event,$rootScope.currentUser)
+        _.each vm.lookup.feed, (post)->
+          # add $$owner to FEED posts
+          post.head ?= {}
+          post.head.$$owner = _.find(vm.lookup.users, {id: post.head.ownerId})
+          if _.isEmpty post.head.recipientIds
+            post.head.likes = [_.sample(vm.lookup.users)]
 
-
+          # chatWith
+          if post.head.recipientIds?[0]
+            post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
+          return
 
     activate0 = ()->
       # # return $q.reject("ERROR: expecting event.id") if not $stateParams.id
       return devConfig.dataReady
       .then (eventId)->
-        # vm.me = $rootScope.user
         vm.event = _.find vm.events, {id: eventId}
         if !$rootScope.demoRole
           $rootScope.demoRole = 'invited'
-        return vm.dev.loginByRole(vm.event).then vm.dev.addRoleToUser
-      .then ()->
-        event = vm.event
-        $scope.$emit 'user:event-role-changed', null, event
-        event.feed = vm.lookup.feed
-        # event.feed = $filter('feedFilter')(event, FEED)
-        return event
+        return vm.dev.loginByRole(vm.event)
+        .then ()->
+          vm.dev.addRoleToUser $rootScope.currentUser, vm.event
+          $scope.$emit 'user:event-role-changed', null, event
+          return event
 
 
     resetMaterialMotion = (motion, parentId)->
@@ -793,10 +819,11 @@ EventDetailCtrl = (
         .removeClass('in')
         .removeClass('done')
 
-    $scope.$watch 'vm.me', (newV)->
+    # TODO: deprecate
+    $scope.$watch $rootScope.currentUser, (newV)->
       return if !newV
-      vm.me.role = null
-      vm.dev.addRoleToUser()
+      $rootScope.currentUser.role = null
+      vm.dev.addRoleToUser($rootScope.currentUser, vm.event)
 
     $scope.$on '$ionicView.loaded', (e)->
       # $log.info "viewLoaded for EventDetailCtrl, $scope.$id=" + e.currentScope.$id
@@ -846,7 +873,8 @@ EventDetailCtrl.$inject = [
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc', 'eventUtils'
-  '$reactive', 'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
+  '$reactive', 'ReactiveTransformSvc', '$auth'
+  'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
   'EventActionHelpers', '$filter', 'notificationTemplates'
   'utils', 'devConfig', 'exportDebug'
 ]

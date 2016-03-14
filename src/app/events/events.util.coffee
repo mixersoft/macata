@@ -33,37 +33,54 @@ EventsUtil = (utils, $document, amMoment) ->
         }
       return event
     mockData: (event, vm)->
-      # console.warn("TESTDATA: using currentUser as event Moderator")
-      # event.isPostModerator = vm.postActions.acl.isModerator
-      # event.moderatorId = vm.me.id  # force for demo data
 
-      # console.warn("TESTDATA: using random menuItems")
-      # ideas = mcRecipes.find({}).fetch()
-      # fromHost = _.find ideas, {ownerId: event.ownerId}
-      # event.$$menuItems = [fromHost]
-      # event.$$menuItems = event.$$menuItems.concat( _.sample ideas[0...3], 3 )
-      # event.$$menuItems = _.unique(event.$$menuItems)
-      # event.menuItemIds = _.pluck event.$$menuItems, 'id'
+      event.moderatorIds = [event.ownerId]
+      event.isPostModerator = vm.postActions.acl.isModerator
 
-      event.seatsOpen = event.seatsTotal
+
+      event.feed = vm.lookup.feed
+      # event.feed = $filter('feedFilter')(event, FEED)
+
+
+
       event.participantIds ?= []    # set event.participantIds manually
-      vm.$$participations ?= []
-      event.participationIds ?= []
+      ## NOTE: save participations in events, not as a separate Collection
+      ## NOTE: save contributions in participations[].contributions, not as a separate Collection
+      event.participations ?= []
 
-      _.each vm.$$menuItems, (mi, i)->
-        mi.ownerId = _.sample [event.ownerId].concat event.participantIds
-        p = {
-          id: Date.now()
-          seats: _.random(3) + 1  # random seats for participation
-          createdAt: moment(mi.createdAt).add(i, 'hours').toJSON()
-          ownerId: mi.ownerId
-          $$owner: Meteor.users.findOne(mi.ownerId)
-        }
-        event.participationIds.push p.id
-        vm.$$participations.push p
-        event.seatsOpen -= p.seats
-        # TODO: participation hasMany contributions
-        return
+      if event.participations.length == 0
+        # create mock data for event.participations
+        _getByIds = (ids)-> return {_id: {$in: ids}}
+        $$menuItems = mcRecipes.find(_getByIds(event['menuItemIds'])).fetch()
+
+        _.each $$menuItems, (mi, i)->
+          participantIds = [event.ownerId].concat( event.participantIds)
+          # mi.ownerId = participantIds[i % participantIds.length ]
+          contribution = {
+            menuItemId: mi._id
+            portions: null
+            comment: null
+            sort: null
+            }
+          if found = _.find event.participations, {ownerId: mi.ownerId}
+            found.contributions.push contribution
+            return
+          p = {
+            id: Date.now()
+            ownerId: mi.ownerId
+            seats: _.random(3) + 1  # random seats for participation
+            contributions: [contribution]
+            createdAt: moment(mi.createdAt).add(i, 'hours').toJSON()
+          }
+          event.participations.push p
+          return
+
+      # sum seatsOpen
+      seatsTaken = _.chain event.participations
+        .pluck('seats')
+        .sum()
+        .value()
+      event.seatsOpen = event.seatsTotal - seatsTaken
       return
   }
   return self

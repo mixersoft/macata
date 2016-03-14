@@ -44,7 +44,7 @@
 EventFeedFilter = ($rootScope, exportDebug)->
 
   getPersonalizedFeed = (event, me, feed)->
-
+    me ?= $rootScope.currentUser
     feed ?= event.feed
     # console.info "user NOT set" if !me
 
@@ -66,7 +66,7 @@ EventFeedFilter = ($rootScope, exportDebug)->
       check = {
         eventId: head.eventId == event.id
         address: head.isPublic ||
-          (me && ~[head.ownerId].concat(head.recipientIds || []).indexOf me.id)
+          (me && ~[head.ownerId].concat(head.recipientIds || []).indexOf me._id)
         expiration: !head.expiresAt || new Date().toJSON() <= head.expiresAt
       }
 
@@ -89,7 +89,7 @@ EventFeedFilter = ($rootScope, exportDebug)->
         when 'Comment'
           'TODO:allow recipientIds for comments' if head.recipientIds
         when 'Notification'
-          check['notDismissed'] = not (head.dismissedBy && ~head.dismissedBy.indexOf me.id)
+          check['notDismissed'] = not (head.dismissedBy && ~head.dismissedBy.indexOf me._id)
           # console.log ['check Notification', check]
         else
           'skip'
@@ -100,21 +100,22 @@ EventFeedFilter = ($rootScope, exportDebug)->
 
   memoized_getPersonalizedFeed = _.memoize( getPersonalizedFeed
     , (event, me, feed)->
-      return [event.id, me.id].join(':')
+      return [event.id, me?._id].join(':')
     )
 
   resetMemo = (event, me)->
+    me ?= $rootScope.currentUser
     cache = memoized_getPersonalizedFeed.cache
     if !event && !me
       return cache.__data__ = {}
     if event && me
-      return cache.delete([event.id, me.id].join(':'))
+      return cache.delete([event.id, me._id].join(':'))
     toDelete = []
     if (event && !me) || (me && !event)
       _.each _.keys(cache.__data__), (k)->
         [eid, uid] = k.split(':')
         toDelete.push k if event && eid == event.id
-        toDelete.push k if me && uid == me.id
+        toDelete.push k if me && uid == me._id
         return
       toDelete.forEach (k)->
         cache.delete k
@@ -128,7 +129,8 @@ EventFeedFilter = ($rootScope, exportDebug)->
 
   exportDebug.set('memoCache',  memoized_getPersonalizedFeed.cache)
   return (event, me, feed)->
-    return [] if !event.feed
+    me ?= $rootScope.currentUser
+    return [] if !(event?.feed?)
     return memoized_getPersonalizedFeed(event, me, feed)
 
 
@@ -141,20 +143,24 @@ EventFeedFilter.$inject = ['$rootScope', 'exportDebug']
 ###
 EventParticipantsFilter = ()->
   return (event, vm)->
-    return [] if not (vm.$$participations && vm.$$host)
+    return [] if not (event.participations && vm.$$host)
+    console.info "EventParticipantsFilter"
     MAX_VISIBLE_PARTICIPANTS = 12
     total = Math.min event.seatsTotal, MAX_VISIBLE_PARTICIPANTS
     padded = []
     now = Date.now() + '-'
-    h = _.findIndex vm.$$participations, {ownerId: event.ownerId}
+    h = _.findIndex event.participations, {ownerId: event.ownerId}
     #move host to front
     if h > 0
-      host = vm.$$participations.splice(h,1)
-      vm.$$participations.unshift(host[0])
+      host = event.participations.splice(h,1)
+      event.participations.unshift(host[0])
 
-    _.each vm.$$participations, (p, i)->
+    _.each event.participations, (p, i)->
       _.each [0...p.seats], (i)->
-        face = _.pick p.$$owner, ['_id', 'username', 'profile']
+        face = _.chain vm.$$participants
+          .find {_id:p.ownerId}
+          .pick ['_id', 'username', 'profile']
+          .value()
         face['trackBy'] = now + padded.length
         padded.push face
         return

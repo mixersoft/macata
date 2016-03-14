@@ -44,8 +44,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
           head:
             id: Date.now() + ""
             createdAt: new Date()
-            eventId: event.id
-            ownerId: vm.me.id
+            eventId: event._id
+            ownerId: $rootScope.currentUser._id
           body: {}
         }
         angular.extend(post.head, data.head)
@@ -60,7 +60,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
             # post.body.message += ' (This should be a private notification.)'
 
           # testData
-          post.head['$$owner'] = vm.me
+          post.head['$$owner'] = $rootScope.currentUser
 
         return FeedResource.save(post, post.head.id)
         .then (post)->
@@ -163,7 +163,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         return $q.when()
         .then ()->
           return TokensResource.get([$stateParams.invitation]) if $stateParams.invitation
-          target = ['Event', event.id].join(':')
+          target = ['Event', event._id].join(':')
           return TokensResource.query({target: target})
         .then (results)->
           # return token if TokensResource.isTokenValid(token)
@@ -175,7 +175,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(err) if /EXPIRED|INVALID|NONE/.test(err) == false
           # TODO: check permission to create new Token
           token = {
-            ownerId: vm.me.id
+            ownerId: $rootScope.currentUser._id
             target: target
             views: 0
             expireCount: 100
@@ -195,11 +195,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
           #   path = $location.path()
           #   baseurl = $location.absUrl().slice(0, $location.absUrl().indexOf(path))
           baseurl += '#'
-          eventLink = baseurl + '/app/event-detail/' + event.id
+          eventLink = baseurl + '/app/event-detail/' + event._id
           shareLinks = {
             'event': if event.setting['isExclusive'] then false else eventLink
           }
-          if event.setting['denyGuestShare'] && vm.me.id != vm.event.ownerId
+          if event.setting['denyGuestShare'] && $rootScope.currentUser._id != vm.event.ownerId
             shareLinks['invitations'] = false
           else
             shareLinks['invitations'] = _.map tokens, (token)->
@@ -287,8 +287,6 @@ EventActionHelpers = ($rootScope, $q, $timeout
             window.open(target, '_system')
             return false
           return true
-
-
 
 
         if type == 'invitation' # goto Invite
@@ -411,10 +409,10 @@ EventActionHelpers = ($rootScope, $q, $timeout
               submitResponse: (ev, myResponse, onSuccess)->
                 return if this.isValidated(myResponse['response']) == false
                 # some sanity checks
-                if vm.event.id != myResponse.event.id
+                if vm.event._id != myResponse.event._id
                   toastr.warning("You are booking for a different event. title=" +
                     myResponse.event.title)
-                if vm.me && myResponse.person?.id != vm.me.id
+                if $rootScope.currentUser && myResponse.person?.id != $rootScope.currentUser._id
                   toastr.warning("You are booking for a different person. name=" +
                     myResponse.person.displayName)
                 if myResponse.person?.id
@@ -459,7 +457,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         return $q.when()
         .then ()->
           data = {
-            eventId: myResponse.event.id
+            eventId: myResponse.event._id
             participantId: myResponse.person?.id || null
             response: response.value
             seats: response.seats
@@ -500,9 +498,12 @@ EventActionHelpers = ($rootScope, $q, $timeout
               , 'event', 'participation'
               , 'response-user', myResponse.response['value'], 10)
 
-          # for anonymous responses, look for response in vm.me.participation, delete on sign-in
-          _.extend vm.me.participation, result if vm.me.participation?
-          vm.me['participation'] = result if _.isEmpty vm.me
+          # for anonymous responses, look for response in
+          # $rootScope.currentUser.participation, delete on sign-in
+          if $rootScope.currentUser?.participation?
+            _.extend( $rootScope.currentUser.participation, result )
+          if _.isEmpty $rootScope.currentUser
+            $rootScope.currentUser['participation'] = result
 
           if result.responseId
             toastr.info "Please use passcode='" + response.passcode + "' to update your response."
@@ -563,7 +564,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         .then ()->
           return true if $state.is('app.event-detail.invitation')
           if event.setting.isExclusive || $state.params.invitation
-            return TokensResource.isValid($state.params.invitation, 'Event', event.id)
+            return TokensResource.isValid($state.params.invitation, 'Event', event._id)
         .catch (result)->
           $log.info "Token check, value="+result
           toastr.info "Sorry, this event is by invitation only." if result=='INVALID'
@@ -606,14 +607,14 @@ EventActionHelpers = ($rootScope, $q, $timeout
         }
 
         event.participationIds.push p.id
-        event.$$participations.push p
+        vm.$$participations.push p
         #TODO: should use a listener or watch on 'event:participants-changed'
-        event.$$paddedParticipants = $filter('eventParticipantsFilter')(event)
+        vm.$$paddedParticipants = $filter('eventParticipantsFilter')(event, vm)
 
         event.seatsOpen -= particip.body.seats
         if not _.isEmpty particip.body.attachment
-          event.$$menuItems.push _participation2menuItem(p, particip)
-          event.$$menuItems = _.unique event.$$menuItems
+          vm.$$menuItems.push _participation2menuItem(p, particip)
+          vm.$$menuItems = _.unique vm.$$menuItems
         else
           # TODO: show a placeholder in event.menuItems?
           console.info '???:attach a placeholder and render in event.menuItems'
@@ -685,9 +686,9 @@ EventActionHelpers = ($rootScope, $q, $timeout
               link: null
             # label: label
             contribution:
-              eventId: vm.event.id
+              eventId: vm.event._id
               menuItemId: null
-              contributorId: vm.me.id
+              contributorId: $rootScope.currentUser._id
               portions: Math.min(12, vm.event.seatsTotal)
               portionsRequired: null   # TODO: allow create from to set portionsRequired
               comment: null
@@ -704,9 +705,9 @@ EventActionHelpers = ($rootScope, $q, $timeout
             menuItem: mitem
             # label: label
             contribution:
-              eventId: vm.event.id
+              eventId: vm.event._id
               menuItemId: mitem.id
-              contributorId: vm.me.id
+              contributorId: $rootScope.currentUser._id
               portions: Math.min(12, mitem.summary.portionsRemaining)
               comment: null
           },modalOptions_ShowInkEffect)
@@ -779,8 +780,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
         return promise
         .then (result)->
           # register person as contributor
-          if !~vm.event['contributorIds'].indexOf( vm.me.id )
-            vm.event['contributorIds'].push( vm.me.id )
+          if !~vm.event['contributorIds'].indexOf( $rootScope.currentUser._id )
+            vm.event['contributorIds'].push( $rootScope.currentUser._id )
           vm.lookup['Contributions'][result.id] = result # copy
           # update contrib in MenuItemContributions lookup
           contribs = vm.lookup['MenuItemContributions'][result.menuItemId]
@@ -790,7 +791,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           else
             vm.lookup['MenuItemContributions'][result.menuItemId][i] = result
           # update MyParticipation.contributionIds,  .contributions
-          vm.lookup['MyParticipation'] = vm.getParticipationByUser(vm.me)
+          vm.lookup['MyParticipation'] = vm.getParticipationByUser($rootScope.currentUser)
           if !~vm.lookup['MyParticipation']?.contributionIds.indexOf( result.id )
             vm.lookup['MyParticipation'].contributionIds.push( result.id )
           # need to getDerivedValues()

@@ -1,7 +1,7 @@
 //- ion-list
 div.hide 
   {{vm=$parent.$parent.vm;''}}
-div(ng-repeat="$post in event | eventFeedFilter:vm.me track by $post.head.id" )
+div(ng-repeat="$post in event | eventFeedFilter track by $post.head.id" )
   ion-item.item-notification.tile.item-complex(
      ng-if="$post.type==='Notification'"
     )
