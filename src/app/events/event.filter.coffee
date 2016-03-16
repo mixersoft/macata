@@ -43,28 +43,27 @@
 ###
 EventFeedFilter = ($rootScope, exportDebug)->
 
-  getPersonalizedFeed = (event, me, feed)->
+  getPersonalizedFeed = (feed, me)->
     me ?= $rootScope.currentUser
-    feed ?= event.feed
     # console.info "user NOT set" if !me
 
     # check moderator status
     feed = _.reduce feed, (result, post)->
 
-      if "OK-for-demo"
-        post.head.eventId = event.id
-
       # all check properties must be truthy for true
       head = post.head
-      switch head.role
-        when 'participants'
-          head.recipientIds = event['participantIds']
-        when 'contributors'
-          head.recipientIds = event['contributorIds']
-        when 'moderators'
-          head.recipientIds = event['moderatorIds']
+
+      if false && "OK-for-demo"
+        head.eventId = event.id
+        switch head.role
+          when 'participants'
+            head.recipientIds = event['participantIds']
+          when 'contributors'
+            head.recipientIds = event['contributorIds']
+          when 'moderators'
+            head.recipientIds = event['moderatorIds']
       check = {
-        eventId: head.eventId == event.id
+        # eventId: head.eventId == event.id
         address: head.isPublic ||
           (me && ~[head.ownerId].concat(head.recipientIds || []).indexOf me._id)
         expiration: !head.expiresAt || new Date().toJSON() <= head.expiresAt
@@ -74,11 +73,13 @@ EventFeedFilter = ($rootScope, exportDebug)->
         when 'Invitation'
           #  sent by ownerId: owner > [recipientId]
           check['status'] = ~['new','viewed','closed'].indexOf(post.body.status)
+          # check['skip'] = false
         when 'Participation'
           # from action=[Join, ???Invitation[status=accept]  ]
           #   need to notify event.moderatorId, or head.moderatorIds
           check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
-          check['acl'] = event.isPostModerator(event, post)
+          # check['acl'] = event.isPostModerator(event, post)
+          check['acl'] = post.isModerator?(me)
           check.address =  true if check.acl
         when 'ParticipationResponse'
           # from action=Participation[status='accepted']
@@ -98,40 +99,40 @@ EventFeedFilter = ($rootScope, exportDebug)->
     , []
     return feed
 
+  ###
+  return here if we are NOT using _.memoize
+  ###
+  return getPersonalizedFeed
+
+  ###
+  include this code block to use _.memoize
+  ###
+
+  cachedFeedLength = 0
   memoized_getPersonalizedFeed = _.memoize( getPersonalizedFeed
-    , (event, me, feed)->
-      return [event.id, me?._id].join(':')
+    , (feed, me)->
+      if cachedFeedLength != feed.length
+        memoized_getPersonalizedFeed.cache.delete(cachedFeedLength)
+      return cachedFeedLength = feed.length
     )
 
-  resetMemo = (event, me)->
-    me ?= $rootScope.currentUser
-    cache = memoized_getPersonalizedFeed.cache
-    if !event && !me
-      return cache.__data__ = {}
-    if event && me
-      return cache.delete([event.id, me._id].join(':'))
-    toDelete = []
-    if (event && !me) || (me && !event)
-      _.each _.keys(cache.__data__), (k)->
-        [eid, uid] = k.split(':')
-        toDelete.push k if event && eid == event.id
-        toDelete.push k if me && uid == me._id
-        return
-      toDelete.forEach (k)->
-        cache.delete k
-
-
   $rootScope.$on 'event:feed-changed', (ev, event, user)->
-    resetMemo event, user
+    cache = memoized_getPersonalizedFeed.cache
+    cache.__data__ = {}
+    # resetMemo event, user
 
   $rootScope.$on 'user:event-role-changed', (ev, user, event)->
-    resetMemo event, user
+    cache = memoized_getPersonalizedFeed.cache
+    cache.__data__ = {}
+    # resetMemo event, user
 
   exportDebug.set('memoCache',  memoized_getPersonalizedFeed.cache)
-  return (event, me, feed)->
-    me ?= $rootScope.currentUser
-    return [] if !(event?.feed?)
-    return memoized_getPersonalizedFeed(event, me, feed)
+
+  return (feed, me)->
+    return [] if _.isEmpty feed
+    return memoized_getPersonalizedFeed(feed)
+
+
 
 
 EventFeedFilter.$inject = ['$rootScope', 'exportDebug']

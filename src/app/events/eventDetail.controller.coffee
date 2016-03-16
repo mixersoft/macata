@@ -32,7 +32,7 @@ EventDetailCtrl = (
         'hideDetails': false
         'hideMap':true
         'hideParticipants': false
-        'hideInvitations': false
+        'hideInvitations': true
         'hideControlPanel': true
         'fabIcon': 'ion-plus'
     }
@@ -51,7 +51,7 @@ EventDetailCtrl = (
       .then ()->
         return true if $state.is('app.event-detail.invitation')
         if event.setting['isExclusive'] || $state.params.invitation
-          return TokensResource.isValid($state.params.invitation, 'Event', event.id)
+          return TokensResource.isValid($state.params.invitation, 'Event', event._id)
       .catch (result)->
         $log.info "Token check, value="+result
         toastr.info "Sorry, this event is by invitation only." if result=='INVALID'
@@ -61,6 +61,7 @@ EventDetailCtrl = (
 
     vm.inviteActions = {
       requiresAction: (post, event, me)->
+        return if post.type != 'Invitation'
         event ?= vm.event
         me ?= $rootScope.currentUser
         check = {
@@ -71,9 +72,9 @@ EventDetailCtrl = (
         switch nextAction
           when 'owner'
             check['nextAction'] = me && event.$$owner == me
-            # check['nextAction'] = me && ~event.moderatorIds.indexOf me.id
+            # check['nextAction'] = me && ~event.moderatorIds.indexOf me._id
           when 'recipient'
-            check['nextAction'] = me && ~post.head.recipientIds.indexOf me.id
+            check['nextAction'] = me && ~post.head.recipientIds.indexOf me._id
         return _.reject(check).length == 0
 
       accept: ($event, event, invitation)->
@@ -175,10 +176,10 @@ EventDetailCtrl = (
         nextAction = post.head.nextActionBy
         switch nextAction
           when 'moderator', 'owner'
-            check['nextAction'] = me && event.ownerId == me.id
-            check['nextAction'] = me && ~event.moderatorIds.indexOf me.id
+            check['nextAction'] = me && event.ownerId == me._id
+            check['nextAction'] = me && ~event.moderatorIds.indexOf me._id
           when 'recipient'
-            check['nextAction'] = me && ~post.head.recipientIds.indexOf me.id
+            check['nextAction'] = me && ~post.head.recipientIds.indexOf me._id
         return _.reject(check).length == 0
 
       accept: ($event, event, participation)->
@@ -282,7 +283,7 @@ EventDetailCtrl = (
           body:
             type: 'ParticipationResponse'
             action: participation.body.status  # ['accepted', 'declined']
-            participationId: participation.id
+            participationId: participation._id
             $$participation: participation
             comment: ''
         }
@@ -320,21 +321,27 @@ EventDetailCtrl = (
     vm.postActions = {
       acl : {
         isModerator: (event, post)->
-          return true if ~event.moderatorIds.indexOf $rootScope.currentUser._id
-          return true if post.head.moderatorIds? &&
-            ~post.head.moderatorIds.indexOf $rootScope.currentUser._id
-          return true if event.ownerId == $rootScope.currentUser._id
-          # console.info "DEMO: isModerator() == true"
-          # return true
+          return post.isModerator() if post.isModerator?
+
+
+          # #TODO: deprecate after removing FeedsResource
+          # console.warn "legacy post"
+          # return false if !$rootScope.currentUser
+          # return true if ~event.moderatorIds.indexOf $rootScope.currentUser._id
+          # return true if post.head.moderatorIds? &&
+          #   ~post.head.moderatorIds.indexOf $rootScope.currentUser._id
+          # return true if event.ownerId == $rootScope.currentUser._id
+          # # console.info "DEMO: isModerator() == true"
+          # # return true
       }
       dismissItem: ($event, item)->
         item.head['dismissedBy'] ?= []
         item.head['dismissedBy'].push $rootScope.currentUser._id
-        return FeedResource.update(item.id, item)
+        return FeedResource.update(item._id, item)
         .then (result)->
           # TODO: animate offscreen before removal
-          found = _.findIndex vm.event.feed, {id: result.id}
-          vm.event.feed[found] = result if ~found
+          found = _.findIndex vm.$$feed, {id: result._id}
+          vm.$$feed[found] = result if ~found
           $rootScope.$emit 'event:feed-changed', vm.event, $rootScope.currentUser
 
           return
@@ -391,10 +398,10 @@ EventDetailCtrl = (
             type: "PostComment"
             head:
               id: Date.now()
-              ownerId: from.id + ''
+              ownerId: from._id + ''
               $$owner: from
               target: # parent post for this comment
-                id: post.head.id
+                id: post.head._id
                 class: post.type
               createdAt: new Date()
               likes: []
@@ -544,7 +551,7 @@ EventDetailCtrl = (
         fields.push 'setting' if setting?
         fields.push 'isPublic' if isPublic?
         data = _.pick vm.event, fields
-        EventsResource.update(vm.event.id, data).then (result)->
+        EventsResource.update(vm.event._id, data).then (result)->
           $log.info "Event updated, result=" + JSON.stringify _.pick result, fields
 
       # TODO: change params to (event, person)
@@ -617,12 +624,14 @@ EventDetailCtrl = (
           return $q.when(event)
           .then (event)->
             console.info ["load once for event=", event._id]
-            eventUtils.mockData(event, vm)
             exportDebug.set 'vm', vm
             exportDebug.set 'event', event
             return event
 
         onChange: (event)->
+          ## NOTE: run in onChange because event properties reset on vm.getReactively()
+          eventUtils.mockData(event, vm)
+
           return $q.when(event)
           .then (event)->
             _getByIds = (ids)-> return {_id: {$in: ids}}
@@ -643,7 +652,6 @@ EventDetailCtrl = (
               vm.event = event
 
             # render participations/participants
-            # mockData depends on vm.$$menuItems
             vm['$$paddedParticipants'] = $filter('eventParticipantsFilter')(event, vm)
             return event
           .then (event)->
@@ -672,7 +680,14 @@ EventDetailCtrl = (
 
     }
 
-
+    vm.findOne = (className, id, fields)->
+      switch className
+        when 'User', 'user'
+          collection = Meteor.users
+        else
+          collName = ['mc' + className + 's'].join('')
+          collection = $window[collName]
+      return collection.findOne(id)
 
     initialize = ()->
       # $ionicView.loaded: called once for EACH cached $ionicView,
@@ -688,6 +703,25 @@ EventDetailCtrl = (
             console.info ["EventDetailCtrl subscribe: Events onReady"]
         }
 
+      vm.subscribe 'myEventFeeds'
+        ,()->
+          eventId = vm.getReactively('eventId')
+          myUserId = Meteor.userId()
+          params = [
+            {
+              eventId: eventId
+              $or:[
+                {'head.isPublic': true}
+                {'head.ownerId': myUserId}
+                {'head.recipientIds': myUserId}
+              ]
+            }
+            ,{} # paginate options
+          ]
+          console.log ["subscribe.feed", params]
+          return params
+
+
       eventTransforms = new ReactiveTransformSvc(vm, callbacks['Event'])
 
       _getByIds = (ids)-> return {_id: {$in: ids}}
@@ -700,12 +734,16 @@ EventDetailCtrl = (
           menuItemIds = vm.getReactively('event.menuItemIds')
           return [] if !menuItemIds
           return mcRecipes.find( { _id: {$in: menuItemIds }} )
+        '$$feed': ()->
+          return mcFeeds.find({})
       }
 
       vm.autorun (tracker)->
         event = vm.getReactively('event' , true)
-        eventTransforms.onChange(event)
+        eventTransforms.onChange(event).catch (err)->console.warn err
         return
+
+
 
 
     activate = ()->
@@ -752,9 +790,6 @@ EventDetailCtrl = (
       .then (eventId)->
         vm.eventId = eventId
         console.info ["Event.id", eventId]
-        # return vm['event'] = mcEvents.findOne(eventId)
-        # get event from eventId
-        # return vm.eventId = eventId
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()
@@ -794,7 +829,7 @@ EventDetailCtrl = (
           return
 
     activate0 = ()->
-      # # return $q.reject("ERROR: expecting event.id") if not $stateParams.id
+      # # return $q.reject("ERROR: expecting event._id") if not $stateParams.id
       return devConfig.dataReady
       .then (eventId)->
         vm.event = _.find vm.events, {id: eventId}
@@ -849,7 +884,7 @@ EventDetailCtrl = (
 
     $scope.$on 'user:event-role-changed', (ev, user, event)->
       return !user
-      console.info ['user:event-role-changed', user.id]
+      console.info ['user:event-role-changed', user._id]
       # ev.stopPropagation()
       ev.preventDefault()
       return vm.dev.addRoleToUser()

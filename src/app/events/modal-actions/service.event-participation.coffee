@@ -56,8 +56,8 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
         if post.type != "Notification"
           if not _.isEmpty post.head.recipientIds
-            post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
-            # post.body.message += ' (This should be a private notification.)'
+            # post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
+            post.body.message += ' (This should be a private notification.)'
 
           # testData
           post.head['$$owner'] = $rootScope.currentUser
@@ -71,7 +71,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
             when "Invitation"
               event.feed.unshift(post)
             when "Participation"
-              post.head['likes'] = [_.sample(vm.lookup.users)]
+              post.head['likes'] = [_.sample(Meteor.users.find().fetch())]
               event.feed.unshift(post)
             when "Comment"
               event.feed.unshift(post)
@@ -173,6 +173,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return tokens
         .catch (err)->
           return $q.reject(err) if /EXPIRED|INVALID|NONE/.test(err) == false
+          return $q.when [] if !$rootScope.currentUser
           # TODO: check permission to create new Token
           token = {
             ownerId: $rootScope.currentUser._id
@@ -603,7 +604,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           seats: particip.body.seats
           createdAt: new Date()
           ownerId: particip.head.ownerId
-          $$owner: _.find(vm.lookup.users, {id: particip.head.ownerId})
+          # $$owner: _.find(vm.lookup.users, {id: particip.head.ownerId})
         }
 
         event.participationIds.push p.id

@@ -38,7 +38,9 @@ EventsUtil = (utils, $document, amMoment) ->
       event.isPostModerator = vm.postActions.acl.isModerator
 
 
+      # @deprecated, using ng-repeat="$post in event | eventFeedFilter:vm.$$feed
       event.feed = vm.lookup.feed
+      event.feed = vm.$$feed
       # event.feed = $filter('feedFilter')(event, FEED)
 
 
@@ -51,11 +53,11 @@ EventsUtil = (utils, $document, amMoment) ->
       if event.participations.length == 0
         # create mock data for event.participations
         _getByIds = (ids)-> return {_id: {$in: ids}}
-        $$menuItems = mcRecipes.find(_getByIds(event['menuItemIds'])).fetch()
+        vm.$$menuItems = mcRecipes.find(_getByIds(event['menuItemIds'])).fetch()
 
-        _.each $$menuItems, (mi, i)->
+        _.each vm.$$menuItems, (mi, i)->
           participantIds = [event.ownerId].concat( event.participantIds)
-          # mi.ownerId = participantIds[i % participantIds.length ]
+          mi.ownerId = participantIds[i % participantIds.length ]
           contribution = {
             menuItemId: mi._id
             portions: null
