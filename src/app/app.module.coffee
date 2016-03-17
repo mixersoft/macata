@@ -27,4 +27,5 @@ angular
     'starter.recipe'
     'starter.map'
     'starter.events'
+    'starter.feed'
   ]

@@ -1,0 +1,28 @@
+// feed/feed.jade
+ion-view.event-feed(
+  view-title="{{vm.event.title || vm.title}}"
+  id="{{vm.feedId}}"
+  )
+  ion-nav-buttons(side="primary")
+    button.button.button-icon.button-clear.ion-ios-arrow-back(
+      ng-click="vm.on.gotoEvent($event)"
+      )
+
+  ion-content.event-detail.has-header(
+    fab-scroll-container
+    delegate-handle="feed-item-scroll"
+    scroll-sista="header"
+  )
+    div.row.responsive-sm.no-padding
+      div.col
+        ng-include(src="'feed/feed.html'")
+    
+  
+  ion-fab(
+    animation="fade"
+    ng-click="vm.on.fabClick($event, vm)"
+    )
+    i.icon.ion(
+      ng-class="vm.settings.show.fabIcon"
+      ) 
+  
