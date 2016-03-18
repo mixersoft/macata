@@ -17,14 +17,14 @@ ion-list.feed
       ng-show="$feedHelpers.show.messageComposer"
       header-text="Post to Feed"
       placeholder-text="What are you thinking..."
-      post-button="vm.on.postCommentToFeed(value)"
+      post-button="vm.on.postToFeed(value)"
       message="$postDefaults.message"
       attachment="$postDefaults.attachment"
       address="$postDefaults.address"
       location="$postDefaults.location"
       )
       
-  div(ng-repeat="$post in $filteredFeed track by $post.head._id" )
+  div(ng-repeat="$post in $filteredFeed track by $post._id" )
     ion-item.item-notification.tile.item-complex(
        ng-if="$post.type==='Notification'"
       )
@@ -47,7 +47,7 @@ ion-list.feed
       div.scope-locals.hide
         {{vm=$parent.$parent.$parent.vm;''}}
         {{$postHead = $post.head;$postBody=$post.body;''}}
-        {{$owner = vm.findOne('User', $postHead.ownerId);''}}
+        {{$owner = vm.collHelpers.findOne('User', $postHead.ownerId);''}}
         {{$chatWithId = $postHead.recipientIds[0];''}}
         
       //- Invitation Actions  
@@ -103,7 +103,7 @@ ion-list.feed
         ng-class="{'private item-avatar-right':$chatWithId}"
         )
         div.scope-locals.hide
-          {{ $chatWith = vm.findOne('User', $chatWithId);''}}
+          {{ $chatWith = vm.collHelpers.findOne('User', $chatWithId);''}}
         div.avatar-wrap
           img.item-image.ink(
             ng-src="{{$owner.profile.face}}"
@@ -144,7 +144,7 @@ ion-list.feed
           ng-if="$postBody.attachment._id"
         ) 
           div.scope-locals.hide
-            {{$attachment = vm.findOne($postBody.attachment.type, $postBody.attachment._id);''}}
+            {{$attachment = vm.collHelpers.findOne($postBody.attachment.type, $postBody.attachment._id);''}}
           div.hero.content(style="height:160px;")
             div.icon-bar.top-right-toolbar.condensed.light(
               ng-click="$event.stopImmediatePropagation()"
@@ -177,17 +177,16 @@ ion-list.feed
         div.likes
           span(ng-show="$postHead.likes.length")
             span(ng-repeat="userId in $postHead.likes")
-              {{$person=vm.findOne('User', userId);''}}
+              {{$person=vm.collHelpers.findOne('User', userId);''}} 
               a(
-                ui-sref="app.profile({id: person._id })"
-                ) {{$index ? ',':''}} {{$person.profile.displayName}}
+                ui-sref="app.profile({id: $person._id })"
+                ) {{$person.profile.displayName}}{{$last ? '':','}}
             span  &nbsp;likes this.
           a(
             ng-show="$postBody.comments.length"
             ng-class="{'padding-left': $postHead.likes.length}"
             ng-click="$postHelpers.showCommentForm($event, $post)"
-            )
-            {{$postBody.comments.length}} comment.
+            ) comments ({{$postBody.comments.length}})
 
         div.button-bar.condensed.positive 
           button.button.button-icon.ion-heart.positive(
@@ -207,7 +206,7 @@ ion-list.feed
           ng-repeat="$comment in $postBody.comments | dateFilter"
           ) 
           div.scope-locals.hide
-            {{$owner = vm.findOne('User', $comment.head.ownerId);''}}
+            {{$owner = vm.collHelpers.findOne('User', $comment.head.ownerId);''}}
           div.avatar-wrap 
             img.item-image.ink(
               ng-src="{{$owner.profile.face}}"
@@ -222,11 +221,11 @@ ion-list.feed
             div.likes.likes-and-comments
               div
                 span(ng-show="$comment.head.likes.length")
-                  span(ng-repeat="person in $comment.head.likes")
-                    {{$index ? ',':''}} 
+                  span(ng-repeat="userId in $comment.head.likes")
+                    {{$person=vm.collHelpers.findOne('User', userId);''}}
                     a(
-                      ui-sref="app.profile({id: person._id })"
-                      ) {{person.profile.displayName}}
+                      ui-sref="app.profile({id: $person._id })"
+                      ) {{$person.profile.displayName}}{{$last ? '':','}}
                   span  &nbsp;likes this. &mdash;&nbsp;
                 a(
                   ng-click="$postHelpers.like($event, $comment); $event.preventDefault()"

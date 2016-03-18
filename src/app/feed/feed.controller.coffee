@@ -13,7 +13,7 @@ FeedCtrl = (
   $scope, $rootScope, $stateParams, $q, $window
   $reactive, ReactiveTransformSvc, $auth
   $filter, $ionicHistory, $state
-  feedHelpers, postHelpers
+  CollectionHelpers, FeedHelpers, PostHelpers
   exportDebug
   )->
     # add angular-meteor reactivity
@@ -23,8 +23,9 @@ FeedCtrl = (
 
     vm.title = 'Feed'
     vm.feedId = null
-    vm.feedHelpers = feedHelpers
-    vm.postHelpers = postHelpers
+    vm.collHelpers = new CollectionHelpers(vm)
+    vm.feedHelpers = new FeedHelpers(vm)
+    vm.postHelpers = new PostHelpers(vm)
 
 
 
@@ -46,16 +47,6 @@ FeedCtrl = (
     }
 
     feedTransforms = new ReactiveTransformSvc(vm, callbacks['Feed'])
-
-    # TODO: move to Meteor Collection service
-    vm.findOne = (className, id, fields)->
-      switch className
-        when 'User', 'user'
-          collection = Meteor.users
-        else
-          collName = ['mc' + className + 's'].join('')
-          collection = global[collName]
-      return collection.findOne(id)
 
     initialize = ()->
       exportDebug.set('vm', vm)
@@ -107,6 +98,11 @@ FeedCtrl = (
           disableBack: true
         })
         $state.go('app.event-detail', {id: vm.feedId}) # same as eventId
+
+      postToFeed: (comment)->
+        vm.feedHelpers.postCommentToFeed(comment)
+        return $q.when()    # TODO: fix in message-composer.on.post()
+
     }
 
     $scope.$on '$ionicView.loaded', (e)->
@@ -125,42 +121,122 @@ FeedCtrl.$inject = [
   '$scope', '$rootScope', '$stateParams', '$q', '$window'
   '$reactive', 'ReactiveTransformSvc', '$auth'
   '$filter', '$ionicHistory', '$state'
-  'feedHelpers', 'postHelpers'
+  'CollectionHelpers', 'FeedHelpers', 'PostHelpers'
   'exportDebug'
 ]
+
+
+
+CollectionHelpers = (
+  $window
+)->
+  class CollectionHelpersClass
+    global = $window
+    constructor: (@context)->
+      # NOTE: We need @context = vm to make $reactive calls
+      return
+
+    # currently not used
+    ###
+      call in Class::constructor, e.g. bindClassMethods(@,PostHelpersClass,@context)
+      usage: vm.postHelpers = new PostHelpers(vm)
+    ###
+    bindClassMethods = (instance, Class, context)->
+      _.each Class.prototype, (v,k)->
+        # bind methods to @context
+        if _.isFunction(v)
+          instance[k] = ()-> return v.apply(context, arguments)
+        return
+      ,instance
+
+    findOne: (className, id, fields)->
+      switch className
+        when 'User', 'user'
+          collection = Meteor.users
+        else
+          collName = ['mc' + className + 's'].join('')
+          collection = global[collName]
+      return collection.findOne(id)
+
+  return CollectionHelpersClass
+
+CollectionHelpers.$inject = ['$window']
+
+
 
 FeedHelpers = (
   $timeout
 )->
-  self = {
+  class FeedHelpersClass
+    constructor: (@context)->
+      return
+
     postDefaults: {}
     show:
       messageComposer: false
+
     showMessageComposer: ($event, event, post)->
       # template for post.body
       # for post.head: {} # see: FeedHelpers.post()
-      self.postDefaults = {
+      @postDefaults = {
         message: null
         attachment: null
         address: null
         location: null
       }
-      self.show.messageComposer = true
+      @show.messageComposer = true
       parent = ionic.DomUtil.getParentWithClass($event.target, 'event-feed')
       $timeout().then ()->
         textbox = parent.querySelector('message-composer textarea')
         textbox.focus()
         textbox.scrollIntoViewIfNeeded()
       return
-  }
-  return self
+
+    ###
+    # @description  use with directive message-composer
+        example(jade): message-composer( post-button="postCommentToFeed(value)" )
+    # @return promise
+    ###
+    postCommentToFeed: (comment)->
+      self = @
+      post = {
+        type: 'Comment'
+        head:
+          isPublic: true
+        body: comment
+      }
+      @context.call 'Post.postFeedPost', @context.feedId, post, (err, result)->
+        return console.warn ['Meteor::postFeedPost WARN', err] if err
+        self.show.messageComposer = false
+        console.log ['Meteor::postFeedPost OK']
+
+
+  return FeedHelpersClass
 
 FeedHelpers.$inject = ['$timeout']
+
+
 
 PostHelpers = (
   $timeout, utils
 )->
-  self = {
+  class PostHelpersClass
+    constructor: (@context)->
+      # bindClassMethods(@,PostHelpersClass,@context)
+      return
+
+    dismissItem: ($event, post)->
+      # return mcFeeds.helpers.dismiss(post)
+      @context.call 'Post.dismiss', post, (err, result)->
+        console.warn ['Meteor::dismiss WARN', err] if err
+        console.log ['Meteor::dismiss OK']
+
+    like: ($event, post)->
+      # return mcFeeds.helpers.toggleLike(post)
+      @context.call 'Post.toggleLike', post, (err, result)->
+        console.warn ['Meteor::toggleLike WARN', err] if err
+        console.log ['Meteor::toggleLike OK']
+
     showCommentForm: ($event, post)->
       return if post.type == 'Notification'
       target = $event.currentTarget
@@ -171,31 +247,6 @@ PostHelpers = (
         textbox = $wrap[0].querySelector('textarea.comment')
         textbox.focus()
         textbox.scrollIntoViewIfNeeded()
-
-    dismissItem: ($event, post)->
-      me = Meteor.user()
-      return post.dismiss?( me )
-      # post.head['dismissedBy'] ?= []
-      # post.head['dismissedBy'].push $rootScope.currentUser._id
-      # return FeedResource.update(post._id, post)
-      # .then (result)->
-      #   # TODO: animate offscreen before removal
-      #   found = _.findIndex vm.$$feed, {id: result._id}
-      #   vm.$$feed[found] = result if ~found
-      #   $rootScope.$emit 'event:feed-changed', vm.event, $rootScope.currentUser
-      #   return
-
-    like: ($event, post)->
-      me = Meteor.user()
-      return post.like?( me )
-      # post.head.likes ?= []
-      # #TODO: should add Ids to the array, not object
-      # found = post.head.likes.indexOf($rootScope.currentUser)
-      # if ~found
-      #   post.head.likes.splice(found,1) # unlike
-      # else
-      #   post.head.likes.push($rootScope.currentUser)
-
 
     ###
     # @description Post comment to a Feed Post
@@ -212,47 +263,34 @@ PostHelpers = (
         comment = options.message
         comment = comment.join(' ') if _.isArray comment
 
-      return $q.when() if not comment
+      return if not comment
 
-      return $q.when()
-      .then ()->
-        from = $rootScope.currentUser
-        if options?['log'] == true
-          # TODO: ???: has post from syslog("feed") been replaced by "Notifications"?
-          from = {
-            id: 'syslog'
-            displayName: 'feed:'
-            face: unsplashItSvc.getImgSrc(0,'syslog',{face:true})
-          }
-
-        postComment = {
-          type: "PostComment"
-          head:
-            id: Date.now()
-            ownerId: from._id + ''
-            $$owner: from
-            target: # parent post for this comment
-              id: post.head._id
-              class: post.type
-            createdAt: new Date()
-            likes: []
-          body:
-            comment: comment
+      if options?['log'] == true
+        # TODO: ???: has post from syslog("feed") been replaced by "Notifications"?
+        from = {
+          id: 'syslog'
+          displayName: 'feed:'
+          face: unsplashItSvc.getImgSrc(0,'syslog',{face:true})
         }
+      else
+        from = Meteor.user()
+      return if !from
+
+      @context.call 'Post.postPostComment', post, comment, from, (err, result)->
+        return console.warn ['Meteor::postPostComment WARN', err] if err
         if commentField?
           commentField.value = ''
-        return [post, postComment]
-      .then (result)->
-        [post, postComment] = result
-        post.body.comments ?= []
-        post.body.comments.push postComment
-        return post
-  }
-  return self
+        # post.body.comments ?= []
+        # post.body.comments.push postComment
+        console.log ['Meteor::postPostComment OK']
+
+  return PostHelpersClass
+
 
 PostHelpers.$inject = ['$timeout', 'utils']
 
 angular.module 'starter.feed'
-  .factory 'feedHelpers', FeedHelpers
-  .factory 'postHelpers', PostHelpers
+  .factory 'CollectionHelpers', CollectionHelpers
+  .factory 'FeedHelpers', FeedHelpers
+  .factory 'PostHelpers', PostHelpers
   .controller 'FeedCtrl', FeedCtrl
