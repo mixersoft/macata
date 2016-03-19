@@ -2,32 +2,39 @@
 
 # @ adds to global namespace
 global = @
+mcRecipes = global['mcRecipes']
 
-Meteor.publishComposite 'myVisibleRecipes', (options)->
-  console.log ['publish recipes']
+Meteor.publishComposite 'myVisibleRecipes', (filterBy={}, options={})->
+
   # TODO: use check() to validate options
   # TODO: add filter/sort/pagination
+  selector = {
+    $or: [
+      {
+        $and: [
+          {'ownerId': this.userId}
+          {'ownerId': {$exists: true} }
+        ]
+      }
+      ,{'isPrivate': {$ne: true} }
+    ]
+  }
+  if not _.isEmpty filterBy
+    selector = {
+      $and: [
+        selector
+        filterBy
+      ]
+    }
+
+  # selector = {}
+  console.log ['publish recipes, selector=', JSON.stringify( selector )]
   result = {
     find: ()->
-      return global['mcRecipes'].find({
-        $or: [
-          {
-            $and: [
-              {'ownerId': this.userId}
-              {'ownerId': {$exists: true} }
-            ]
-          }
-        , {
-            $or: [
-              {'isPrivate': {$exists: false} }
-              {'isPrivate': false }
-            ]
-          }
-        ]
-      }, options)
+      return mcRecipes.find(selector, options)
     children: [
       {
-        find: (recipe)-> return recipe.fetchProfiles()
+        find: (recipe)-> return mcRecipes.helpers.findProfiles(recipe)
       }
     ]
   }

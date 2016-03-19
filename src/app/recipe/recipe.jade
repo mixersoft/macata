@@ -2,18 +2,20 @@
 ion-view(
   view-title="{{vm.title}}"
   id="{{vm.viewId}}"
-  ) {{ show=vm.settings.show;'' }}
+  ) 
+  div.scope-locals.hide
+    {{ $show=vm.settings.show;'' }}
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
 
   ion-nav-buttons(side="secondary") 
     button.button.button-icon.button-clear.ion-plus(
-      ng-class="show.newTile ? 'ion-close': 'ion-plus'"
+      ng-class="$show.newTile ? 'ion-close': 'ion-plus'"
       ng-click="vm.on.createNewTile()"
     )
 
   div(
-    ng-show="show.newTile"
+    ng-show="$show.newTile"
   )
     div.bar.has-header.bar-inset-wrap.bar-subheader
       div.item-input-inset.no-padding
@@ -22,16 +24,16 @@ ion-view(
           new-tile(
             style="width:100%;"
             return-close="true"
-            is-fetching="show.spinner.newTile"
+            is-fetching="$show.spinner.newTile"
             on-complete="vm.on.submitNewTile(result)"
           )  
         button.button.button-dark.button-clear
           i.icon.ion-ios-arrow-forward(
-            ng-show="!show.spinner.newTile"
+            ng-show="!$show.spinner.newTile"
           )
           ion-spinner(
             icon="ios-small"
-            ng-show="show.spinner.newTile"
+            ng-show="$show.spinner.newTile"
           )
 
 

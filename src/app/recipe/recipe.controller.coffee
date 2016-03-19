@@ -6,14 +6,21 @@ RecipeCtrl = (
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc
   $reactive
+  CollectionHelpers, RecipeHelpers
   utils, devConfig, exportDebug
   )->
-
+    # add angular-meteor reactivity
+    $reactive(this).attach($scope)
+    global = $window
     vm = this
+
     vm.title = "Ideas"
     vm.viewId = ["recipe-view",$scope.$id].join('-')
-    vm.me = null      # current user, set in initialize()
+
+    vm.recipeHelpers = new RecipeHelpers(vm)
+    vm.collHelpers = new CollectionHelpers(vm)
     vm.listItemDelegate = null
+
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.user
@@ -62,17 +69,8 @@ RecipeCtrl = (
           # this isn't working
           $timeout ()->document.querySelector('new-tile input').focus()
 
-      forkTile: ($event, item)->
-        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-        # from new-tile.directive fn:_showTileEditorAsModal
-        return tileHelpers.modal_showTileEditor(data)
-        .then (result)->
-          console.log ['forkTile',result]
-          return vm.on.submitNewTile(result)
-        .then ()->
-          item.isOwner = true
-        .catch (err)->
-          console.warn ['forkTile', err]
+      'forkTile': vm.recipeHelpers['forkTile']
+      'edit': vm.recipeHelpers['edit']
 
 
       # called by <new-tile[on-complete]>
@@ -84,7 +82,7 @@ RecipeCtrl = (
         # console.log "newTile=" + JSON.stringify result
         # check result.body for details
         if result
-          result.ownerId = vm.me.id
+          result.ownerId = $rootScope.currentUser._id
           mcRecipes.insert(result)
           return
 
@@ -92,8 +90,14 @@ RecipeCtrl = (
     }
 
     initialize = ()->
-      $reactive(vm).attach($scope)
+
+
       vm.subscribe 'myVisibleRecipes'
+      ,()->
+        filterBy = null
+        paginate = null
+        return subscription = [ filterBy, paginate  ]
+
       vm.helpers {
         'rows': ()->
           mcRecipes.find({})
@@ -103,8 +107,6 @@ RecipeCtrl = (
     activate = ()->
       vm.listItemDelegate = $listItemDelegate.getByHandle('recipe-list-scroll', $scope)
       return $q.when()
-      .then ()->
-        vm.me = $rootScope.user
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()
@@ -149,9 +151,49 @@ RecipeCtrl.$inject = [
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc'
   '$reactive'
+  'CollectionHelpers', 'RecipeHelpers'
   'utils', 'devConfig', 'exportDebug'
 ]
 
+
+RecipeHelpers = (
+  $timeout, utils, tileHelpers
+)->
+  class RecipeHelpersClass
+    constructor: (@context)->
+      # bindClassMethods(@,RecipeHelpersClass,@context)
+      return
+
+    favorite: ($event, model)->
+      # return mcFeeds.helpers.toggleLike(model)
+      @context.call 'Model.toggleFavorite', model, (err, result)->
+        console.warn ['Meteor::toggleFavorite WARN', err] if err
+        console.log ['Meteor::toggleFavorite OK']
+
+    edit: (event, item)->
+      data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+      return tileHelpers.modal_showTileEditor(data)
+      .then (result)->
+        console.log ["edit", data]
+        data.isOwner = true
+        return
+
+    forkTile: ($event, item)->
+      data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+      # from new-tile.directive fn:_showTileEditorAsModal
+      return tileHelpers.modal_showTileEditor(data)
+      .then (result)->
+        console.log ['forkTile',result]
+        # return vm.on.submitNewTile(result)
+      .then ()->
+        item.isOwner = true
+      .catch (err)->
+        console.warn ['forkTile', err]
+
+
+  return RecipeHelpersClass
+
+RecipeHelpers.$inject = ['$timeout', 'utils', 'tileHelpers']
 
 
 ###
@@ -160,10 +202,11 @@ RecipeCtrl.$inject = [
 
 RecipeDetailCtrl = (
   $scope, $rootScope, $q, $state
-  tileHelpers, openGraphSvc
+  tileHelpers, openGraphSvc, RecipeHelpers
   $log, toastr
   ) ->
     vm = this
+    vm.recipeHelpers = new RecipeHelpers(vm)
     vm.on = {
       'gotoTarget':(event, item)->
         event.stopImmediatePropagation()
@@ -183,24 +226,9 @@ RecipeDetailCtrl = (
           document.querySelector('.list-item-detail')
         ).toggleClass('slide-under')
         return
-      'edit': (event, item)->
-        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-        return tileHelpers.modal_showTileEditor(data)
-        .then (result)->
-          console.log ["edit", data]
-          data.isOwner = true
-          return
-      'forkTile': ($event, item)->
-        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-        # from new-tile.directive fn:_showTileEditorAsModal
-        return tileHelpers.modal_showTileEditor(data)
-        .then (result)->
-          console.log ['forkTile',result]
-          # return vm.on.submitNewTile(result)
-        .then ()->
-          item.isOwner = true
-        .catch (err)->
-          console.warn ['forkTile', err]
+
+      'forkTile': vm.recipeHelpers['forkTile']
+      'edit': vm.recipeHelpers['edit']
 
     }
     console.log ["RecipeDetailCtrl initialized scope.$id=", $scope.$id]
@@ -208,7 +236,7 @@ RecipeDetailCtrl = (
 
 RecipeDetailCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$state'
-  'tileHelpers', 'openGraphSvc'
+  'tileHelpers', 'openGraphSvc', 'RecipeHelpers'
   '$log', 'toastr'
 ]
 
@@ -285,6 +313,7 @@ RecipeSearchCtrl.$inject = [
 ]
 
 angular.module 'starter.recipe'
+  .factory 'RecipeHelpers', RecipeHelpers
   .controller 'RecipeCtrl', RecipeCtrl
   .controller 'RecipeDetailCtrl', RecipeDetailCtrl
   .controller 'RecipeSearchCtrl', RecipeSearchCtrl
