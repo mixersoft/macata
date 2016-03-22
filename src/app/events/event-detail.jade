@@ -3,7 +3,7 @@ ion-view.event-detail(
   view-title="{{vm.event.title || vm.title}}"
   id="{{vm.viewId}}"
   )
-  div.hide {{ show=vm.settings.show;'' }}
+  div.scope-locals.hide {{ show=vm.settings.show;'' }}
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-navicon(menu-toggle="primary")
 
@@ -12,6 +12,22 @@ ion-view.event-detail(
     delegate-handle="list-item-scroll"
     scroll-sista="header"
   ) 
+  
+  
+    //- ion-list.test.card
+    //-   ion-item.item-divider.item-energized
+    //-     h1 ng-repeat test EventModel.findMenuItems()
+    //-   ion-item(ng-repeat="$item in vm.event.findMenuItems().fetch()")
+    //-     {{$item.title}}
+    //- ion-list.test.card
+    //-   ion-item.item-divider.item-balanced
+    //-     h1 ng-repeat test vm.$$menuItems
+    //-   ion-item(ng-repeat="$item in vm.$$menuItems")
+    //-     {{$item.title}}
+      
+      
+    
+    
     div.hide {{ event=vm.event; show=vm.settings.show;''}}
     div.row.responsive-sm.no-padding
       div.col
@@ -231,23 +247,11 @@ ion-view.event-detail(
             
             
       div.col.col-67
-        ion-list.feed {{feed=vm.feed;''}}
-          ion-item.item-divider.item-button-right 
-            p feed
-            button.button.button-icon.button-clear.ion-plus(
-              ng-click="vm.feed.showMessageComposer($event)"
-              )
-          message-composer(
-              ng-show="feed.show.messageComposer"
-              header-text="Post to Feed"
-              placeholder-text="What are you thinking..."
-              post-button="vm.on.postCommentToFeed(value)"
-              message="feed.postDefaults.message"
-              attachment="feed.postDefaults.attachment"
-              address="feed.postDefaults.address"
-              location="feed.postDefaults.location"
-              )  
-          ng-include(src="'events/post.html'")  
+        filtered-feed(
+          reactive-context="vm"
+          show="vm.settings.show"
+          filtered-feed="vm.$$filteredFeed"
+          )
 
         
     

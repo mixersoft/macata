@@ -1,30 +1,27 @@
 //- ion-list
 ion-list.feed
   div.scope-locals.hide
-    {{ vm=$parent.$parent.vm;''}}
-    {{ $show=vm.settings.show;''}}
-    {{ $filteredFeed=vm.$$filteredFeed;''}}
-    {{ $feedHelpers=vm.feedHelpers;''}}
-    {{ $postHelpers=vm.postHelpers;''}}
-    {{ $postDefaults=$feedHelpers.postDefaults;''}}
+    {{ vm=ff.reactiveContext;''}}
+    {{ $postDefaults=ff.feedHelpers.postDefaults;''}}
+    {{ userId = Meteor.userId() }}
   ion-item.item-divider.item-button-right.item-royal
     p
       span.light feed
     button.button.button-icon.button-light.button-clear.ion-plus(
-      ng-click="$feedHelpers.showMessageComposer($event);$event.stopImmediatePropagation()"
+      ng-click="ff.feedHelpers.showMessageComposer($event);$event.stopImmediatePropagation()"
       )
   message-composer(
-      ng-show="$feedHelpers.show.messageComposer"
+      ng-show="ff.feedHelpers.show.messageComposer"
       header-text="Post to Feed"
       placeholder-text="What are you thinking..."
-      post-button="vm.on.postToFeed(value)"
+      post-button="ff.on.postToFeed(value)"
       message="$postDefaults.message"
       attachment="$postDefaults.attachment"
       address="$postDefaults.address"
       location="$postDefaults.location"
       )
       
-  div(ng-repeat="$post in $filteredFeed track by $post._id" )
+  div(ng-repeat="$post in ff.filteredFeed track by $post._id" )
     ion-item.item-notification.tile.item-complex(
        ng-if="$post.type==='Notification'"
       )
@@ -32,7 +29,7 @@ ion-list.feed
         ion-item.item-calm.item-button-right(
           )
           button.button.close.button-clear.button-icon.ion-close-circled.button-dark(
-            ng-click="$postHelpers.dismissItem($event, $post)"
+            ng-click="ff.postHelpers.dismissItem($event, $post)"
             )
           div.item-text-wrap.dark(
             ng-bind-html="$post.body.message"
@@ -45,14 +42,13 @@ ion-list.feed
        ng-if="$post.type!='Notification'"
       ) 
       div.scope-locals.hide
-        {{vm=$parent.$parent.$parent.vm;''}}
         {{$postHead = $post.head;$postBody=$post.body;''}}
-        {{$owner = vm.collHelpers.findOne('User', $postHead.ownerId);''}}
+        {{$owner = ff.collHelpers.findOne('User', $postHead.ownerId);''}}
         {{$chatWithId = $postHead.recipientIds[0];''}}
         
       //- Invitation Actions  
       div.card.invitation-actions(
-        ng-if='vm.inviteActions.requiresAction($post)'
+        ng-if='ff.inviteActions.requiresAction($post)'
         )
         ion-item.item-divider.item-royal
           div Invitation Actions
@@ -61,16 +57,16 @@ ion-list.feed
           span.padding-right has invited you to join this table.
         div.item.item-complex.item-balanced.button-bar.condensed
           button.button.button-royal(
-            ng-click="vm.inviteActions.decline($event, vm.event, $post)"
+            ng-click="ff.inviteActions.decline($event, $post)"
             )
             i.icon.ion-close-circled &nbsp; Decline
           button.button.button-royal(
-            ng-click="vm.inviteActions.message($event, vm.event, $post)"
+            ng-click="ff.inviteActions.message($event, $post)"
             )
             i.icon.ion-chatbox(
             ) &nbsp; Message
           button.button.button-royal(
-            ng-click="vm.inviteActions.accept($event, vm.event, $post)"
+            ng-click="ff.inviteActions.accept($event, $post)"
             )
             i.icon.ion-checkmark-circled &nbsp; Accept 
                       
@@ -103,12 +99,11 @@ ion-list.feed
         ng-class="{'private item-avatar-right':$chatWithId}"
         )
         div.scope-locals.hide
-          {{ $chatWith = vm.collHelpers.findOne('User', $chatWithId);''}}
+          {{ $chatWith = ff.collHelpers.findOne('User', $chatWithId);''}}
         div.avatar-wrap
           img.item-image.ink(
             ng-src="{{$owner.profile.face}}"
             ng-click="$event.stopImmediatePropagation()"
-            ng-if="hack_delay_uiSref = $post"
             ui-sref="app.profile({id: $postHead.ownerId })"
             width="40"
           )
@@ -131,7 +126,6 @@ ion-list.feed
           img.item-image.ink(
             ng-src="{{$chatWith.profile.face}}"
             ng-click="$event.stopImmediatePropagation()"
-            ng-if="hack_delay_uiSref = $post"
             ui-sref="app.profile({id: $chatWithId })"
             width="40"
           )      
@@ -144,7 +138,8 @@ ion-list.feed
           ng-if="$postBody.attachment._id"
         ) 
           div.scope-locals.hide
-            {{$attachment = vm.collHelpers.findOne($postBody.attachment.type, $postBody.attachment._id);''}}
+            {{$type = $postBody.attachment.type || $postBody.attachment.className;''}}
+            {{$attachment = ff.collHelpers.findOne($type, $postBody.attachment._id);''}}
           div.hero.content(style="height:160px;")
             div.icon-bar.top-right-toolbar.condensed.light(
               ng-click="$event.stopImmediatePropagation()"
@@ -177,7 +172,7 @@ ion-list.feed
         div.likes
           span(ng-show="$postHead.likes.length")
             span(ng-repeat="userId in $postHead.likes")
-              {{$person=vm.collHelpers.findOne('User', userId);''}} 
+              {{$person=ff.collHelpers.findOne('User', userId);''}} 
               a(
                 ui-sref="app.profile({id: $person._id })"
                 ) {{$person.profile.displayName}}{{$last ? '':','}}
@@ -185,16 +180,16 @@ ion-list.feed
           a(
             ng-show="$postBody.comments.length"
             ng-class="{'padding-left': $postHead.likes.length}"
-            ng-click="$postHelpers.showCommentForm($event, $post)"
+            ng-click="ff.postHelpers.showCommentForm($event, $post)"
             ) comments ({{$postBody.comments.length}})
 
         div.button-bar.condensed.positive 
           button.button.button-icon.ion-heart.positive(
-            ng-click="$postHelpers.like($event, $post)"
+            ng-click="ff.postHelpers.like($event, $post)"
             ng-class="{'balanced': $postHead.likes.indexOf(vm.me) >= 0, 'disabled':$chatWith }"
             ) &nbsp; Like
           button.button.button-icon.ion-chatbox.positive(
-            ng-click="$postHelpers.showCommentForm($event, $post)"
+            ng-click="ff.postHelpers.showCommentForm($event, $post)"
             ) &nbsp; Comment
           button.button.button-icon.ion-share.positive(
             ng-class="{'disabled':$chatWith }"
@@ -206,7 +201,7 @@ ion-list.feed
           ng-repeat="$comment in $postBody.comments | dateFilter"
           ) 
           div.scope-locals.hide
-            {{$owner = vm.collHelpers.findOne('User', $comment.head.ownerId);''}}
+            {{$owner = ff.collHelpers.findOne('User', $comment.head.ownerId);''}}
           div.avatar-wrap 
             img.item-image.ink(
               ng-src="{{$owner.profile.face}}"
@@ -222,27 +217,24 @@ ion-list.feed
               div
                 span(ng-show="$comment.head.likes.length")
                   span(ng-repeat="userId in $comment.head.likes")
-                    {{$person=vm.collHelpers.findOne('User', userId);''}}
+                    {{$person=ff.collHelpers.findOne('User', userId);''}}
                     a(
                       ui-sref="app.profile({id: $person._id })"
                       ) {{$person.profile.displayName}}{{$last ? '':','}}
                   span  &nbsp;likes this. &mdash;&nbsp;
                 a(
-                  ng-click="$postHelpers.like($event, $comment); $event.preventDefault()"
+                  ng-click="ff.postHelpers.like($event, $comment); $event.preventDefault()"
                   href="#"
                   ng-bind="$comment.head.likes.indexOf(vm.me)===-1 ? 'like' : 'unlike'"
                 )
 
         div.comment-form
-          div.scope-locals.hide
-            {{owner=vm.me;''}}
           div.wrap
             div.avatar-wrap
               img.item-image.ink(
-                ng-src="{{$owner.profile.face}}"
+                ng-src="{{ff.me.profile.face}}"
                 ng-click="$event.stopImmediatePropagation()"
-                ng-if="hack_delay_uiSref = owner"
-                ui-sref="app.profile({id: $owner._id })"
+                ui-sref="app.profile({id: ff.me._id })"
                 width="40"
               )
             textarea.comment(
@@ -250,6 +242,6 @@ ion-list.feed
               )
           div.actions.text-right
             button.button.button-small.button-clear.button-outline.button-positive(
-              ng-click="$postHelpers.postComment($event, $post)"
+              ng-click="ff.postHelpers.postComment($event, $post)"
               )
               span.padding-horizontal Post

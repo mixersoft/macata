@@ -11,6 +11,10 @@ options = {
 
 
 _getByIds = (ids)-> return {_id: {$in: ids}}
+_omit$keys = (o)->
+  return o if not _.isObject o
+  omitKeys = _.filter(_.keys(o), (k)->return k[0]=='$')
+  return clean = _.omit o, omitKeys
 
 global['mcFeeds'] = mcFeeds = new Mongo.Collection('feeds', {
   # transform: null
@@ -31,12 +35,12 @@ mcFeeds.helpers = {
     return true if @model.head.ownerId == userId
     return false
 
-  fetchOwner: =>
-    return Meteor.users.findOne(@model.head.ownerId, options['profile'])
 
   findAttachment: (model)-> # for publishComposite
     return if not model.body.attachment
-    switch model.body.attachment.type
+    # TODO: standardize form, use type(?)
+    type = model.body.attachment.type || model.body.attachment.className
+    switch type
       when 'Recipe'
         return global['mcRecipes'].find(model.body.attachment._id)
 
@@ -104,9 +108,6 @@ methods = {
 
   # comment for a Feed
   'Post.postFeedPost': (feedId, options)->
-    omit$keys = (o)->
-      omitKeys = _.filter(_.keys(o), (k)->return k[0]=='$')
-      return clean = _.omit o, omitKeys
 
     meId = this.userId
     post = {
@@ -122,8 +123,8 @@ methods = {
     _.extend(post.body, options.body)
     post.head.ownerId = meId  # force ownership
 
-    # post.head = omit$keys(post.head)
-    post.body.attachment = omit$keys(post.body.attachment)
+    # post.head = _omit$keys(post.head)
+    post.body.attachment = _omit$keys(post.body.attachment)
 
     if _.isArray post.body.message
       post.body.message = post.body.message.join(' ')
@@ -140,10 +141,8 @@ methods = {
 
   # comment on a Post
   'Post.postPostComment': (post, comment, from)->
-    omit$keys = (o)->
-      omitKeys = _.filter(_.keys(o), (k)->return k[0]=='$')
-      return clean = _.omit o, omitKeys
-    comment = omit$keys(comment)
+
+    comment = _omit$keys(comment)
     postComment = {
       id: Date.now()    # not a top-level doc
       type: "PostComment"
@@ -155,6 +154,7 @@ methods = {
         createdAt: new Date()
         # likes: []
       body:
+        # TODO: use body.message instead(?)
         comment: comment
     }
     modifier = { $addToSet: {"body.comments": postComment} }

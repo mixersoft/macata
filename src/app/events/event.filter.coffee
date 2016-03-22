@@ -1,5 +1,7 @@
 'use strict'
 
+global = @
+
 ###
 # @description filter event.feed for demo data
 # expecting the following attrs for "posts" to event.feed
@@ -43,6 +45,10 @@
 ###
 EventFeedFilter = ($rootScope, exportDebug)->
 
+  _isPostModerator = (model, userId, event)->
+    userId = userId._id if userId?._id?
+    global['mcFeeds'].helpers.isModerator(model, userId, event)
+
   getPersonalizedFeed = (feed, me)->
     me ?= $rootScope.currentUser
     # console.info "user NOT set" if !me
@@ -78,8 +84,7 @@ EventFeedFilter = ($rootScope, exportDebug)->
           # from action=[Join, ???Invitation[status=accept]  ]
           #   need to notify event.moderatorId, or head.moderatorIds
           check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
-          # check['acl'] = event.isPostModerator(event, post)
-          check['acl'] = post.isModerator?(me)
+          check['acl'] = _isPostModerator(post, me)
           check.address =  true if check.acl
         when 'ParticipationResponse'
           # from action=Participation[status='accepted']
@@ -90,7 +95,8 @@ EventFeedFilter = ($rootScope, exportDebug)->
         when 'Comment'
           'TODO:allow recipientIds for comments' if head.recipientIds
         when 'Notification'
-          check['notDismissed'] = not (head.dismissedBy && ~head.dismissedBy.indexOf me._id)
+          check['notDismissed'] =
+            not head.dismissedBy || not (me &&  ~head.dismissedBy?.indexOf me._id)
           # console.log ['check Notification', check]
         else
           'skip'
@@ -116,6 +122,7 @@ EventFeedFilter = ($rootScope, exportDebug)->
       return cachedFeedLength = feed.length
     )
 
+  # TODO: put inside getCollectionReactively('event.feed')
   $rootScope.$on 'event:feed-changed', (ev, event, user)->
     cache = memoized_getPersonalizedFeed.cache
     cache.__data__ = {}

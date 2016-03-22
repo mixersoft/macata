@@ -15,7 +15,11 @@ ion-view.event-feed(
   )
     div.row.responsive-sm.no-padding
       div.col
-        ng-include(src="'feed/feed.html'")
+        filtered-feed(
+          reactive-context="vm"
+          show="vm.settings.show"
+          filtered-feed="vm.$$filteredFeed"
+          )
     
   
   ion-fab(
