@@ -27,8 +27,7 @@ Meteor.publishComposite 'myEventFeeds', (filterBy, options)->
       return global['mcFeeds'].find(selector, options)
     children: [
       {
-        # find: (feed)-> return feed.findAttachment()
-        find: (feed)-> return global['mcFeeds'].helpers.findAttachment(feed)
+        find: (feed)-> return FeedModel::findAttachment(feed)
       }
     ]
   }

@@ -35,13 +35,11 @@ EventsUtil = (utils, $document, amMoment) ->
     mockData: (event, vm)->
 
       event.moderatorIds = [event.ownerId]
-      event.isPostModerator = vm.postActions.acl.isModerator
 
-
-      # @deprecated, using ng-repeat="$post in event | eventFeedFilter:vm.$$feed
-      event.feed = vm.lookup.feed
-      event.feed = vm.$$feed
-      # event.feed = $filter('feedFilter')(event, FEED)
+      # # @deprecated, using ng-repeat="$post in event | eventFeedFilter:vm.$$feed
+      # event.feed = vm.lookup.feed
+      # event.feed = vm.$$feed
+      # # event.feed = $filter('feedFilter')(event, FEED)
 
 
 
@@ -59,7 +57,8 @@ EventsUtil = (utils, $document, amMoment) ->
           participantIds = [event.ownerId].concat( event.participantIds)
           mi.ownerId = participantIds[i % participantIds.length ]
           contribution = {
-            menuItemId: mi._id
+            _id: mi._id
+            className: 'Recipe' # use className for object ref, type for posts
             portions: null
             comment: null
             sort: null

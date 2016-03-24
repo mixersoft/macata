@@ -45,12 +45,8 @@ global = @
 ###
 EventFeedFilter = ($rootScope, exportDebug)->
 
-  _isPostModerator = (model, userId, event)->
-    userId = userId._id if userId?._id?
-    global['mcFeeds'].helpers.isModerator(model, userId, event)
-
   getPersonalizedFeed = (feed, me)->
-    me ?= $rootScope.currentUser
+    meId = me?._id || Meteor.userId()
     # console.info "user NOT set" if !me
 
     # check moderator status
@@ -71,7 +67,7 @@ EventFeedFilter = ($rootScope, exportDebug)->
       check = {
         # eventId: head.eventId == event.id
         address: head.isPublic ||
-          (me && ~[head.ownerId].concat(head.recipientIds || []).indexOf me._id)
+          (meId && ~[head.ownerId].concat(head.recipientIds || []).indexOf meId)
         expiration: !head.expiresAt || new Date().toJSON() <= head.expiresAt
       }
 
@@ -84,19 +80,23 @@ EventFeedFilter = ($rootScope, exportDebug)->
           # from action=[Join, ???Invitation[status=accept]  ]
           #   need to notify event.moderatorId, or head.moderatorIds
           check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
-          check['acl'] = _isPostModerator(post, me)
+          check['status'] = true
+          if post.body.response == 'accepted'
+            check['acl'] = true
+          else
+            check['acl'] = FeedModel::isModerator(post, meId)
           check.address =  true if check.acl
         when 'ParticipationResponse'
-          # from action=Participation[status='accepted']
+          # from action=Participation[response='accepted']
           # ??: automatically accept from invitation[status=accept>join]
-          # Participation[status='decline']
+          # Participation[response='declined']
           #   check[isRecipient] will make declines private
           'none'
         when 'Comment'
           'TODO:allow recipientIds for comments' if head.recipientIds
         when 'Notification'
           check['notDismissed'] =
-            not head.dismissedBy || not (me &&  ~head.dismissedBy?.indexOf me._id)
+            not head.dismissedBy || not (meId &&  ~head.dismissedBy?.indexOf meId)
           # console.log ['check Notification', check]
         else
           'skip'

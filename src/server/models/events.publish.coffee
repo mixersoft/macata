@@ -29,7 +29,6 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
         filterBy
       ]
     }
-
   # console.log ['publish events', JSON.stringify( selector ), 'userId=' + this.userId ]
   result = {
     find: ()->
@@ -40,10 +39,12 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
       return global['mcEvents'].find(selector, options)
     children: [
       {
-        find: (event)-> return event.findParticipants()
+        find: (event)->
+          return EventModel::findParticipants(event)
       }
       {
-        find: (event)-> return event.findMenuItems()
+        find: (event)->
+          return EventModel::findMenuItems(event)
       }
     ]
   }

@@ -174,7 +174,7 @@ ion-view.event-detail(
                 )
 
         ion-list.share-links(
-          ng-if="event.isParticipant()"
+          ng-if="vm.EventM.isParticipant()"
           )
           ion-item.item-divider.item-button-right(
             ng-click="show.hideInvitations = !show.hideInvitations"

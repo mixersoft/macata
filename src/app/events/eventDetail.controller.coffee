@@ -18,7 +18,7 @@ EventDetailCtrl = (
     vm.title = "Event Detail"
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
     vm.feedHelpers = new FeedHelpers(vm)
-
+    vm.EventM = new EventModel()
 
     vm.acl = {
       isVisitor: ()->
@@ -30,7 +30,7 @@ EventDetailCtrl = (
     vm.settings = {
       view:
         show: 'grid'
-        'new': false
+        'xxx-new': false
       show:
         'hideDetails': false
         'hideMap':true
@@ -151,20 +151,12 @@ EventDetailCtrl = (
 
 
 
-    setFabIcon = ()->
-      vm.settings.show.fabIcon = 'ion-load-d' if !$rootScope.currentUser
-
-      icon = null
-      switch $rootScope.currentUser?.role
-        when 'host', 'participant', 'booking'
-          # edit event
-          icon = 'ion-chatbox'
-        when 'invitation','visitor'
-          # join
-          icon = 'ion-plus'
-      # console.log ["FabIcon=" + icon, $rootScope.currentUser.role]
+    setFabIcon = (event)->
+      if vm.EventM.isParticipant()
+        icon = 'ion-chatbox'
+      else
+        icon = 'ion-plus'
       vm.settings.show.fabIcon = icon
-
 
 
     vm.on = {
@@ -180,15 +172,13 @@ EventDetailCtrl = (
         return vm.settings.view.show = value
 
       fabClick: ($event)->
-        switch $rootScope.currentUser.role
-          when 'host', 'participant', 'booking'
-            # edit event
-            return vm.feed.showMessageComposer($event)
+        if vm.EventM.isParticipant()
 
-          when 'invitation','visitor'
-            # join
-            return vm.on['beginBooking']($rootScope.currentUser, vm.event)
-        return
+          parent = ionic.DomUtil.getParentWithClass($event.target, 'event-detail')
+          el = parent.querySelector('filtered-feed')
+          return vm.feedHelpers.showMessageComposer({target:el})
+        else
+          return vm.on['beginBooking']($rootScope.currentUser, vm.event)
 
       'updateSettings': (setting, isPublic)->
         fields = []
@@ -274,6 +264,8 @@ EventDetailCtrl = (
             return event
 
         onChange: (event)->
+          vm.EventM.set(event)
+
           ## NOTE: run in onChange because event properties reset on vm.getReactively()
           eventUtils.mockData(event, vm)
 
@@ -312,12 +304,13 @@ EventDetailCtrl = (
           .then (event)->
             # render shareLinks
             if event.isPublic == false || event.setting.isExclusive
-              return event if not event.isParticipant()
+              return event if not vm.EventM.isParticipant()
             EventActionHelpers.getShareLinks(event, vm)
             .then (sharelinks)->
               event.shareLinks = sharelinks
             return event
           .then (event)->
+            setFabIcon(event)
             # NOTE: $timeout required when using getReactively with deep watch
             $timeout().then ()->
               callbacks['Event'].isRendering = false

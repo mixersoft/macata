@@ -15,46 +15,78 @@ _omit$keys = (o)->
   return o if not _.isObject o
   omitKeys = _.filter(_.keys(o), (k)->return k[0]=='$')
   return clean = _.omit o, omitKeys
+_getUserId = (context)->
+  return if Meteor.isServer then context.userId else Meteor.userId()
+
+
+global['FeedModel'] = class FeedModel
+  constructor: (@context)->
+  set: (@context)->
+  release: ()->
+    delete @context
+
+
+FeedModel::isAdmin = (model, userId)->
+  if @context
+    model = @context
+    [userid] = arguments
+  return false if !model
+  userId ?= _getUserId(this)
+  return true if model.head.ownerId == userId
+  return false
+
+FeedModel::isModerator = (model, userId, event)->
+  if @context
+    model = @context
+    [userid, event] = arguments
+  return false if !event
+  userId ?= _getUserId(this)
+  return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
+  return true if model.head.ownerId == userId
+  return true if event?.moderatorIds && ~event.moderatorIds.indexOf userId
+  return false
+
+FeedModel::fetchOwner = (model={})->
+  if @context
+    model = @context
+  return Meteor.users.findOne(model.head.ownerId, options['profile'])
+
+FeedModel::findEvent = (model={})->
+  if @context
+    model = @context
+  # return global['mcEvents'].find({_id: model._id})
+  found = global['mcEvents'].find({_id: model._id})
+  console.log ["Feed belongsTo Event, event=", found.fetch()]
+  return found
+
+FeedModel::findAttachment = (model={})-> # for publishComposite
+  if @context
+    model = @context
+  return if not model.body.attachment
+  # TODO: standardize form, use type(?), see message-composer
+  type = model.body.attachment.type || model.body.attachment.className
+  switch type
+    when 'Recipe'
+      return global['mcRecipes'].find(model.body.attachment._id)
+
+FeedModel::fetchAttachment = (model={})-> # for publishComposite
+  if @context
+    model = @context
+  switch model.body.attachment.type
+    when 'Recipe'
+      return global['mcRecipes'].findOne(model.body.attachment._id).fetch()
+
+FeedModel::fetchProfiles = (model={})->
+  if @context
+    model = @context
+  return if model.type != 'Invitation'
+  userIds = [model.head.ownerId].concat model.head.recipiendIds
+  return Meteor.users.find(_getByIds(userIds), options['profile']).fetch()
+
 
 global['mcFeeds'] = mcFeeds = new Mongo.Collection('feeds', {
   # transform: null
 })
-
-# NOTE: these methods are attached to the global Meteor Collection
-#   used on server with Meteor.publish where we don't have angular $inject
-#   only add find() methods
-mcFeeds.helpers = {
-  isAdmin: (userId)=>
-    userId ?= Meteor.userId()
-    return true if @model.head.ownerId == userId
-    return false
-
-  isModerator: (userId)=>
-    userId ?= Meteor.userId()
-    return true if @model.head.moderatorIds && ~@model.head.moderatorIds.indexOf userId
-    return true if @model.head.ownerId == userId
-    return false
-
-
-  findAttachment: (model)-> # for publishComposite
-    return if not model.body.attachment
-    # TODO: standardize form, use type(?)
-    type = model.body.attachment.type || model.body.attachment.className
-    switch type
-      when 'Recipe'
-        return global['mcRecipes'].find(model.body.attachment._id)
-
-  fetchAttachment: => # for publishComposite
-    switch @model.body.attachment.type
-      when 'Recipe'
-        return global['mcRecipes'].findOne(@model.body.attachment._id).fetch()
-
-  fetchProfiles: =>
-    return if model.type != 'Invitation'
-    userIds = [@model.head.ownerId].concat @model.head.recipiendIds
-    return Meteor.users.find(_getByIds(userIds), options['profile']).fetch()
-
-}
 
 
 
@@ -172,6 +204,7 @@ methods = {
     mcFeeds.update(post._id, modifier )
 
 
+  #  called by both respondToInvite and respondToBooking
   'Post.respondToInvite': (invite, action, options = {})->
     modifier = {
       $set:

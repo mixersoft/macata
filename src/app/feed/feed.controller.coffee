@@ -28,7 +28,18 @@ FeedCtrl = (
     vm.feedHelpers = new FeedHelpers(vm)
     vm.postHelpers = new PostHelpers(vm)
 
+    vm.settings = {
+      view:
+        show: 'grid'
+      show:
+        fabicon: null
+    }
 
+
+    vm.DEV = {
+      resetFeed: ()->
+        vm.call 'DEV.Post.resetFeed'
+    }
 
     callbacks = {
       'Feed':
@@ -95,6 +106,8 @@ FeedCtrl = (
         eventTransforms.onChange(event)
         .then (event)->
           eventUtils.mockData(event, vm)
+          setFabIcon(event)
+
 
         return
 
@@ -111,6 +124,13 @@ FeedCtrl = (
           # NOTE: vm.feedId -> vm.getReactively('feedId') -> vm.helpers()
           vm.feedId = feedId
 
+    setFabIcon = (event)->
+      if EventModel::isParticipant::isParticipant(event)
+        icon = 'ion-chatbox'
+      else
+        icon = 'ion-plus'
+      vm.settings.show.fabIcon = icon
+
     vm.on = {
       gotoEvent: ($event)->
         $ionicHistory.nextViewOptions({
@@ -121,6 +141,9 @@ FeedCtrl = (
       postToFeed: (comment)->
         vm.feedHelpers.postCommentToFeed(comment)
         return $q.when()    # TODO: fix in message-composer.on.post()
+
+      fabClick: ($event)->
+        return vm.feedHelpers.showMessageComposer($event)
 
     }
 

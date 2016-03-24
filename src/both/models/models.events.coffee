@@ -11,49 +11,83 @@ options = {
     limit: 10
 }
 
-class EventModel
-  constructor: (event)->
-    _.extend(@, event)
+_getUserId = (context)->
+  return if Meteor.isServer then context.userId else Meteor.userId()
 
-  isAdmin: (userId)=>
-    userId ?= Meteor.userId()
-    return true if @ownerId == userId
-    return false
+###
+# Example:
+    vm.EventM = new EventModel()
+    vm.EventM.set(event)
+    vm.EventM.isParticipant()
+    or
+    vm.EventModel = EventModel::
+    vm.EventModel.isParticipant(event)
+    or from publish:
+    EventModel::isParticipant.call(this, event)
+###
+global['EventModel'] = class EventModel
+  constructor: (@context)->
+  set: (@context)->
+  release: ()->
+    delete @context
 
-  isModerator: (userId)=>
-    userId ?= Meteor.userId()
-    return true if @moderatorIds && ~@moderatorIds.indexOf userId
-    return true if @ownerId == userId
-    return false
 
-  isParticipant: (userId)=>
-    userId ?= Meteor.userId()
-    return true if @participantIds && ~@participantIds.indexOf userId
-    return true if @ownerId == userId
-    return false
+EventModel::isAdmin = (event, userId)->
+  if @context
+    event = @context
+    [userid] = arguments
+  return false if !event
+  userId ?= _getUserId(this)
+  return true if event.ownerId == userId
+  return false
 
-  fetchHost: =>
-    return Meteor.users.findOne(@ownerId, options['profile'])
+EventModel::isModerator = (event, userId)->
+  if @context
+    event = @context
+    [userid] = arguments
+  return false if !event
+  userId ?= _getUserId(this)
+  return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
+  return true if event.ownerId == userId
+  return false
 
-  findParticipants: =>
-    return Meteor.users.find({
-      _id:
-        $in: [@ownerId].concat(@participantIds)
-      }
-      , options['profile'])
+EventModel::isParticipant = (event, userId)->
+  if @context
+    event = @context
+    [userid] = arguments
+  return false if !event
+  userId ?= _getUserId(this)
+  return true if event.participantIds && ~event.participantIds.indexOf userId
+  return true if event.ownerId == userId
+  return false
 
-  findMenuItems: =>
-    return global['mcRecipes'].find({
-      _id:
-        $in: @menuItemIds || []
-      }
-      , options['menuItem'])
+EventModel::fetchHost = (event={})->
+  if @context
+    event = @context
+  return Meteor.users.findOne(event.ownerId, options['profile'])
+
+EventModel::findParticipants = (event={})->
+  if @context
+    event = @context
+  return Meteor.users.find({
+    _id:
+      $in: [event.ownerId].concat(event.participantIds)
+    }
+    , options['profile'])
+
+EventModel::findMenuItems = (event={})->
+  if @context
+    event = @context
+  return global['mcRecipes'].find({
+    _id:
+      $in: event.menuItemIds || []
+    }
+    , options['menuItem'])
 
 
 
 global['mcEvents'] = mcEvents = new Mongo.Collection('events', {
-  transform: (event)->
-    return new EventModel(event)
+  # transform: null
 })
 
 allow = {

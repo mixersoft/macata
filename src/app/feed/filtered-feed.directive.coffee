@@ -37,6 +37,10 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ff.on = {
           edit: ()-> console.warn "attachment.edit: See RecipeHelpers"
           forkTile: ()-> console.warn "attachment.forkTile: See RecipeHelpers"
+          headerClick: ($event)->
+            return if $state.includes('app.feed')
+            $state.go('app.feed', {id: $state.params.id})
+            console.info ["state=", $state.current.name, $state.params]
           postToFeed: (comment)->
             ff.feedHelpers.postCommentToFeed(comment)
             return $q.when()    # TODO: fix in message-composer.on.post()

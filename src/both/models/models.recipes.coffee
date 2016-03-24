@@ -9,22 +9,41 @@ options = {
       profile: 1
 }
 
+_getUserId = (context)->
+  return if Meteor.isServer then context.userId else Meteor.userId()
+
+
+global['RecipeModel'] = class RecipeModel
+  constructor: (@context)->
+  set: (@context)->
+  release: ()->
+    delete @context
+
+RecipeModel::isAdmin = (model, userId)->
+  if @context
+    model = @context
+    [userid] = arguments
+  return false if !model
+  userId ?= _getUserId(this)
+  return true if model.ownerId == userId
+  return false
+
+RecipeModel::fetchOwner = (model={})->
+  if @context
+    model = @context
+  return Meteor.users.findOne(model.ownerId, options['profile'])
+
+RecipeModel::findProfiles = (model={})-> # use with publishComposite.children
+  if @context
+    model = @context
+  return Meteor.users.find(model.ownerId, options['profile'])
+
+
+
 global['mcRecipes'] = mcRecipes = new Mongo.Collection('recipes', {
   # transform: null
 })
 
-mcRecipes.helpers = {
-  isAdmin: (model, userId)->
-    userId ?= Meteor.userId()
-    return true if model.ownerId == userId
-    return false
-
-  fetchOwner: (model)->
-    return Meteor.users.findOne(model.ownerId, options['profile'])
-
-  findProfiles: (model)-> # use with publishComposite.children
-    return Meteor.users.find(model.ownerId, options['profile'])
-}
 
 allow = {
   insert: (userId, recipe)->
@@ -50,6 +69,7 @@ methods = {
     modifier[action] = {"likes": meId}  # e.g.  { $addToSet: {"likes": meId} }
     mcRecipes.update(model._id, modifier )
     return
+
   'Recipe.toggleFavorite': (model)->
     return if model.type != 'Recipe'
     meId = this.userId
@@ -66,7 +86,6 @@ methods = {
     profileFavorite = {"profile.favorites": { _id: model._id, class: 'Recipe' }}
     modifier[action] = profileFavorite
     Meteor.user.update({_id: meId}, modifier )
-
     return
 
 }

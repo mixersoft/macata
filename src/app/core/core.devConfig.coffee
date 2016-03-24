@@ -66,7 +66,6 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
           event.$$host = _.find users, {id: event.ownerId}
           event.visibleAddress = event.address
           # console.warn("TESTDATA: using currentUser as event Moderator")
-          # event.isPostModerator = vm.postActions.acl.isModerator
           # event.moderatorId = vm.me.id  # force for demo data
           console.warn("TESTDATA: using random menuItems")
           fromHost = _.find ideas, {ownerId: event.ownerId}
