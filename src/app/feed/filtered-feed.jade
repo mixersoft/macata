@@ -4,7 +4,9 @@ ion-list.feed
     {{ vm=ff.reactiveContext;''}}
     {{ $postDefaults=ff.feedHelpers.postDefaults;''}}
     {{ userId = Meteor.userId() }}
-  ion-item.item-divider.item-button-right.item-royal
+  ion-item.item-divider.item-button-right.item-royal(
+    ng-click="ff.on.headerClick()"
+    )
     p
       span.light feed
     button.button.button-icon.button-light.button-clear.ion-plus(
@@ -72,7 +74,7 @@ ion-list.feed
                       
       //- Moderator Actions
       div.card.moderator-actions(
-        ng-if='vm.moderatorActions.requiresAction($post)'
+        ng-if='ff.moderatorActions.requiresAction($post)'
         )
         ion-item.item-divider.item-balanced
           div Moderator Actions
@@ -81,16 +83,16 @@ ion-list.feed
           span.padding-right has requested {{$postBody.seats}} seats at the table.
         div.item.item-complex.item-balanced.button-bar.condensed
           button.button.button-balanced(
-            ng-click="vm.moderatorActions.decline($event, vm.event, $post)"
+            ng-click="ff.moderatorActions.decline($event, $post)"
             )
             i.icon.ion-close-circled &nbsp; Decline
           button.button.button-balanced(
-            ng-click="vm.moderatorActions.message($event, vm.event, $post)"
+            ng-click="ff.moderatorActions.message($event, $post)"
             )
             i.icon.ion-chatbox(
             ) &nbsp; Message
           button.button.button-balanced(
-            ng-click="vm.moderatorActions.accept($event, vm.event, $post)"
+            ng-click="ff.moderatorActions.accept($event, $post)"
             )
             i.icon.ion-checkmark-circled &nbsp; Accept
              

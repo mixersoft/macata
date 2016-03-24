@@ -2,6 +2,7 @@
 ion-view.event-feed(
   view-title="{{vm.event.title || vm.title}}"
   id="{{vm.feedId}}"
+  hide-back-button="true"
   )
   ion-nav-buttons(side="primary")
     button.button.button-icon.button-clear.ion-ios-arrow-back(
@@ -18,6 +19,7 @@ ion-view.event-feed(
         filtered-feed(
           reactive-context="vm"
           show="vm.settings.show"
+          event="vm.event"
           filtered-feed="vm.$$filteredFeed"
           )
     

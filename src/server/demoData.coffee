@@ -307,9 +307,76 @@ demoData = {
         yes: 0
         maybe: 0
         no: 0
-  }
+  },
+  'mcFeeds': [
+    # Event: 'LastDaysSummer' = 'vYCDTNzc4Ky6CXyi3'
+    # Event.ownerId = "xBYWvthK5qZ5zHx9T" # lulu
+    #                 "xSs5BigB8yCkqRbxA" # markymark
+    {
+      "type":"Comment"
+      head:
+        "createdAt":"2016-01-28T14:37:41.983Z",
+        "ownerId": "xSs5BigB8yCkqRbxA" # markymark
+        "eventId": "vYCDTNzc4Ky6CXyi3"
+        "isPublic": true
+      body:
+        "type":"Comment"
+        "message":"This is what I've been waiting for. I'm on it.",
+        "attachment":{"_id":"sq7ekDt7w4DngJDrq","type":"Recipe"}
+        "location":null
+    }
+    {
+      type:"Notification"
+      head:
+        id: Date.now()
+        "createdAt": moment()
+        "expiresAt": null
+        "eventId":"vYCDTNzc4Ky6CXyi3"
+        "ownerId": "xBYWvthK5qZ5zHx9T" # lulu
+      body:
+        message: "<b>Hello!</b> This is a notification. It might be appear as a mobile notification in the App."
+    }
+    {
+      # NOTE: for invitation by link, we only know from the invite token
+      #   vm.me may be undefined
+      "type":"Invitation"
+      head:
+        # "id":"1453967670694"
+        "createdAt": moment().subtract(7, 'hours').toJSON()
+        "eventId":"vYCDTNzc4Ky6CXyi3"
+        "ownerId": "xBYWvthK5qZ5zHx9T" # lulu      # for .item-post .item-avatar
+        "recipientIds": ["L8EdePbduQ3Aj3r3W"]  # filterBy: feed.type chuckychu
+        "nextActionBy": 'recipient' # [recipient, owner]
+        "token":  "invite-token-if-found"
+      body:
+        "type":"Invitation"
+        "status":"new"      # [new, viewed, closed, hide]
+        "message":"Please come-this will be epic!"
+        "comments":[]       #$postBody.comments, show msg, regrets here
+    }
+    {
+      "type":"Participation"
+      head:
+        # "id":"1453967670695"
+        "createdAt": moment().subtract(23, 'minutes').toJSON()
+        "eventId":"vYCDTNzc4Ky6CXyi3"
+        "ownerId": "xSs5BigB8yCkqRbxA" # markymark
+        "nextActionBy": 'moderator' # [recipient, moderator, owner]
+      body:
+        "type":"Participation"
+        "status":"new"
+        "response":"Yes"
+        "seats":2,
+        "message":"Exciting. I'll take 2 and bring the White Stork."
+        "attachment": {"_id":"WBfnHwH2fx39Lg6Pe","type":"Recipe"}
+        "address":"ul. \"Oborishte\" 18, 1504 Sofia, Bulgaria",
+        "location":{"latlon":[42.69448,23.342364],"address":"ul. \"Oborishte\" 18, 1504 Sofia, Bulgaria"}
+    }
+
+  ]
 
 }
+
 # coffeelint: enable=max_line_length
 loadData = ()->
   context = @

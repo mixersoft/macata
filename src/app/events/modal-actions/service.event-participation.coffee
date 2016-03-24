@@ -36,116 +36,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         return
     }
 
-    FeedHelpers = {
-      post: (event, data, vm)->
-        # data : {type: header: body:}
-        post = {
-          type: data.type || data.body.type
-          head:
-            id: Date.now() + ""
-            createdAt: new Date()
-            eventId: event._id
-            ownerId: $rootScope.currentUser._id
-          body: {}
-        }
-        angular.extend(post.head, data.head)
-        angular.extend(post.body, data.body)
 
-        if _.isArray post.body.message
-          post.body.message = post.body.message.join(' ')
-
-        if post.type != "Notification"
-          if not _.isEmpty post.head.recipientIds
-            # post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
-            post.body.message += ' (This should be a private notification.)'
-
-          # testData
-          post.head['$$owner'] = $rootScope.currentUser
-
-        return FeedResource.save(post, post.head.id)
-        .then (post)->
-          event.feed ?= []
-          switch post.type
-            when "Notification"
-              event.feed.unshift(post)
-            when "Invitation"
-              event.feed.unshift(post)
-            when "Participation"
-              post.head['likes'] = [_.sample(Meteor.users.find().fetch())]
-              event.feed.unshift(post)
-            when "Comment"
-              event.feed.unshift(post)
-            when "ParticipationResponse"
-              event.feed.unshift(post)
-          $rootScope.$emit 'event:feed-changed', event
-          return post
-
-      ###
-      # @description post notification to feed, appear as colored tile with dismiss
-      #     ng-bind-html allows for basic html markup
-      # @params data object {ownerId, recipientIds, role, message, expiresAt, delay }
-      ###
-      notify: (event, data={}, vm)->
-        # format notification as a Post
-        post = {}
-        post.type = 'Notification'
-        post.head = _.pick data, ['ownerId', 'recipientIds', 'role', 'expiresAt']
-        post.body = {
-          message: data.message
-        }
-        $timeout(1000).then ()->
-          FeedHelpers.post(event, post, vm)
-
-
-      # TODO: should we make these logs Notifications?
-      # @deprecate use FeedHelpers.notify() instead
-      log: (event, data, vm)->
-        type = data.type || data.body.type
-        method = '_log_' + type
-        return $q.when(method)
-        .then (method)->
-          return FeedHelpers[method](event, data, vm) if FeedHelpers[method]?
-          console.info ['FeedHelpers.log(): no log format for type=' + type]
-          return
-
-      _log_ParticipationResponse: (event, data, vm)->
-        # see vm.moderator.accept()
-        responseBody = data.body
-        participation = responseBody.$$participation
-
-        participationResponse = {
-          type: "ParticipationResponse"
-          head: data.head
-          body:
-            message: ''
-        }
-
-        switch responseBody.action
-          when 'accepted'
-            message = [
-              'Welcome', participation.head.$$owner.displayName+','
-              'your booking has been accepted.'
-              'You have', participation.body.seats, 'seats at the table.'
-            ]
-            message.push responseBody.comment if responseBody.comment
-            if event.seatsOpen
-              message.push 'There are', event.seatsOpen, 'seats remaining.'
-            participationResponse.body.message = message
-          when 'declined'
-            message = [
-              'Sorry'
-              participation.head.$$owner.displayName+','
-              'your booking was declined.'
-            ]
-            message.push responseBody.comment if responseBody.comment
-            participationResponse.head.recipientIds = [participation.head.ownerId]
-            participationResponse.body.message = message
-          else
-            return
-
-        return $timeout(2000).then ()->
-          return FeedHelpers.post(event, participationResponse, vm)
-    }
 
     self = {
       'bookingWizard': (person, event, vm)->
@@ -154,8 +45,6 @@ EventActionHelpers = ($rootScope, $q, $timeout
         .then (result)->
           return if !result
           return participation = result
-
-      'FeedHelpers': FeedHelpers  # make a service
 
       getShareLinks: (event, vm)->
         vm ?= this
@@ -516,8 +405,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
       # @description show booking/join event modal and handle response
       # called by EventDetailCtrl:button.JoinEvent
       ###
-      beginBooking: (templateName, person, event, vm)->
-        vm ?= this
+      beginBooking: (templateName, person, event)->
         templateName ?= 'booking.modal.html'
         template = 'events/modal-actions/' + templateName
 
@@ -539,11 +427,10 @@ EventActionHelpers = ($rootScope, $q, $timeout
           , 'EventBookingCtrl as mm'
           , {
             copyToModalViewModal :
-              # host: vm.lookup['host']
               person: person
               event: event
               booking:
-                userId: person.id
+                userId: person._id
                 seats: options['defaultSeats']
                 maxSeats: options['maxSeats']
                 message: null
@@ -583,47 +470,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
-      # called by vm.moderator.accept()
-      createBooking: (event, particip, vm)->
-
-        _participation2menuItem = (participation, item)->
-          menuItem = angular.copy item.body.attachment
-          menuItem = _.extend menuItem, {
-            id: Date.now()
-            $$owner: participation.$$owner
-            ownerId: participation.ownerId
-          }
-          menuItem['recipeId'] = item.body.attachment.id
-          return menuItem
-
-        event.participantIds ?= []
-        event.participantIds.push particip.head.ownerId
-        event.participantIds = _.unique(event.participantIds)
-        p = {
-          id: Date.now()
-          seats: particip.body.seats
-          createdAt: new Date()
-          ownerId: particip.head.ownerId
-          # $$owner: _.find(vm.lookup.users, {id: particip.head.ownerId})
-        }
-
-        event.participationIds.push p.id
-        vm.$$participations.push p
-        #TODO: should use a listener or watch on 'event:participants-changed'
-        vm.$$paddedParticipants = $filter('eventParticipantsFilter')(event, vm)
-
-        event.seatsOpen -= particip.body.seats
-        if not _.isEmpty particip.body.attachment
-          vm.$$menuItems.push _participation2menuItem(p, particip)
-          vm.$$menuItems = _.unique vm.$$menuItems
-        else
-          # TODO: show a placeholder in event.menuItems?
-          console.info '???:attach a placeholder and render in event.menuItems'
-
-        return event
-
-
-
+    
 
 
       ###

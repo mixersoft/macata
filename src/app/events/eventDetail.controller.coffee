@@ -8,7 +8,7 @@ EventDetailCtrl = (
   uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc, eventUtils
   $reactive, ReactiveTransformSvc, $auth
   UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
-  EventActionHelpers, $filter, notificationTemplates
+  EventActionHelpers, $filter, notificationTemplates, FeedHelpers
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
@@ -17,6 +17,9 @@ EventDetailCtrl = (
     vm = this
     vm.title = "Event Detail"
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
+    vm.feedHelpers = new FeedHelpers(vm)
+
+
     vm.acl = {
       isVisitor: ()->
         return true if !$rootScope.currentUser
@@ -41,8 +44,6 @@ EventDetailCtrl = (
       colors: ['royal', 'positive', 'calm', 'balanced', 'energized', 'assertive']
     }
 
-    vm.event = {}
-
     vm.isInvitation = ()->
       return !!$state.params.invitation
 
@@ -59,263 +60,6 @@ EventDetailCtrl = (
           toastr.warning "Sorry, this invitation has expired. Please contact the host for another."
         return $q.reject(result)
 
-    vm.inviteActions = {
-      requiresAction: (post, event, me)->
-        return if post.type != 'Invitation'
-        event ?= vm.event
-        me ?= $rootScope.currentUser
-        check = {
-          type: post.type == 'Invitation'
-          status: ~['new', 'viewed'].indexOf(post.body.status)
-        }
-        nextAction = post.head.nextActionBy
-        switch nextAction
-          when 'owner'
-            check['nextAction'] = me && event.$$owner == me
-            # check['nextAction'] = me && ~event.moderatorIds.indexOf me._id
-          when 'recipient'
-            check['nextAction'] = me && ~post.head.recipientIds.indexOf me._id
-        return _.reject(check).length == 0
-
-      accept: ($event, event, invitation)->
-        return $q.when()
-        .then ()->
-          return if invitation.type != 'Invitation'
-
-          invitation.body.status='viewed'
-          return invitation
-        .then (invitation)->
-          return vm.on.beginBooking($rootScope.currentUser, event)
-        .then (participation)->
-          return if !participation
-          invitation.body.status='closed'
-          invitation.body.response = 'accepted'
-          # append a log as a comment to invitation
-          invitation.body.seats = participation.body.seats
-          return vm.inviteActions._logAction(event, invitation, vm)
-          .then (invitation)->
-            target = $event.target
-            $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
-            $wrap.removeClass('hide')
-          .then (invitation)->
-            toastr.info("DEMO: invitation responses will be automatically accepted.")
-            return $timeout(3000)
-          .then ()->
-            # TODO: need to change ParticipationResponse.head.ownerId
-            vm.moderatorActions.accept($event, event, participation)
-
-
-      message: ($event, event, invitation)->
-        return $q.when()
-        .then ()->
-          invitation.body.status='viewed'
-          return vm.postActions.showCommentForm($event)
-
-      decline: ($event, event, invitation)->
-        return $q.when()
-        .then ()->
-          return if invitation.type != 'Invitation'
-
-          invitation.body.status='closed'
-          invitation.body.response = 'declined'
-          # append a log as a comment to invitation
-          return vm.inviteActions._logAction(event, invitation, vm)
-        .then (result)->
-          message = notificationTemplates.get('invitation.declined.ownerId', invitation)
-          notify = {
-            ownerId: invitation.head.ownerId
-            # role: 'participants'
-            message: message
-          }
-          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
-
-          # # show Post.comments
-          # target = $event.target
-          # $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
-          # $wrap.removeClass('hide')
-
-
-      _logAction: (event, invitation, vm)->
-        options = {
-          log: true
-          message: [
-            $rootScope.currentUser.profile.displayName
-            'has', invitation.body.response
-          ]
-        }
-        switch invitation.body.response
-          when 'declined'
-            options.message.push 'this invitation.'
-          when 'accepted'
-            options.message = options.message.concat [
-              'this invitation, and requested'
-              invitation.body.seats
-              'seats.'
-            ]
-          else
-            return
-
-        # TODO set 'moderatorIds' to new participantId
-        #   log/add notification to feed (dismissable), '[person] accepted your invitation'
-        return vm.postActions.postComment(null, invitation, options)
-
-
-
-    }
-
-    vm.moderatorActions = {
-      requiresAction: (post, event, me)->
-        event ?= vm.event
-        me ?= $rootScope.currentUser
-        check = {
-          type: post.type == 'Participation'
-          status: ~['new', 'pending'].indexOf(post.body.status)
-          response: ~['Yes','Message'].indexOf post.body.response
-        }
-
-        nextAction = post.head.nextActionBy
-        switch nextAction
-          when 'moderator', 'owner'
-            check['nextAction'] = me && event.ownerId == me._id
-            check['nextAction'] = me && ~event.moderatorIds.indexOf me._id
-          when 'recipient'
-            check['nextAction'] = me && ~post.head.recipientIds.indexOf me._id
-        return _.reject(check).length == 0
-
-      accept: ($event, event, participation)->
-        return $q.when()
-        .then ()->
-          return if participation.type != 'Participation'
-
-          participation.body.status='accepted'
-          return participation
-        .then (participation)->
-          # update event to include participation
-          return EventActionHelpers.createBooking(event, participation, vm)
-        .then (event)->
-          $scope.$emit 'user:event-role-changed', participation.head.$$owner, event
-          return vm.moderatorActions._logAction(event, participation, vm)
-        .then ()->
-          promises = []
-          notify = {
-            ownerId: participation.head.ownerId
-            message: notificationTemplates.get('booking.accepted.ownerId', participation)
-          }
-          if _.isEmpty participation.body.attachment
-            notify.message = [
-              notify.message
-              '<br /><br />'
-              notificationTemplates.get('event.contributions.reminder', participation)
-            ]
-          promises.push notifyNewBooking = EventActionHelpers.FeedHelpers.notify(event, notify, vm)
-
-          notify = {
-            ownerId: event.ownerId
-            # role: 'participants'
-            recipientIds: _.difference event.participantIds, [participation.head.ownerId]
-            message: notificationTemplates.get('booking.accepted.participantIds', participation)
-            contribution: participation.body.attachment
-          }
-          if not _.isEmpty participation.body.attachment
-            notify.message = [
-              notify.message
-              '<br /><br />'
-              notificationTemplates.get('event.contributions.notify', participation)
-            ]
-          promises.push notifyOthers = EventActionHelpers.FeedHelpers.notify(event, notify, vm)
-
-          return $q.all(promises)
-          .then ()->
-            if event.seatsOpen > 0
-              event.moderatorIds = [participation.head.ownerId]
-              post = {
-                ownerId: participation.head.ownerId
-                displayName: participation.head.$$owner.displayName
-                seatsOpen: event.seatsOpen
-                toNow: moment(event.startTime).fromNow()
-              }
-
-              if event.setting.isExclusive
-                shareTemplate = 'event.booking.sendInvites'
-                vm.settings.show.hideInvitations = false
-              else
-                shareTemplate = 'event.booking.shareEvent'
-              post.message = notificationTemplates.get(shareTemplate, post)
-              promises.push share = EventActionHelpers.FeedHelpers.notify(event, post, vm)
-            else
-              post = {
-                hostName: event.$$host.displayName
-                role: 'participants'
-              }
-              post.message = notificationTemplates.get('event.booking.fullyBooked', post)
-              promises.push fullyBooked = EventActionHelpers.FeedHelpers.notify(event, post, vm)
-            return $q.all(promises)
-
-      message: ($event, event, participation)->
-        return $q.when()
-        .then ()->
-          participation.body.status='pending'
-          return vm.postActions.showCommentForm($event)
-
-      decline: ($event, event, participation)->
-        return $q.when()
-        .then ()->
-          return if participation.type != 'Participation'
-
-          participation.body.status='declined'
-          # update participation, post to Server
-          return participation
-        .then (participation)->
-          return vm.moderatorActions._logAction(event, participation, vm)
-        .then ()->
-          notify = {
-            ownerId: participation.head.ownerId
-            # role: 'participants'
-            message: notificationTemplates.get('booking.decline.ownerId', participation)
-          }
-          return EventActionHelpers.FeedHelpers.notify(event, notify, vm)
-
-      _logAction: (event, participation, vm)->
-        # log ParticipationResponse
-        action = {
-          head:
-            ownerId: $rootScope.currentUser._id
-          body:
-            type: 'ParticipationResponse'
-            action: participation.body.status  # ['accepted', 'declined']
-            participationId: participation._id
-            $$participation: participation
-            comment: ''
-        }
-        if participation.body.status=='declined'
-          # make rejected private (Notification?)
-          action.head['recipientIds'] = [participation.head.ownerId]
-        $scope.$emit 'event:feed-changed', [event, action]
-        return EventActionHelpers.FeedHelpers.log(event, action, vm)
-
-    }
-
-    vm.feed = {
-      postDefaults: {}
-      show:
-        messageComposer: false
-      showMessageComposer: ($event, event, post)->
-        # template for post.body
-        # for post.head: {} # see: FeedHelpers.post()
-        this.postDefaults = {
-          message: null
-          attachment: null
-          address: null
-          location: null
-        }
-        this.show.messageComposer = true
-        parent = ionic.DomUtil.getParentWithClass($event.target, 'event-detail')
-        $timeout().then ()->
-          textbox = parent.querySelector('message-composer textarea')
-          textbox.focus()
-          textbox.scrollIntoViewIfNeeded()
-        return
-    }
 
 
     vm.location = {
@@ -455,27 +199,24 @@ EventDetailCtrl = (
           $log.info "Event updated, result=" + JSON.stringify _.pick result, fields
 
       # TODO: change params to (event, person)
+      # see also: filteredFeed.inviteActions.accept()
       'beginBooking': (person, event)->
         return EventActionHelpers.bookingWizard(person, event, vm)
         .then (participation)->
           return if participation == 'CANCELED'
-          return EventActionHelpers.FeedHelpers.post(event, participation, vm)
+          # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
+          vm.feedHelpers.postCommentToFeed(participation, {
+            onSuccess: ()->
+              dfd.resolve()
+            })
+        return dfd.promise
         .then (participation)->
           return participation
 
-      'postCommentToFeed': (comment)->
-        data = {
-          type: 'Comment'
-          head:
-            isPublic: true
-          body: comment
-        }
-        return EventActionHelpers.FeedHelpers.post(vm.event, data, vm)
-        .then ()->
-          console.log ['postToFeed', comment]
-          # reset message-console and hide
-          vm.feed.show.messageComposer = false
-          vm.feed.post={}
+      'postToFeed': (comment)->
+        vm.feedHelpers.postCommentToFeed(comment)
+        return $q.when()
+
 
       'toggleMap': ($event)->
         # $event.preventDefault()
@@ -519,6 +260,10 @@ EventDetailCtrl = (
     }
 
     callbacks = {
+      'Feed':
+        onChange: (feed)->
+          filtered = $filter('eventFeedFilter')(feed, $rootScope.currentUser)
+          return filtered
       'Event':
         onLoad: (event)->
           return $q.when(event)
@@ -643,13 +388,20 @@ EventDetailCtrl = (
         eventTransforms.onChange(event).catch (err)->console.warn err
         return
 
+      feedTransforms = new ReactiveTransformSvc(vm, callbacks['Feed'])
+      vm.autorun (tracker)->
+        feed = vm.getReactively('$$feed', true)
+        feedTransforms.onChange(feed)
+        .then (filteredFeed)->
+          vm['$$filteredFeed'] = filteredFeed
+
 
 
 
     activate = ()->
       return $q.when()
-      .then ()->
-        getData()
+      # .then ()->
+        # getData()
       .then ()->
         if $state.is('app.event-detail.invitation')
           if !$stateParams.invitation
@@ -810,7 +562,7 @@ EventDetailCtrl.$inject = [
   'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc', 'eventUtils'
   '$reactive', 'ReactiveTransformSvc', '$auth'
   'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
-  'EventActionHelpers', '$filter', 'notificationTemplates'
+  'EventActionHelpers', '$filter', 'notificationTemplates', 'FeedHelpers'
   'utils', 'devConfig', 'exportDebug'
 ]
 

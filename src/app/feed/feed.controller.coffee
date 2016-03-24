@@ -7,7 +7,7 @@
   vm.feedId will trigger
     -> vm.getReactively('feedId')
     -> vm.helpers()
-    -> vm.feed
+    -> vm.$$feed
 ###
 FeedCtrl = (
   $scope, $rootScope, $stateParams, $q, $window
@@ -15,9 +15,9 @@ FeedCtrl = (
   $filter, $ionicHistory, $state
   CollectionHelpers, FeedHelpers, PostHelpers
   exportDebug
+  eventUtils
   )->
     # add angular-meteor reactivity
-    Reactivecontext = $reactive(this).attach($scope)
     $reactive(this).attach($scope)
     global = $window
     vm = this
@@ -52,6 +52,7 @@ FeedCtrl = (
     initialize = ()->
       exportDebug.set('vm', vm)
       vm.subscribe 'userProfiles'
+      vm.subscribe 'myVisibleEvents' # , {_id: vm.getReactively('feedId')}
       vm.subscribe 'myEventFeeds'
       ,()->
         eventId = vm.getReactively('feedId')
@@ -63,6 +64,7 @@ FeedCtrl = (
               {'head.isPublic': true}
               {'head.ownerId': myUserId}
               {'head.recipientIds': myUserId}
+              {'head.moderatorIds': myUserId} # moderators if action required
             ]
           }
           ,{} # paginate options
@@ -72,8 +74,11 @@ FeedCtrl = (
 
       vm.helpers {
         'feed': ()->
-          # NOTE: vm.getReactively('feedId') -> vm.feed
+          # NOTE: vm.getReactively('feedId') -> vm.$$feed
           return global['mcFeeds'].find( {'head.eventId': vm.getReactively('feedId')} )
+        'event': ()->
+          return global['mcEvents'].findOne( vm.getReactively('feedId') )
+
       }
 
       vm.autorun (tracker)->
@@ -81,6 +86,19 @@ FeedCtrl = (
         feedTransforms.onChange(feed)
         .then (filteredFeed)->
           vm['$$filteredFeed'] = filteredFeed
+
+
+
+      eventTransforms = new ReactiveTransformSvc(vm)
+      vm.autorun (tracker)->
+        event = vm.getReactively('event' , true)
+        eventTransforms.onChange(event)
+        .then (event)->
+          eventUtils.mockData(event, vm)
+
+        return
+
+      return # initialize
 
 
 
@@ -124,6 +142,7 @@ FeedCtrl.$inject = [
   '$filter', '$ionicHistory', '$state'
   'CollectionHelpers', 'FeedHelpers', 'PostHelpers'
   'exportDebug'
+  'eventUtils'
 ]
 
 

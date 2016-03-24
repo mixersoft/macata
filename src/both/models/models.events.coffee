@@ -67,6 +67,65 @@ allow = {
 
 
 methods = {
+  'Event.updateBooking': (event, booking)->
+    # save participations directly in Event
+    now = new Date()
+    found = _.find(event.participations, {ownerId: booking.head.ownerId})
+    participation = found || {
+      id: Date.now()  # for track by
+      seats: 0
+      createdAt: new Date()
+      ownerId: booking.head.ownerId
+      contributions: []
+    }
+    participation.seats += booking.body.seats
+    participation.modifiedAt = now
+
+    attachment = booking.body.attachment
+    switch attachment?.type
+      when 'Recipe'
+        found2 = _.find(participation.contributions, {_id: attachment._id})
+        contrib = found2 || {
+          _id: booking.body.attachment._id
+          className: booking.body.attachment.type
+          portions: 'todo'
+          sort: 'todo'
+          comment: []
+        }
+        # update portions, comment
+        contrib.comment = [contrib.comment] if _.isString contrib.comment
+        contrib.comment.push booking.body.message
+        if not found2
+          participation.contributions.push contrib
+      else
+        if !_.isEmpty booking.body.attachment
+          participation.contributions.push booking.body.attachment
+        else
+          # TODO: show a placeholder in event.menuItems?
+          console.info 'Event.updateBooking ???:attach a placeholder?'
+
+    if not found
+      event.participations ?=[]
+      event.participations.push participation
+    event.modifiedAt = now
+
+    # de-normalize certain fields
+    event.participantIds = _.pluck event.participations, 'ownerId'
+    event.menuItemIds = _.reduce event.participations, (result, p)->
+      ids = _.chain(p.contributions).filter({className:'Recipe'}).pluck('_id').value()
+      return result = result.concat ids
+    ,[]
+    seatsBooked = _.sum event.participations, 'seats'
+    event.seatsOpen = event.seatsTotal - seatsBooked
+
+    modified = _.pick event, [
+      'participations', 'seatsOpen', 'modifiedAt'
+      'participantIds', 'menuItemIds'
+    ]
+    modifier = {$set: modified}
+    mcEvents.update(event._id, modifier )
+    return
+
 }
 
 

@@ -121,21 +121,32 @@ methods = {
     }
     _.extend(post.head, options.head)
     _.extend(post.body, options.body)
-    post.head.ownerId = meId  # force ownership
+
+    if post.type != "Notification"
+      post.head.ownerId = meId  # force ownership
 
     # post.head = _omit$keys(post.head)
-    post.body.attachment = _omit$keys(post.body.attachment)
+    switch post.body.attachment?.className
+      when 'Recipe'
+        post.body.attachment = {
+          _id: post.body.attachment._id
+          type: post.body.attachment.className
+        }
+      else
+        post.body.attachment = _omit$keys(post.body.attachment) if post.body.attachment
+
+
+
 
     if _.isArray post.body.message
       post.body.message = post.body.message.join(' ')
 
-    if post.type != "Notification"
+    if post.type == "Notification"
       # TODO: demo only
       if not _.isEmpty post.head.recipientIds
         post.body.message += ' (This should be a private notification.)'
 
-    mcFeeds.insert post, (err, id)->
-      return console.warn ['Meteor::insert post WARN', err] if err
+    mcFeeds.insert post
 
 
 
@@ -160,6 +171,30 @@ methods = {
     modifier = { $addToSet: {"body.comments": postComment} }
     mcFeeds.update(post._id, modifier )
 
+
+  'Post.respondToInvite': (invite, action, options = {})->
+    modifier = {
+      $set:
+        'head.modifiedAt': new Date()
+    }
+    switch action
+      when 'accept'
+        modifier.$set['body.response'] = 'accepted'
+        modifier.$set['body.status'] = 'closed'
+        modifier.$set['body.seats'] = options.seats if options.seats
+      when 'decline'
+        modifier.$set['body.response'] = 'declined'
+        modifier.$set['body.status'] = 'closed'
+      when 'viewed'
+        modifier.$set['body.status'] = 'viewed'
+      when 'pending'  # TODO: participation status=pending, not viewed??
+        modifier.$set['body.status'] = 'pending'
+
+    mcFeeds.update(invite._id, modifier)
+
+
+  'DEV.Post.resetFeed': ()->
+    mcFeeds.remove({"head.createdAt": { $gt:moment().subtract(3,'day').toDate()} })
 
 
 }

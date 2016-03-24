@@ -5,17 +5,20 @@
 EventBookingCtrl = (
   $scope, $rootScope, $q, $timeout
   AAAHelpers, tileHelpers, appModalSvc
+  $reactive, CollectionHelpers
   $log, toastr, devConfig
   ) ->
+    $reactive(this).attach($scope)
     mm = this
     mm.name = "EventBookingCtrl"
+    mm.collHelpers = new CollectionHelpers(mm)
     mm.afterModalShow = ()->
       # params from appModalSvc.show( template , controllerAs , params, options) available
       # mm = copyToModalViewModal = {
       #   person: person
       #   event: event
       #   booking:
-      #     userId: person.id
+      #     userId: person._id
       #     seats: options['defaultSeats']
       #     maxSeats: options['maxSeats']
       #     message: null
@@ -25,8 +28,8 @@ EventBookingCtrl = (
       # }
       angular.extend mm, $scope.copyToModalViewModal
       angular.extend mm , {
-        confirmEventId: mm.event?.id
-        confirmCurrentUserId: mm.person?.id
+        confirmEventId: mm.event?._id
+        confirmCurrentUserId: mm.person?._id
       }
 
       # other init methods
@@ -36,7 +39,7 @@ EventBookingCtrl = (
       return
 
     mm.isAnonymous = ()->
-      return not (mm.person?.id)
+      return not (mm.person?._id)
 
     mm.isValidated = (booking)->
       return false if mm.isAnonymous()
@@ -47,8 +50,14 @@ EventBookingCtrl = (
       # add booking as participant to event
       # clean up data
       particip = {
+        type: 'Participation'
+        head:
+          eventId: event._id
+          moderatorIds: [event.ownerId] # TODO: add invitation.head.ownerId
+          nextActionBy: "moderator"
+          isPublic: false
         body:
-          type: 'Participation'
+          'xxx-type': 'Participation'
           status: 'new'
           response: 'Yes'
           seats: parseInt booking.seats
@@ -58,7 +67,7 @@ EventBookingCtrl = (
           location: booking.location  # booking.location = {address: latlon:}
       }
       # check for existing participation
-      if ~participantIds?.indexOf(person.id)
+      if ~participantIds?.indexOf(person._id)
         return $q.reject("DUPLICATE KEY")
 
       # booking by definition is a new response
@@ -110,16 +119,13 @@ EventBookingCtrl = (
       ###
       validateBooking : (person, event, booking, onSuccess)->
         # clean data
-        booking.attachment =
-          _.pick( booking.attachment
-          , ['id', 'url','title','description','image', 'site_name', 'extras'])
         booking.seats = parseInt booking.seats
 
         # some sanity checks
-        if mm.confirmEventId != event.id
+        if mm.confirmEventId != event._id
           toastr.warning("You are booking for a different event. title=" +
             event.title)
-        if mm.confirmCurrentUserId != person.id
+        if mm.confirmCurrentUserId != person._id
           toastr.warning("You are booking for a different person. name=" +
             person.displayName)
 
@@ -153,6 +159,7 @@ EventBookingCtrl = (
 EventBookingCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$timeout'
   'AAAHelpers', 'tileHelpers', 'appModalSvc'
+  '$reactive', 'CollectionHelpers'
   '$log', 'toastr', 'devConfig'
 ]
 

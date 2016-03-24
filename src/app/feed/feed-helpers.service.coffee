@@ -59,7 +59,7 @@ FeedHelpers = (
       .catch (err)->
         console.warn ['WARN:sign-in to post to Feed', err]
 
-    showMessageComposer: ($event, event, post)->
+    showMessageComposer: ($event)->
       return @showSignInRegister('sign-in') if !Meteor.userId()
       # template for post.body
       # for post.head: {} # see: FeedHelpers.post()
@@ -70,7 +70,12 @@ FeedHelpers = (
         location: null
       }
       @show.messageComposer = true
-      parent = ionic.DomUtil.getParentWithClass($event.target, 'event-feed')
+      parent = $event.target
+      while parent && parent.parentNode
+        break if parent.tagName == 'FILTERED-FEED'
+        parent = parent.parentNode
+
+
       $timeout().then ()->
         textbox = parent.querySelector('message-composer textarea')
         textbox.focus()
@@ -167,21 +172,21 @@ PostHelpers = (
       .catch (err)->
         console.warn ['WARN:sign-in to post to Feed', err]
 
-    updateInvite: (invite, action)->
+    respondToInvite: (invite, action, options={})->
       dfd = $q.defer()
-      @context.call 'Post.updateInvite', invite, action, (err, result)->
+      @context.call 'Post.respondToInvite', invite, action, options, (err, result)->
         if err
           dfd.reject(err)
-          return console.warn ['Meteor::updateInvite WARN', action, err]
+          return console.warn ['Meteor::respondToInvite WARN', action, err]
         dfd.resolve( mcFeeds.findOne(invite._id) )
-        console.log ['Meteor::updateInvite OK', action]
+        console.log ['Meteor::respondToInvite OK', action]
       return dfd.promise
 
     showCommentForm: ($event, post)->
       return if post.type == 'Notification'
       return @showSignInRegister('sign-in') if !Meteor.userId()
 
-      target = $event.currentTarget
+      target = $event.currentTarget || $event.target
       $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
       $wrap.toggleClass('hide')
       return if $wrap.hasClass('hide')
@@ -206,7 +211,7 @@ PostHelpers = (
         comment = options.message
         comment = comment.join(' ') if _.isArray comment
 
-      return if not comment
+      return $q.reject('Expecting message for comment') if not comment
 
       if options?['log'] == true
         # TODO: ???: has post from syslog("feed") been replaced by "Notifications"?
@@ -217,7 +222,7 @@ PostHelpers = (
         }
       else
         from = Meteor.user()
-      return if !from
+      return $q.reject('Expecting user for comment, not signed in?') if !from
 
       dfd = $q.defer()
       @context.call 'Post.postPostComment', post, comment, from, (err, result)->
