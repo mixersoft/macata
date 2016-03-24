@@ -14,6 +14,7 @@ angular
     'ionic'
     'ngCordova'
     'angular-meteor'
+    'angular-meteor.auth'
     'starter.core'
     'starter.layout'
     # Feature areas

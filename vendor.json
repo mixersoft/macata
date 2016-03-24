@@ -12,6 +12,7 @@
     "ionic-material/dist/ionic.material.DEBUG.js",
     "robotodraft/fonts/**/*",
     "angular-meteor/dist/angular-meteor.bundle.js",
+    "angular-meteor-auth/dist/angular-meteor-auth.bundle.js",
     "angular-google-maps/dist/angular-google-maps.js",
     "manual/ion-fab.css",
     "manual/ion-fab.js",

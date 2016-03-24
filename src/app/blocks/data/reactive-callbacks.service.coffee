@@ -2,7 +2,7 @@
 
 ReactiveTransformSvc = ($q)->
 
-  ReactiveTransformClass = (@context, @callbacks) ->
+  ReactiveTransformClass = (@context, @callbacks = {}) ->
     @onLoadPromise = null  # promise
     @isChanging = false
 

@@ -236,23 +236,6 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         ]
       return null
 
-    ###
-    # @description add a 'random' offset to latlon to mask exact location
-    # @param latlon Array, [lat,lon] expressed as decimal
-    ###
-    maskLatLon: (latlon, key)->
-      # +- .0025 to lat/lon
-      key = key[0..10]
-      offset = {
-        lat: (self.a2nHash( latlon[0] + key ) % 25) / 10000
-        lon: (self.a2nHash( latlon[1] + key ) % 25) / 10000
-      }
-      # console.log offset
-      return [
-        mathRound6 latlon[0]+offset.lat
-        mathRound6 latlon[1]+offset.lon
-      ]
-
     mathRound6: mathRound6
 
     ###

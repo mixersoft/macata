@@ -22,10 +22,14 @@ getStates = ->
         'menuContent':
           templateUrl: 'events/event-detail.html'
           controller: 'EventDetailCtrl as vm'
+      # resolve:
+      #   user: ['$auth', ($auth)->return $auth.currentUser ]
   ,
     state: 'app.event-detail.invitation'
     config:
       url: '^/app/invitation/:invitation'
+      params:
+        invitation: null
       views:
         'menuContent':
           templateUrl: 'events/events.html'

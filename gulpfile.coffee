@@ -111,6 +111,7 @@ gulp.task 'serve', ->
   browserSync.init
     server:
       baseDir: 'www'
+    ghostMode: false
 
   gulp.watch paths.sass, ['sass-watch']
   gulp.watch paths.jade, ['jade-watch']

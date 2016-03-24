@@ -84,19 +84,21 @@ ProfileCtrl = (
         return
 
       if $state.is('app.profile')
-        username = $stateParams.username
-        if !username
+        route = _.pick $stateParams, ['id', 'username']
+        if _.filter(route).length == 0
           toastr.warning "Sorry, that profile was not found."
           $rootScope.goBack()
           return
-        else if username == vm.me?.username
+        else if (vm.me && (route.username == vm.me.username || route.id == vm.me._id))
           # looking at my own profile
           return vm.person = vm.me
         else
           # viewing someone else's profile
           return $q.when()
           .then ()->
-            return Meteor.users.findOne({username:username})
+            options = route.id || {username: route.username}
+            return Meteor.users.findOne(options)
+
           .then (found)->
             if !found
               toastr.info "Sorry, that profile was not found"

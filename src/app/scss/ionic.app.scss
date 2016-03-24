@@ -944,6 +944,7 @@ $hero-wrap-bg-height: 170px;
     top: 0;
     z-index: 0;
     width: 100%;
+    pointer-events:none;
   }
 }
 .has-mask-reverse:after {

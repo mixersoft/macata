@@ -136,16 +136,21 @@ EventCtrl = (
     initialize = ()->
       $reactive(vm).attach($scope)
       # vm.subscribe 'userProfiles'
-      vm.subscribe 'myVisibleEvents', ()->
-        return [
-          vm.getReactively('filter.filterBy')
-          ,{
-            limit: parseInt(vm.pg.perpage),
-            skip: parseInt((vm.getReactively('pg.page') - 1) * vm.pg.perpage),
-            sort: vm.getReactively('pg.sort')
-          }
-          #, vm.getReactively('searchText')
-        ]
+      vm.subscribe 'myVisibleEvents'
+        ,()->
+          return [
+            vm.getReactively('filter.filterBy')
+            ,{
+              limit: parseInt(vm.pg.perpage),
+              skip: parseInt((vm.getReactively('pg.page') - 1) * vm.pg.perpage),
+              sort: vm.getReactively('pg.sort')
+            }
+          ]
+        ,{
+          onReady: ()->
+            # arguments == []
+            console.info ["EventsCtrl subscribe: Events onReady"]
+        }
       vm.helpers {
         'rows': ()->
           return mcEvents.find(
