@@ -11,6 +11,7 @@
 #
 
 MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
+  $reactive, ReactiveTransformSvc
   tileHelpers, IdeasResource
 )->
   directive = {
@@ -79,12 +80,28 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
         }
 
         $mc.RECIPE = {
+          filterBy: {}
           search: ()->
-            return IdeasResource.query()
-            .then (data)->
-              rows = data
-              return $mc.RECIPE.modal_showSearchRecipeTile(rows)
-          modal_showSearchRecipeTile : (data)->
+            Reactivecontext = $reactive($mc).attach($scope)
+            subHandle = $mc.subscribe 'myVisibleRecipes'
+            ,()->
+              filterBy = null
+              paginate = null
+              return subscription = [ filterBy, paginate  ]
+            ,{
+              onReady: ()->
+                console.info ["$mc.subscribe 'myVisibleRecipes'", "ready"]
+              onStop: (error)->
+                console.info ["$mc.subscribe 'myVisibleRecipes'", "stopped"]
+            }
+
+            $mc.helpers {
+              'rows': ()->
+                return mcRecipes.find( $mc.getReactively( 'RECIPE.filterBy' ) )
+            }
+            $mc.RECIPE.modal_showSearchRecipeTile($mc.rows, subHandle)
+
+          modal_showSearchRecipeTile : (data, subHandle)->
             options = {modalCallback: null} # see RecipeSearchCtrl
             return appModalSvc.show(
               'events/modal-actions/search-recipe.modal.html'
@@ -96,6 +113,11 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
               }
               , options )
             .then (result)->
+              subHandle.stop?()
+              if $mc.stop
+                $mc.stop()  # stop reactivity
+              else
+                console.warn "WARN: How do we stop reactivity???"
               # wait for closeModal()
               result ?= 'CANCELED'
               console.log ['modal_showSearchRecipeTile()', result]
@@ -186,6 +208,7 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
   return directive
 
 MessageComposerDirective.$inject = ['$compile', '$q', '$timeout', '$ionicScrollDelegate'
+  '$reactive', 'ReactiveTransformSvc'
   'tileHelpers', 'IdeasResource'
 ]
 
