@@ -125,7 +125,7 @@ FeedCtrl = (
           vm.feedId = feedId
 
     setFabIcon = (event)->
-      if EventModel::isParticipant::isParticipant(event)
+      if EventModel::isParticipant(event)
         icon = 'ion-chatbox'
       else
         icon = 'ion-plus'

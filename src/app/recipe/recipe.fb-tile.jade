@@ -28,8 +28,8 @@ list-item-summary.animate-fade-slide-in-right(
         ng-click="$event.stopImmediatePropagation()"
         )
         i.button.button-clear.larger.ion-heart.ink(
-          ng-class="$item.favorite && 'selected'"
-          ng-click="$item.favorite = !$item.favorite"
+          ng-class="vm.RecipeM.isFavorite($item) && 'selected'"
+          ng-click="vm.on.favorite($event, $item)"
           )
         i.button.button-clear.larger.ion-map.ink(
           ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"

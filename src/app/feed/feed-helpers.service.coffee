@@ -8,21 +8,6 @@ CollectionHelpers = (
   class CollectionHelpersClass
     global = $window
     constructor: (@context)->
-      # NOTE: We need @context = vm to make $reactive calls
-      return
-
-    # currently not used
-    ###
-      call in Class::constructor, e.g. bindClassMethods(@,PostHelpersClass,@context)
-      usage: vm.postHelpers = new PostHelpers(vm)
-    ###
-    bindClassMethods = (instance, Class, context)->
-      _.each Class.prototype, (v,k)->
-        # bind methods to @context
-        if _.isFunction(v)
-          instance[k] = ()-> return v.apply(context, arguments)
-        return
-      ,instance
 
     findOne: (className, id, fields)->
       return null if not (id && className)
@@ -48,56 +33,56 @@ FeedHelpers = (
 )->
   class FeedHelpersClass
     constructor: (@context)->
-      return
 
     postDefaults: {}
     show:
       messageComposer: false
 
-    showSignInRegister: (action)->
-      return AAAHelpers.showSignInRegister.call(@context, action)
-      .catch (err)->
-        console.warn ['WARN:sign-in to post to Feed', err]
-
     showMessageComposer: ($event)->
-      return @showSignInRegister('sign-in') if !Meteor.userId()
-      # template for post.body
-      # for post.head: {} # see: FeedHelpers.post()
-      @postDefaults = {
-        message: null
-        attachment: null
-        address: null
-        location: null
-      }
-      @show.messageComposer = true
-      parent = $event.target
-      while parent && parent.parentNode
-        break if parent.tagName == 'FILTERED-FEED'
-        parent = parent.parentNode
+      self = @
+      return AAAHelpers.requireUser('sign-in')
+      .then ()->
+
+      # return @showSignInRegister('sign-in') if !Meteor.userId()
+
+        # template for post.body
+        # for post.head: {} # see: FeedHelpers.post()
+        self.postDefaults = {
+          message: null
+          attachment: null
+          address: null
+          location: null
+        }
+        self.show.messageComposer = true
+        parent = $event.target
+        while parent && parent.parentNode
+          break if parent.tagName == 'FILTERED-FEED'
+          parent = parent.parentNode
 
 
-      $timeout().then ()->
-        textbox = parent.querySelector('message-composer textarea')
-        textbox.focus()
-        textbox.scrollIntoViewIfNeeded()
-      return
+        $timeout().then ()->
+          textbox = parent.querySelector('message-composer textarea')
+          textbox.focus()
+          textbox.scrollIntoViewIfNeeded()
+        return
 
     ###
     # @description  post to Feed
     # @return promise
     ###
     postToFeed: (post, cb={})->
-      missingKeys = _.difference ['type','head','body'], _.keys post
-      return if missingKeys.length
-
       self = @
+      return AAAHelpers.requireUser('sign-in')
+      .then ()->
+        missingKeys = _.difference ['type','head','body'], _.keys post
+        return if missingKeys.length
 
-      @context.call 'Post.postFeedPost', @context.feedId, post, (err, result)->
-        if err
-          cb['onError']?(err)
-          return console.warn ['Meteor::postFeedPost WARN', err]
-        cb['onSuccess']?(result)
-        console.log ['Meteor::postFeedPost OK']
+        self.context.call 'Post.postFeedPost', self.context.feedId, post, (err, result)->
+          if err
+            cb['onError']?(err)
+            return console.warn ['Meteor::postFeedPost WARN', err]
+          cb['onSuccess']?(result)
+          console.log ['Meteor::postFeedPost OK']
 
     ###
     # @description  use with directive message-composer
@@ -105,39 +90,45 @@ FeedHelpers = (
     # @return promise
     ###
     postCommentToFeed: (comment)->
-      dfd = $q.defer()
       self = @
-      post = {
-        type: 'Comment'
-        head:
-          isPublic: true
-        # @TODO: check/change to post.body.message(?)
-        body: comment
-      }
-      return @postToFeed(post, {
-        onSuccess: (result)->
-          self.show.messageComposer = false
-          return dfd.resolve( mcFeeds.findOne(result) )
-        })
+      return AAAHelpers.requireUser('sign-in')
+      .then ()->
+        post = {
+          type: 'Comment'
+          head:
+            isPublic: true
+          # @TODO: check/change to post.body.message(?)
+          body: comment
+        }
+        dfd = $q.defer()
+        return self.postToFeed(post, {
+          onSuccess: (result)->
+            self.show.messageComposer = false
+            return dfd.resolve( mcFeeds.findOne(result) )
+          })
 
     ###
     # @return promise
     ###
     postNotificationToFeed: (data) ->
+      self = @
+      return AAAHelpers.requireUser('sign-in')
+      .then ()->
       # format notification as a Post
-      dfd = $q.defer()
-      post = {}
-      post.type = 'Notification'
-      post.head = _.pick data, ['ownerId', 'recipientIds', 'role', 'expiresAt']
-      post.body = {
-        message: data.message
-      }
-      @postToFeed(post, {
-        onError: (err)-> return dfd.reject(err)
-        onSuccess: (result)-> return dfd.resolve( mcFeeds.findOne(result) )
+
+        post = {}
+        post.type = 'Notification'
+        post.head = _.pick data, ['ownerId', 'recipientIds', 'role', 'expiresAt']
+        post.body = {
+          message: data.message
         }
-      )
-      return dfd.promise
+        dfd = $q.defer()
+        self.postToFeed(post, {
+          onError: (err)-> return dfd.reject(err)
+          onSuccess: (result)-> return dfd.resolve( mcFeeds.findOne(result) )
+          }
+        )
+        return dfd.promise
 
 
 
@@ -152,8 +143,6 @@ PostHelpers = (
 )->
   class PostHelpersClass
     constructor: (@context)->
-      # bindClassMethods(@,PostHelpersClass,@context)
-      return
 
     dismissItem: ($event, post)->
       # return mcFeeds.helpers.dismiss(post)
@@ -162,10 +151,13 @@ PostHelpers = (
         console.log ['Meteor::dismiss OK']
 
     like: ($event, post)->
-      # return mcFeeds.helpers.toggleLike(post)
-      @context.call 'Post.toggleLike', post, (err, result)->
-        console.warn ['Meteor::toggleLike WARN', err] if err
-        console.log ['Meteor::toggleLike OK']
+      self = @
+      return AAAHelpers.requireUser('sign-in')
+      .then ()->
+        # return mcFeeds.helpers.toggleLike(post)
+        self.context.call 'Post.toggleLike', post, (err, result)->
+          console.warn ['Meteor::toggleLike WARN', err] if err
+          console.log ['Meteor::toggleLike OK']
 
     showSignInRegister: (action)->
       return AAAHelpers.showSignInRegister.call(@context, action)

@@ -14,6 +14,17 @@ HandyStuff = ($window, $document, amMoment) ->
       parent = ionic.DomUtil.getParentWithClass(el, parentClass)
       return child = parent.querySelector(childSelector)
 
+    ###
+    # @description: bind instance methods to a specific context
+    #   e.g. constructor:
+    #         utils.bindInstanceMethods(@)
+    ###
+    bindInstanceMethods: (instance, context)->
+      context ?= instance.context
+      _.forOwn instance.__proto__, (val, key)->
+        instance[key] = val.bind(context)
+      ,instance
+
     range: (min, max, step)->
       step ?= 1
       range = (x for x in [min..max] by step)

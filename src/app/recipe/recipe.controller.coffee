@@ -20,6 +20,7 @@ RecipeCtrl = (
     vm.recipeHelpers = new RecipeHelpers(vm)
     vm.collHelpers = new CollectionHelpers(vm)
     vm.listItemDelegate = null
+    vm.RecipeM = RecipeModel::
 
     vm.acl = {
       isVisitor: ()->
@@ -71,6 +72,7 @@ RecipeCtrl = (
 
       'forkTile': vm.recipeHelpers['forkTile']
       'edit': vm.recipeHelpers['edit']
+      'favorite': vm.recipeHelpers['favorite']
 
 
       # called by <new-tile[on-complete]>
@@ -156,44 +158,7 @@ RecipeCtrl.$inject = [
 ]
 
 
-RecipeHelpers = (
-  $timeout, utils, tileHelpers
-)->
-  class RecipeHelpersClass
-    constructor: (@context)->
-      # bindClassMethods(@,RecipeHelpersClass,@context)
-      return
 
-    favorite: ($event, model)->
-      # return mcFeeds.helpers.toggleLike(model)
-      @context.call 'Model.toggleFavorite', model, (err, result)->
-        console.warn ['Meteor::toggleFavorite WARN', err] if err
-        console.log ['Meteor::toggleFavorite OK']
-
-    edit: (event, item)->
-      data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-      return tileHelpers.modal_showTileEditor(data)
-      .then (result)->
-        console.log ["edit", data]
-        data.isOwner = true
-        return
-
-    forkTile: ($event, item)->
-      data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-      # from new-tile.directive fn:_showTileEditorAsModal
-      return tileHelpers.modal_showTileEditor(data)
-      .then (result)->
-        console.log ['forkTile',result]
-        # return vm.on.submitNewTile(result)
-      .then ()->
-        item.isOwner = true
-      .catch (err)->
-        console.warn ['forkTile', err]
-
-
-  return RecipeHelpersClass
-
-RecipeHelpers.$inject = ['$timeout', 'utils', 'tileHelpers']
 
 
 ###
@@ -313,7 +278,7 @@ RecipeSearchCtrl.$inject = [
 ]
 
 angular.module 'starter.recipe'
-  .factory 'RecipeHelpers', RecipeHelpers
+  # .factory 'RecipeHelpers', RecipeHelpers
   .controller 'RecipeCtrl', RecipeCtrl
   .controller 'RecipeDetailCtrl', RecipeDetailCtrl
   .controller 'RecipeSearchCtrl', RecipeSearchCtrl

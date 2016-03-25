@@ -11,9 +11,6 @@ options = {
     limit: 10
 }
 
-_getUserId = (context)->
-  return if Meteor.isServer then context.userId else Meteor.userId()
-
 ###
 # Example:
     vm.EventM = new EventModel()
@@ -37,7 +34,8 @@ EventModel::isAdmin = (event, userId)->
     event = @context
     [userid] = arguments
   return false if !event
-  userId ?= _getUserId(this)
+  userId ?= Meteor.userId()   # available in Meteor.methods
+  return false if !userId
   return true if event.ownerId == userId
   return false
 
@@ -46,7 +44,8 @@ EventModel::isModerator = (event, userId)->
     event = @context
     [userid] = arguments
   return false if !event
-  userId ?= _getUserId(this)
+  userId ?= Meteor.userId()   # available in Meteor.methods
+  return false if !userId
   return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
   return true if event.ownerId == userId
   return false
@@ -56,7 +55,8 @@ EventModel::isParticipant = (event, userId)->
     event = @context
     [userid] = arguments
   return false if !event
-  userId ?= _getUserId(this)
+  userId ?= Meteor.userId()   # available in Meteor.methods
+  return false if !userId
   return true if event.participantIds && ~event.participantIds.indexOf userId
   return true if event.ownerId == userId
   return false
@@ -101,6 +101,25 @@ allow = {
 
 
 methods = {
+  'Event.toggleFavorite': (model)->
+    return if model.className != 'Event'
+    meId = Meteor.userId()
+
+    model.favorites ?= []
+    found = model.favorites.indexOf meId
+    action =
+      if found == -1
+      then '$addToSet'   # TODO: this is not scalable
+      else '$pull'
+    modifier = {}
+    modifier[action] = {"favorites": meId}  # e.g.  { $addToSet: {"likes": meId} }
+    mcEvents.update(model._id, modifier )
+    #TODO: update Model.user().profile.favorites
+    profileFavorite = {"profile.favorites": { _id: model._id, className: 'Event' }}
+    modifier[action] = profileFavorite
+    Meteor.users.update({_id: meId}, modifier )
+    return
+
   'Event.updateBooking': (event, booking)->
     # save participations directly in Event
     now = new Date()

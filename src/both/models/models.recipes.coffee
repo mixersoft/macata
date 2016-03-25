@@ -9,10 +9,9 @@ options = {
       profile: 1
 }
 
-_getUserId = (context)->
-  return if Meteor.isServer then context.userId else Meteor.userId()
-
-
+###
+#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
+###
 global['RecipeModel'] = class RecipeModel
   constructor: (@context)->
   set: (@context)->
@@ -22,11 +21,24 @@ global['RecipeModel'] = class RecipeModel
 RecipeModel::isAdmin = (model, userId)->
   if @context
     model = @context
-    [userid] = arguments
+    [userid] = arguments      # required when called from publish
   return false if !model
-  userId ?= _getUserId(this)
+  userId ?= Meteor.userId()   # available in Meteor.methods
+  return false if !userId
   return true if model.ownerId == userId
   return false
+
+RecipeModel::isFavorite = (model, me)->
+  if @context
+    model = @context
+    [me] = arguments
+  return false if !model
+  me ?= Meteor.user()
+  return false if !me
+  return true if _.find me.profile.favorites, {_id: model._id}
+  return false
+
+
 
 RecipeModel::fetchOwner = (model={})->
   if @context
@@ -57,8 +69,8 @@ allow = {
 
 methods = {
   'Recipe.toggleLike': (model)->
-    return if model.type != 'Recipe'
-    meId = this.userId
+    return if model.className != 'Recipe'
+    meId = Meteor.userId()
     model.likes ?= []
     found = model.likes.indexOf meId
     action =
@@ -71,21 +83,22 @@ methods = {
     return
 
   'Recipe.toggleFavorite': (model)->
-    return if model.type != 'Recipe'
-    meId = this.userId
+    return if model.className != 'Recipe'
+    meId = Meteor.userId()
+
     model.favorites ?= []
     found = model.favorites.indexOf meId
     action =
       if found == -1
-      then '$addToSet'
+      then '$addToSet'   # TODO: this is not scalable
       else '$pull'
     modifier = {}
     modifier[action] = {"favorites": meId}  # e.g.  { $addToSet: {"likes": meId} }
     mcRecipes.update(model._id, modifier )
     #TODO: update Model.user().profile.favorites
-    profileFavorite = {"profile.favorites": { _id: model._id, class: 'Recipe' }}
+    profileFavorite = {"profile.favorites": { _id: model._id, className: 'Recipe' }}
     modifier[action] = profileFavorite
-    Meteor.user.update({_id: meId}, modifier )
+    Meteor.users.update({_id: meId}, modifier )
     return
 
 }

@@ -14,6 +14,7 @@ EventCtrl = (
     vm.viewId = ["events-view",$scope.$id].join('-')
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
+    vm.RecipeM = RecipeModel::
 
     vm.pg = {
       perpage: 20
@@ -123,6 +124,10 @@ EventCtrl = (
       notReady: (value)->
         toastr.info "Sorry, " + value + " is not available yet"
         return false
+
+      'favorite': ()->
+        eventUtils['favorite'].apply vm, arguments
+
     }
 
 

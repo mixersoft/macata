@@ -1,6 +1,9 @@
 'use strict'
 
-EventsUtil = (utils, $document, amMoment) ->
+# TODO: refactor as EventHelpers
+EventsUtil = (utils, $document, amMoment,
+  AAAHelpers
+) ->
 
   self = {
     ###
@@ -32,6 +35,18 @@ EventsUtil = (utils, $document, amMoment) ->
           marker: utils.maskLatLon(event.location, event.title)
         }
       return event
+
+    # TODO: change to like for expiring classes?
+    favorite: ($ev, model)->
+      self = this
+      return AAAHelpers.requireUser('sign-in')
+      .then ()->
+        model.className = 'Event' if !model.className
+        self.call 'Event.toggleFavorite', model, (err, result)->
+          console.warn ['Meteor::toggleFavorite WARN', err] if err
+          console.log ['Meteor::toggleFavorite OK']
+
+
     mockData: (event, vm)->
 
       event.moderatorIds = [event.ownerId]
@@ -86,7 +101,9 @@ EventsUtil = (utils, $document, amMoment) ->
   }
   return self
 
-EventsUtil.$inject = ['utils', '$document', 'amMoment']
+EventsUtil.$inject = ['utils', '$document', 'amMoment'
+  'AAAHelpers'
+]
 
 angular.module 'starter.events'
   .factory 'eventUtils', EventsUtil

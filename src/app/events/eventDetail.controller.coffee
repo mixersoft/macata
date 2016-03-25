@@ -8,7 +8,7 @@ EventDetailCtrl = (
   uiGmapGoogleMapApi, geocodeSvc, unsplashItSvc, eventUtils
   $reactive, ReactiveTransformSvc, $auth
   UsersResource, EventsResource, IdeasResource, FeedResource, TokensResource
-  EventActionHelpers, $filter, notificationTemplates, FeedHelpers
+  EventActionHelpers, $filter, notificationTemplates, FeedHelpers, RecipeHelpers
   utils, devConfig, exportDebug
   )->
     # coffeelint: disable=max_line_length
@@ -19,6 +19,9 @@ EventDetailCtrl = (
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
     vm.feedHelpers = new FeedHelpers(vm)
     vm.EventM = new EventModel()
+
+    vm.recipeHelpers = new RecipeHelpers(vm)  # for on.favorite()
+    vm.RecipeM = RecipeModel::                # for .isFavorite($item) in view
 
     vm.acl = {
       isVisitor: ()->
@@ -158,8 +161,10 @@ EventDetailCtrl = (
         icon = 'ion-plus'
       vm.settings.show.fabIcon = icon
 
-
     vm.on = {
+
+      'favorite': vm.recipeHelpers['favorite']
+
       scrollTo: (anchor)->
         $location.hash(anchor)
         $ionicScrollDelegate.anchorScroll(true)
@@ -245,6 +250,8 @@ EventDetailCtrl = (
       'notReady': (value)->
         toastr.info "Sorry, " + value + " is not available yet"
         return false
+
+
 
 
     }
@@ -555,7 +562,7 @@ EventDetailCtrl.$inject = [
   'uiGmapGoogleMapApi', 'geocodeSvc', 'unsplashItSvc', 'eventUtils'
   '$reactive', 'ReactiveTransformSvc', '$auth'
   'UsersResource', 'EventsResource', 'IdeasResource', 'FeedResource', 'TokensResource'
-  'EventActionHelpers', '$filter', 'notificationTemplates', 'FeedHelpers'
+  'EventActionHelpers', '$filter', 'notificationTemplates', 'FeedHelpers', 'RecipeHelpers'
   'utils', 'devConfig', 'exportDebug'
 ]
 

@@ -15,8 +15,13 @@ AAAHelpers = ($rootScope, $q, $timeout
         angular.extend user, _.pick user.profile, ['displayName', 'face']
         user.id = user._id
 
+      requireUser: (initialSlide)->
+        if self.isAnonymous()
+          return self.showSignInRegister(initialSlide)
+        return $q.when(Meteor.user())
+
       isAnonymous: ()->
-        return true if not Meteor.user() || _.isEmpty $rootScope.user
+        return true if not Meteor.user()
         return false
 
       signIn: (person)->
@@ -62,14 +67,14 @@ AAAHelpers = ($rootScope, $q, $timeout
           # checkIfUserExists: (data)->
           #   return UsersResource.query({username:data.username})
           register: self.register
-          notImplemented: vm.on.notReady
+          notImplemented: vm.on?.notReady
         })
         .then (user)->
           console.log ['SignInRegisterSvc, user=', user]
           # return devConfig.loginUser( person.id , true)
           $log.info "Sign-in for username=" + user.username
 
-          _setProfileDefaults = ()->
+          _setProfileDefaults = (user)->
             # sign-in-register cleanup
             profileDefaults = {}
             if not user.profile.displayName
@@ -82,16 +87,18 @@ AAAHelpers = ($rootScope, $q, $timeout
               face = unsplashItSvc.getImgSrc(Meteor.userId(), 'people-1', {face:true} )
               profileDefaults['profile.face'] = face
             if not _.isEmpty profileDefaults
-              Meteor.users.update Meteor.userId(), {$set: profileDefaults}
+              # TODO: move to Meteor.methods
+              Meteor.users.update user._id, {$set: profileDefaults}
             return
 
-          _setProfileDefaults()
+          _setProfileDefaults(user)
 
-          $rootScope['user'] = Meteor.user()
-          self._backwardCompatibleMeteorUser($rootScope['user'])
+          # @TODO: deprecate: use $rootScope.currentUser
+          $rootScope['user'] = user
+          self._backwardCompatibleMeteorUser(user)
 
-          $rootScope.$emit 'user:sign-in', $rootScope['user']
-          return $rootScope['user']
+          $rootScope.$emit 'user:sign-in', user
+          return user
     }
 
     return self # AAAHelpers
