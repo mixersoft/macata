@@ -15,10 +15,10 @@ _omit$keys = (o)->
   return o if not _.isObject o
   omitKeys = _.filter(_.keys(o), (k)->return k[0]=='$')
   return clean = _.omit o, omitKeys
-_getUserId = (context)->
-  return if Meteor.isServer then context.userId else Meteor.userId()
 
-
+###
+#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
+###
 global['FeedModel'] = class FeedModel
   constructor: (@context)->
   set: (@context)->
@@ -31,7 +31,7 @@ FeedModel::isAdmin = (model, userId)->
     model = @context
     [userid] = arguments
   return false if !model
-  userId ?= _getUserId(this)
+  userId ?= Meteor.userId()   # available in Meteor.methods
   return true if model.head.ownerId == userId
   return false
 
@@ -40,7 +40,7 @@ FeedModel::isModerator = (model, userId, event)->
     model = @context
     [userid, event] = arguments
   return false if !event
-  userId ?= _getUserId(this)
+  userId ?= Meteor.userId()   # available in Meteor.methods
   return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
   return true if model.head.ownerId == userId
   return true if event?.moderatorIds && ~event.moderatorIds.indexOf userId

@@ -4,6 +4,13 @@
 global = @
 mcRecipes = global['mcRecipes']
 
+###
+# NOTE: publish functions can only use this.userid
+#   Meteor.methods can use Meteor.user() from both client & server
+###
+_getUser = (userId)->
+  return Meteor.users.findOne(userId)
+
 Meteor.publishComposite 'myVisibleRecipes', (filterBy={}, options={})->
 
   # TODO: use check() to validate options

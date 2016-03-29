@@ -3,6 +3,14 @@
 # @ adds to global namespace
 global = @
 
+###
+# NOTE: publish functions can only use this.userid
+#   Meteor.methods can use Meteor.user() from both client & server
+###
+_getUser = (userId)->
+  return Meteor.users.findOne(userId)
+
+
 Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
   # console.log ['publish events', options]
   # TODO: use check() to validate options

@@ -20,7 +20,11 @@ options = {
     vm.EventModel = EventModel::
     vm.EventModel.isParticipant(event)
     or from publish:
-    EventModel::isParticipant.call(this, event)
+    EventModel::isParticipant(event, this.userId)
+###
+
+###
+#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
 ###
 global['EventModel'] = class EventModel
   constructor: (@context)->
