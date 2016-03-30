@@ -13,6 +13,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
       showDetailInline: "="
       scrollHandle: "@"
       detailByReference: "@"
+      selectedId: "="
       onSelect: '&'
     }
     controllerAs: '$listItemDelegate'
@@ -54,15 +55,16 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
           return angular.element all
 
         vm.layout = (type, $selectedElContainer)->
-          if not vm['$summaryEl']?.length or not vm['$detailEl']?.length
+          if not vm['$summaryEl']?.length
             return throw new Error(
               """
-              Missing: directive <list-item-container> requires both <list-item-summary> and <list-item-detail> child nodes
+              Missing: directive <list-item-container> requires <list-item-summary> and optionally <list-item-detail> child nodes
               """
             )
           switch type
             when 'summary'
-              if $scope.showDetailInline == false
+              showAllSummary = $scope.showDetailInline == false
+              if showAllSummary
                 vm.$summaryEl.children().removeClass('hide')
 
               ngRepeatGridSvc.clearColSpec(vm.$detailEl)
@@ -76,9 +78,9 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
                 # clearColSpec after .slide-under animation
                 ngRepeatGridSvc.clearColSpec( unSelect )
                   .addClass(vm.getColWidth())
-                vm.$summaryEl
-                  .append(vm.$detailEl)
-                vm.$detailEl.addClass 'hide'
+                if vm.$detailEl
+                  vm.$summaryEl.append(vm.$detailEl)
+                  vm.$detailEl.addClass 'hide'
 
                 # vm.$summaryEl.children().removeClass('hide') # optional
                 # _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
@@ -94,38 +96,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
 
 
             when 'detail'
-              if $scope.showDetailInline == false
-                vm.$summaryEl.children().addClass('hide')
-
-              # $compile(vm.$detailEl.children())($scope)
-
-              ngRepeatGridSvc.clearColSpec($selectedElContainer)
-                .removeClass('hide')
-                .addClass('selected')
-                .addClass(ngRepeatGridSvc.calcColWidth(null, $scope.detailMaxWidth))
-                # append $detailEl to $selectedElContainer
-                .append(vm.$detailEl)
-
-
-              unSelectSummaryEl = vm.getAllSelected vm.$summaryEl, $selectedElContainer
-              ngRepeatGridSvc.clearColSpec( unSelectSummaryEl )
-                .removeClass('selected')
-                .addClass(vm.getColWidth())
-              vm.$summaryEl
-                .addClass('detail-view-active')
-
-              vm.$detailEl
-                .removeClass('hide')
-
-              $timeout ()->
-                vm.$detailEl
-                  .removeClass('slide-under')
-                # vm.scrollPos = _ionScroll.getScrollPosition()
-                # _ionScroll.scrollTo(0,0, true)
-                # vm.$summaryEl.children().addClass('hide') # optional
-                return
-
-              $timeout ()->
+              $timeout(300).then ()->
                 vm.scrollPos = {
                   left: 0
                   top: ionic.DomUtil.getPositionInParent($selectedElContainer[0]).top
@@ -143,9 +114,42 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
                     return
                 else
                   _ionScroll.scrollTo(vm.scrollPos.left, vm.scrollPos.top, true)
-
                 return
-              , 300
+
+              return 'skip' if !vm.$detailEl
+
+              showAllSummary = $scope.showDetailInline == false
+              if showAllSummary
+                vm.$summaryEl.children().addClass('hide')
+
+              # $compile(vm.$detailEl.children())($scope)
+
+              ngRepeatGridSvc.clearColSpec($selectedElContainer)
+                .removeClass('hide')
+                .addClass('selected')
+                .addClass(ngRepeatGridSvc.calcColWidth(null, $scope.detailMaxWidth))
+                # append $detailEl to $selectedElContainer
+              if vm.$detailEl
+                $selectedElContainer.append(vm.$detailEl)
+
+
+              unSelectSummaryEl = vm.getAllSelected vm.$summaryEl, $selectedElContainer
+              ngRepeatGridSvc.clearColSpec( unSelectSummaryEl )
+                .removeClass('selected')
+                .addClass(vm.getColWidth())
+              vm.$summaryEl
+                .addClass('detail-view-active')
+
+              if vm.$detailEl
+                vm.$detailEl.removeClass('hide')
+                $timeout ()->
+                  vm.$detailEl.removeClass('slide-under')
+                  # vm.scrollPos = _ionScroll.getScrollPosition()
+                  # _ionScroll.scrollTo(0,0, true)
+                  # vm.$summaryEl.children().addClass('hide') # optional
+                  return
+                
+
           return
 
 
@@ -172,6 +176,14 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
         $scope.$watch 'summaryMinWidth', (newV)->
           ngRepeatGridSvc.resetColWidth($scope.summaryMinWidth)
           return
+
+        $scope.$watch 'selectedId', (newV, oldV)->
+          return if !newV || newV == oldV
+          item = _.find $scope.collection, (o)->
+            return newV == (o._id || o.id)
+          return if !item
+          index = _.findIndex $scope.collection, item
+          vm.$listItemDelegate.select(null, item, index, 'silent')
 
 
         # these methods are available to transclude nodes
@@ -226,6 +238,8 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
                 silent: silent
               })
             return if silent
+
+            $scope.selectedId = $item.id
             $scope.$emit '$listItemDelegate:selected', {
               $item: $item,
               $index: $index
@@ -303,19 +317,22 @@ ListSummaryDirective = ($filter, $window, $controller, $ionicScrollDelegate)->
           controller['$summaryEl'].attr('id', 'list-item-container-'+element.scope().$id)
           return
         post: (scope, element, attrs, controller, transclude) ->
+          # NOTE: controller == vm from ListItemContainerDirective.controller
           scope.$listItemDelegate = controller['$listItemDelegate']
 
-          if not attrs.collection?
+          scope.$watchCollection ()->
+            return scope.collection if attrs.collection?
             # list-item-summary[collection] takes precedence
-            scope.$watch '$listItemDelegate.collection()', (newV, oldV)->
-
-              filter = scope.$listItemDelegate.filter?.split(':')
-              if filter
-                scope.collection = $filter(filter.shift()).apply(this, [newV].concat(filter))
-              else
-                scope.collection = newV
-              scope.$broadcast 'list-item-summary:changed'
-              return
+            return scope.$listItemDelegate.collection()
+          , (newV, oldV)->
+            # console.warn ['collection.count=', newV.length]
+            filter = scope.$listItemDelegate.filter?.split(':')
+            if filter
+              scope.collection = $filter(filter.shift()).apply(this, [newV].concat(filter))
+            else
+              scope.collection = newV
+            scope.$broadcast 'list-item-summary:changed'
+            return
 
           controller.selected(null)
           scope.dbg = {
