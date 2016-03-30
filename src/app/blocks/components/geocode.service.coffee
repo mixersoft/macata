@@ -252,9 +252,10 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
       dragendMarker: Fn
       clickMarker: Fn
     ###
-    getMapConfig: (options)->
+    getMapConfig: (options={}, markerKeymap)->
+
       _.defaults options, {
-        location: []
+        location: GEOCODER.ZERO_RESULT_LOC
         markers:[]
         type: 'oneMarker'
         circleRadius: 500
@@ -308,14 +309,19 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
               'dragend': options.dragendMarker
             }
         when 'manyMarkers'
-          markers = _.map options.markers, (result, i, l)->
-            point = result['geometry']['location']
+          keymap = _.defaults options.markerKeymap, {
+            id: 'id'
+            location: 'location'
+            label: 'title'
+          }
+          markers = _.map options.markers, (o, i, l)->
+            point = o['geometry'][keymap['location']]
             return _.defaults {
-              'id': i
+              'id': o[keymap['id']] || i+''
               'latitude': mathRound6 point.lat()
               'longitude': mathRound6 point.lng()
-              'formatted_address': result.formatted_address
-            }, result
+              'formatted_address': o.formatted_address
+            }, o
 
           mapConfigOptions['manyMarkers'] = {
             models: markers
