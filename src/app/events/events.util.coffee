@@ -28,11 +28,13 @@ EventsUtil = (utils, $document, amMoment,
         event.visible = {
           address: event.address
           marker: event.location
+          type: 'oneMarker'
         }
       else
         event.visible = {
           address: event.neighborhood
           marker: utils.maskLatLon(event.location, event.title)
+          type: 'circle'
         }
       return event
 

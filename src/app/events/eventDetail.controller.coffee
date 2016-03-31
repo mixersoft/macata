@@ -72,15 +72,15 @@ EventDetailCtrl = (
         MarkersControl: {}
       map: null
       prepareMap: (event, options)->
-        markerLoc = event.visible?.marker || event.location
-        return $q.when() if !markerLoc
+        return $q.reject('use setVisibleLocation()') if !event.visible
 
+        return $q.when() if !event.visible.marker
         return uiGmapGoogleMapApi
         .then ()->
           # markerCount==1
           mapOptions = {
-            type: 'oneMarker'
-            location: markerLoc
+            type: event.visible.type
+            location: event.visible.marker
             # draggableMap: true  # set in activate()
             draggableMarker: false
             dragendMarker: (marker, eventName, args)->
