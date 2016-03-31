@@ -4,17 +4,26 @@ EventCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  appModalSvc, tileHelpers, openGraphSvc, eventUtils
+  appModalSvc, tileHelpers, openGraphSvc, eventUtils, AAAHelpers
   $reactive, UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
 
     vm = this
-    vm.title = "Events"
     vm.viewId = ["events-view",$scope.$id].join('-')
+    vm.title = "Events"
     vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
     vm.RecipeM = RecipeModel::
+
+    # required for directive:map-view
+    vm.rows = []
+    vm.markerKeymap = {
+      id: '_id'
+      location: 'location'
+      label: 'title'
+    }
+    vm.selectedItemId = null
 
     vm.pg = {
       perpage: 20
@@ -25,17 +34,13 @@ EventCtrl = (
     # exportDebug.set 'pg', vm.pg
     vm.filter = {
     }
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.user
-      isUser: ()->
-        return true if $rootScope.user
-    }
+
     vm.settings = {
       view:
         show: 'grid'
         'new': false
       show:
+        map: false
         newTile: false
         spinner:
           newTile: false
@@ -175,6 +180,7 @@ EventCtrl = (
 
 
     activate = ()->
+      # vm.settings.viewId = ["events-view",$scope.$id].join('-')
       vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
       vm.filter = _filters[ $stateParams.filter || 'all'  ]()
       # exportDebug.set('filter', vm.filter)
@@ -222,7 +228,7 @@ EventCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils', 'AAAHelpers'
   '$reactive', 'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]

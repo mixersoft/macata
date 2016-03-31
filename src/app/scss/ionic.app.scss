@@ -923,6 +923,10 @@ $hero-wrap-bg-height: 170px;
 /*
    map-view-map
 */
+.map-view-search {
+  min-width:32.5px;
+  svg {width: 26px; height: 26px; margin: 5px 0;}
+}
 .map-view-map {
   .map-marker-label-class {
     background-color: rgba(0,0,0,0.7);

@@ -1,0 +1,46 @@
+div.scope-locals.hide
+  {{$map = mv.map;''}}
+  {{$opt = mv.map.options;''}}
+  {{$gMap = mv.gMap;''}}
+style-scoped(
+  root-tag="ion-view"
+  id="mv.mapId"
+  css-style="mv.cssStyle"
+  )
+div.map-view.content.has-header(
+  ng-show="mv.show"
+  )
+  div.map-view-map.item.item-complex.dark-bg
+    ui-gmap-google-map(
+      ng-if="$map" 
+      center='$map.center'
+      zoom='$map.zoom'
+      options='$opt.map.options'
+      control='$gMap.Control'
+      events='$map.events'
+    )
+      ui-gmap-circle(
+        ng-if="$map.type=='circle'"
+        center="$opt.circle.center"
+        radius="$opt.circle.radius"
+        stroke="$opt.circle.stroke"
+        )
+      ui-gmap-marker(
+        ng-if="mv.isValidMarker()"
+        idKey="$opt.oneMarker.idKey"
+        coords="$opt.oneMarker.coords"
+        options="$opt.oneMarker.options"
+        events="$opt.oneMarker.events"
+        )
+      ui-gmap-markers(
+        ng-if="$map.type=='manyMarkers'"
+        fit="true"
+        idkey="id"
+        coords="'self'"
+        models="$opt.manyMarkers.models"
+        labelContent="{{mv.keymap.label}}"
+        options="$opt.manyMarkers.options"
+        modelbyref="true"
+        events="$opt.manyMarkers.events"
+        control="$gMap.MarkersControl"
+        )
