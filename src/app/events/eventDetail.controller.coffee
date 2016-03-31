@@ -259,7 +259,7 @@ EventDetailCtrl = (
     callbacks = {
       'Feed':
         onChange: (feed)->
-          filtered = $filter('eventFeedFilter')(feed, $rootScope.currentUser)
+          filtered = $filter('feedFilter')(feed, $rootScope.currentUser)
           return filtered
       'Event':
         onLoad: (event)->
@@ -467,7 +467,7 @@ EventDetailCtrl = (
         vm.lookup.menuItems = menuItems
         vm.lookup.feed = feed
       .then ()->
-        # $filter('eventFeedFilter')(event,$rootScope.currentUser)
+        # $filter('feedFilter')(event,$rootScope.currentUser)
         _.each vm.lookup.feed, (post)->
           # add $$owner to FEED posts
           post.head ?= {}

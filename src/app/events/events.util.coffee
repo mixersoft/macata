@@ -51,7 +51,7 @@ EventsUtil = (utils, $document, amMoment,
 
       event.moderatorIds = [event.ownerId]
 
-      # # @deprecated, using ng-repeat="$post in event | eventFeedFilter:vm.$$feed
+      # # @deprecated, using ng-repeat="$post in event | feedFilter:vm.$$feed
       # event.feed = vm.lookup.feed
       # event.feed = vm.$$feed
       # # event.feed = $filter('feedFilter')(event, FEED)

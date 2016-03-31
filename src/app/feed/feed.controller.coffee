@@ -54,7 +54,7 @@ FeedCtrl = (
           # for simple lookups with a single reactive dependency,
           #     use vm.helpers()
 
-          filtered = $filter('eventFeedFilter')(feed, $rootScope.currentUser)
+          filtered = $filter('feedFilter')(feed, $rootScope.currentUser)
           return filtered
     }
 
