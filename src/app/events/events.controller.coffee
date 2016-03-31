@@ -64,8 +64,8 @@ EventCtrl = (
           sortBy: {'startTime' : 1}  # ASC
           filterBy: {
             $and: [
-              {'startTime': {$gt: now.toJSON()}}
-              {'startTime': {$lt: now.add(_filters.CONST.COMING_SOON_DAYS, 'd').toJSON()}}
+              {'startTime': {$gt: moment().toDate()}}
+              {'startTime': {$lt: moment().add(_filters.CONST.COMING_SOON_DAYS, 'd').toDate()}}
             ]
           }
         }
@@ -95,8 +95,8 @@ EventCtrl = (
           sortBy: {'startTime' : -1}  # DESC
           filterBy: {
             $and: [
-              {'startTime': {$lt: now.toJSON()}}
-              {'startTime': {$gt: now.subtract(_filters.CONST.COMING_SOON_DAYS, 'd').toJSON()}}
+              {'startTime': {$lt: moment().toDate()}}
+              {'startTime': {$gt: moment().subtract(_filters.CONST.COMING_SOON_DAYS, 'd').toDate()}}
             ]
           }
         }
@@ -174,7 +174,9 @@ EventCtrl = (
 
       }
       # vm.autorun ()->
+      #   filterBy = vm.getReactively('filter.filterBy')
       #   console.log ['autorun']
+      #   return
       # exportDebug.set 'vm', vm
       return
 

@@ -183,8 +183,24 @@ methods = {
     mcEvents.update(event._id, modifier )
     return
 
+  'Admin.moveEventDate': (days, field='startTime')->
+    where = {}
+    where[field] = {$exists:true}
+    events = mcEvents.find(where).fetch()
+    events.forEach (event)->
+      modifier = { $set: {}  }
+      modifier.$set[field] = moment(event.startTime).add(days,'day').toDate()
+      mcEvents.update(event._id, modifier)
 }
+
 
 
 global['mcEvents'].allow allow
 Meteor.methods methods
+
+
+global['_admin'] = {
+  moveEventDate: (days)->
+    Meteor.call 'Admin.moveEventDate', days, (err, result)->
+      'check'
+}
