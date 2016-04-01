@@ -106,6 +106,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         resp = {
           address: result.override?.address || result['formatted_address']
           location: location  # resolve [lat,lon]
+          geoCodeResult: result
         }
         resp['place_id'] = result['place_id'] if !result.override
         return resp
@@ -252,7 +253,13 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
       dragendMarker: Fn
       clickMarker: Fn
     ###
-    getMapConfig: (options={}, markerKeymap)->
+    getMapConfig: (options={}, markerKeymap={})->
+
+      keymap = _.defaults markerKeymap, {
+        id: 'id'
+        location: 'location'
+        label: 'title'
+      }
 
       _.defaults options, {
         location: GEOCODER.ZERO_RESULT_LOC
@@ -309,11 +316,6 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
               'dragend': options.dragendMarker
             }
         when 'manyMarkers'
-          keymap = _.defaults options.markerKeymap, {
-            id: 'id'
-            location: 'location'
-            label: 'title'
-          }
           markers = _.map options.markers, (o, i, l)->
             point = o['geometry'][keymap['location']]
             return _.defaults {
@@ -398,6 +400,7 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
     mapH = Math.max( MODAL_VIEW.MAP_MIN_HEIGHT , mapH)
     # console.log ["height=",$window.innerHeight , contentH,mapH]
 
+    # TODO: use directive:style-scoped
     styleH = """
       #address-lookup-map .wrap {height: %height%px;}
       #address-lookup-map .angular-google-map-container {height: %height%px;}
@@ -568,7 +571,7 @@ ClearFieldDirective = ($compile, $timeout)->
 ClearFieldDirective.$inject = ['$compile', '$timeout']
 
 
-LocationHelpers = (geocodeSvc, $q)->
+LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading)->
 
   ERROR_CODES = { # err.code
     1: 'PERMISSION_DENIED'
@@ -584,6 +587,8 @@ LocationHelpers = (geocodeSvc, $q)->
         "Your current position unavailable."
       'TIMEOUT':
         "Sorry, we didn't get an answer. Please try later."
+    messages:
+      'CHECKING_LOCATION': "Checking current location"
 
     setErrorMsg: (keyOrObj, value)->
       return angular.extend self.errorLookup, keyOrObj if _.isObject(keyOrObj)
@@ -592,19 +597,48 @@ LocationHelpers = (geocodeSvc, $q)->
       return self.errorLookup
 
     ###
-    @description get [lat,lon] from current Position and show in modal-view
-      allow user to verify location & address string before returning result
-    @params options object
-      options.address, address string
-      options.latlon, array [lat,lon], usually from current location
-      options.isCurrentLocation boolean, set true to update address string but
-          NOT latlon
+    # @description preferred format for storing location in mongoDB
+    # @params lonlat array [lon, lat], or object {lat: lon:}
+    #         isLatLon boolean, reverse array if true, [lat,lon] deprecate
+    ###
+    asGeoJsonPoint: (lonlat, isLatLon=false)->
+      lonlat = lonlat.reverse?() if isLatLon
+      lonlat = [lonlat['lon'], lonlat['lat']] if lonlat['lat']?
+      lonlat ?= []
+      return {
+        type: "Point"
+        coordinates: lonlat # [lon,lat]
+      }
+
+    asLonLat: (geojsonPoint, isLatLon=false)->
+      check = geojsonPoint?.type == 'Point'
+      return if not check
+      lonlat = geojsonPoint['coordinates']
+      lonlat = lonlat.reverse() if isLatLon
+      return lonlat
+
+    ###
+    @description get [lat,lon] from current Position, and geocode=true shows location
+      in modal-view to allow manual verify of location & address string before
+      returning result
+    @params confirm boolean, show position on map (modal) to confirm
     @return promise
       resolve: result object {address:String, latlon:[], isCurrentLocation: boolean}
       reject: err, err.humanize is the humanized error message
     ###
-    getCurrentPosition: ()->
+    getCurrentPosition: (loading=false, confirm=false)->
       return $q.when()
+      .then ()->
+        if loading
+          $ionicLoading.show {
+            template: [
+              self.messages['CHECKING_LOCATION']
+              "<br /><br />"
+              "<div><ion-spinner></ion-spinner></div>"
+            ].join('')
+            hideOnStateChange: true
+            duration: 5000
+          }
       .then ()->
         if ionic.Platform.isWebView()
           options = {timeout: 10000, enableHighAccuracy: false}
@@ -615,7 +649,8 @@ LocationHelpers = (geocodeSvc, $q)->
             (result)-> return dfd.resolve(result)
           , (err)-> return dfd.reject(err)
           )
-          return dfd.promise
+          return dfd.promise.finally ()->
+            $ionicLoading.hide()
       .then (result)->
         gMapPoint = _.chain result.coords
           .pick ['latitude','longitude']
@@ -630,11 +665,29 @@ LocationHelpers = (geocodeSvc, $q)->
         ].join(' ')
         console.log ['with location',retval]
         return retval
+      .then (result)->
+        return geocodeSvc.geocode( result.latlon.join(','))
+        .then (geoCodeResults)->
+          firstResult = geoCodeResults[0]
+          location = firstResult['geometry']['location']
+          retval = {
+            latlon: [location.lat() , location.lng()]
+            address: firstResult.formatted_address
+            geoCodeResult: firstResult
+            isCurrentLocation: result.isCurrentLocation
+          }
+          return retval
+        , (err)->
+          return result # simple [lat,lon]
       .catch (err)->
         return self.handleCurrentLocationErr(err)
       .then (result)->
         # now verify current location
+        if !confirm
+          result.latlon = _.map result.latlon, (v)-> return geocodeSvc.mathRound6(v)
+          return self.showConfirm result
         return self.geocodeAddress(result, 'force')
+
 
     ###
     @description geocode an address string or [lat,lon] and show in modal-view
@@ -646,6 +699,7 @@ LocationHelpers = (geocodeSvc, $q)->
           NOT latlon
     @return promise
       resolve: result object {address:String, latlon:[], isCurrentLocation: boolean}
+        add geoCodeResult property
       reject: err, err.humanize is the humanized error message
     ###
     geocodeAddress: (options, force)->
@@ -669,7 +723,32 @@ LocationHelpers = (geocodeSvc, $q)->
     handleCurrentLocationErr: (err)->
       err.humanize = self.errorLookup[ ERROR_CODES[err.code] ]
       console.warn ['Err location', err]
-      return $q.reject(err)
+      return self.showErrorPrompt err
+
+    showErrorPrompt: (err)->
+      popup = $ionicPopup.prompt {
+        title: 'Location Unavailable'
+        subTitle: err.humanize
+        inputPlaceholder: 'Please enter a location'
+        maxLength: 64
+      }
+      return popup.then (address)->
+        $q.reject(err) if !address
+        return self.geocodeAddress({address:address}, 'force')
+
+
+    showConfirm: (result)->
+      popup = $ionicPopup.confirm {
+        title: 'Your Current Location'
+        template: result.address
+        cancelText: 'See Map'
+      }
+      return popup.then (ok)->
+        return result if ok
+        return self.geocodeAddress(result, 'force')
+        .then (confirmResult)->
+          return confirmResult if confirmResult?.latlon
+          return result
   }
 
   ionic.Platform.ready ()->
@@ -678,7 +757,7 @@ LocationHelpers = (geocodeSvc, $q)->
 
   return self
 
-LocationHelpers.$inject = ['geocodeSvc', '$q']
+LocationHelpers.$inject = ['geocodeSvc', '$q', '$ionicPopup', '$ionicLoading']
 
 angular.module 'blocks.components'
   .constant 'API_KEY', null

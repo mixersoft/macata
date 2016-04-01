@@ -47,6 +47,15 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
                   i.icon.ion-quote.padding-horizontal
                 input(type="text" ng-model="person.about" readonly)
             div.text-center.padding
+              button.button.button-positive(
+                ng-click="vm.on.getLocation($event)"
+                )
+                i.icon.ion-pinpoint
+                  span.padding-left Set Current Location
+            div.text-center.padding
               button.button.button-assertive(
                 ng-click="vm.on.signOut()"
                 ) Sign out
+                
+                
+                

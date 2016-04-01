@@ -4,6 +4,7 @@ ProfileCtrl = (
   $scope, $rootScope, $q, $location, $state, $stateParams, $timeout
   $ionicScrollDelegate
   AAAHelpers, $reactive
+  locationHelpers
   $log, toastr
   utils, devConfig, exportDebug
   )->
@@ -56,6 +57,16 @@ ProfileCtrl = (
           activate()
           $log.info vm.me
 
+      getLocation: ($ev)->
+        return locationHelpers.getCurrentPosition('loading')
+        .then (result)->
+          lonlat = result.latlon.reverse()
+          vm.call 'Profile.saveLocation', lonlat, (err, retval)->
+            'check'
+        , (err)->
+          console.warn ["WARNING: getCurrentPosition", err]
+
+
       signOut: ()->
         Meteor.logout()
         $rootScope.user = null
@@ -70,7 +81,8 @@ ProfileCtrl = (
       return
 
     activate = ()->
-      vm.me = $rootScope.user
+      vm.me = Meteor.user()
+      AAAHelpers._backwardCompatibleMeteorUser(vm.me)
       if $state.is('app.me')
         # console.log vm.me
         vm.person = angular.copy(vm.me)
@@ -124,6 +136,7 @@ ProfileCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$state', '$stateParams', '$timeout'
   '$ionicScrollDelegate'
   'AAAHelpers', '$reactive'
+  'locationHelpers'
   '$log', 'toastr'
   'utils', 'devConfig', 'exportDebug'
 ]

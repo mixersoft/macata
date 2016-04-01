@@ -4,7 +4,8 @@ EventCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  appModalSvc, tileHelpers, openGraphSvc, eventUtils, AAAHelpers
+  appModalSvc, tileHelpers, openGraphSvc, eventUtils
+  AAAHelpers, locationHelpers
   $reactive, UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
@@ -12,7 +13,6 @@ EventCtrl = (
     vm = this
     vm.viewId = ["events-view",$scope.$id].join('-')
     vm.title = "Events"
-    vm.me = null      # current user, set in initialize()
     vm.listItemDelegate = null
     vm.RecipeM = RecipeModel::
 
@@ -53,10 +53,6 @@ EventCtrl = (
         COMING_SOON_DAYS: 21
         NEARBY: 10000 # meters
 
-      # TODO: set here from geolocation
-      here: [42.629065, 23.316998]
-
-
       'comingSoon': ()->
         now = moment()
         return {
@@ -69,22 +65,25 @@ EventCtrl = (
             ]
           }
         }
-      'nearby': (latlon)->
+      'nearby': (lonlat)->
         ###
         TODO: don't forget to create index in mongo
           $ meteor mongo
           > db.events.createIndex({geojson:"2dsphere"})
         ###
-        latlon ?= _filters.here
+        lonlat ?= locationHelpers.asLonLat Meteor.user()?.profile.location
+        if !lonlat
+          toastr.warning "Your location is not available."
+          return $state.go( 'app.events', {filter: 'comingSoon'})
         return {
-          label: "Events Near Me"
+          label: "Events Nearby"
           sortBy: {}  # $near is already sorted
           filterBy: {
             'geojson':
               $near:
                 $geometry:
                   type: "Point"
-                  coordinates: [latlon[1], latlon[0]] # [lon,lat]
+                  coordinates: lonlat # [lon,lat]
                 $maxDistance: _filters.CONST.NEARBY
           }
         }
@@ -173,25 +172,40 @@ EventCtrl = (
           return Counts.get('countEvents')
 
       }
-      # vm.autorun ()->
-      #   filterBy = vm.getReactively('filter.filterBy')
-      #   console.log ['autorun']
-      #   return
+      vm.autorun ()->
+        filterBy = vm.getReactively('filter.filterBy', true)
+        console.log ['autorun', filterBy]
+        return
       # exportDebug.set 'vm', vm
       return
 
 
     activate = ()->
-      # vm.settings.viewId = ["events-view",$scope.$id].join('-')
-      vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
-      vm.filter = _filters[ $stateParams.filter || 'all'  ]()
-      # exportDebug.set('filter', vm.filter)
-      vm.title = vm.filter.label
-      vm.pg.sort = vm.filter.sortBy
-
       return $q.when()
       .then ()->
-        vm.me = $rootScope.user
+        # vm.settings.viewId = ["events-view",$scope.$id].join('-')
+        # vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
+        eventFilter = $stateParams.filter || 'all'
+        location = locationHelpers.asLonLat Meteor.user()?.profile.location
+        switch eventFilter
+          when 'nearby'
+            return {eventFilter: eventFilter, location: location} if location
+            return locationHelpers.getCurrentPosition('loading')
+            .then (result)->
+              lonlat = result.latlon.reverse()
+              vm.call 'Profile.saveLocation', lonlat, (err, retval)->
+                'check'
+              return {eventFilter: eventFilter, location: lonlat}
+            , (err)->
+              console.warn ["WARNING: getCurrentPosition", err]
+
+          else
+            return {eventFilter: eventFilter}
+      .then (result)->
+        vm.filter = _filters[ result.eventFilter ](result.location)
+        # exportDebug.set('filter', vm.filter)
+        vm.title = vm.filter.label
+        vm.pg.sort = vm.filter.sortBy
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()
@@ -230,7 +244,8 @@ EventCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils', 'AAAHelpers'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils'
+  'AAAHelpers', 'locationHelpers'
   '$reactive', 'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
