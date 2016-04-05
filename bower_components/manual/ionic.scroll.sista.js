@@ -8,6 +8,8 @@
       var defaultDelay = TRANSITION_DELAY * 2;
       var defaultDuration = TRANSITION_DELAY + 'ms';
       var scaleHeaderElements = ionic.Platform.isAndroid() ? false : true;
+      // mlin: add scroll-sista-pause="{{show.map}}"
+      var pause = false
 
       function getParentWithAttr (e, attrName, attrValue, depth) {
         var attr;
@@ -78,8 +80,15 @@
           function init () {
             var activeView;
 
-            cachedHeader = body.querySelector('[nav-bar="cached"] .bar-header');
-            activeHeader = body.querySelector('[nav-bar="active"] .bar-header');
+            // cachedHeader = body.querySelector('[nav-bar="cached"] .bar-header');
+            // activeHeader = body.querySelector('[nav-bar="active"] .bar-header');
+
+            // mlin: fix scrollTop bug with ionSideMenu
+            var sideMenu = body.querySelector('ion-side-menu-content');
+            var parent = sideMenu ? sideMenu : body;
+            cachedHeader = parent.querySelector('[nav-bar="cached"] .bar-header');
+            activeHeader = parent.querySelector('[nav-bar="active"] .bar-header');
+
 
             if (!activeHeader) {
               return;
@@ -87,6 +96,7 @@
 
             headerHeight = activeHeader.offsetHeight;
             contentTop = headerHeight;
+            contentTop = $element.prop('offsetTop') + 1
 
             //since some people can have nested tabs, get the last tabs
             tabs = body.querySelectorAll('.tabs');
@@ -212,6 +222,9 @@
             translateHeaders(Math.min(headerEnd, headerY), duration);
 
             //readjust top of ion-content
+            if (pause)
+                return contentStyle.top = null;
+
             contentStyle.top = Math.max(0, contentTop - y) + 'px';
           }
 
@@ -271,11 +284,17 @@
             if (isNavBarTransitioning) {
               return;
             }
+            // mlin: add scroll-sista-pause="{{show.map}}"
+            if (pause) {
+              return;
+            }
             //support for jQuery event as well
             e = e.originalEvent || e;
 
             var duration = 0;
-            var scrollTop = e.detail.scrollTop;
+            // var scrollTop = e.detail.scrollTop;
+            // mlin: see https://github.com/djett41/ionic-scroll-sista/issues/30
+            var scrollTop = e.currentTarget.scrollTop || e.detail.scrollTop;
 
             y = scrollTop >= 0 ? Math.min(defaultEnd, Math.max(0, y + scrollTop - prevScrollTop)) : 0;
 
@@ -296,6 +315,13 @@
             translateElements(y, duration);
           });
 
+          // mlin: add scroll-sista-pause="{{show.map}}"
+          $attr.$observe( 'scrollSistaPause', function(newV){
+            pause = newV === 'true'
+            if (pause) {
+              translateElements(0, defaultDuration);
+            }
+          });
         }
       }
     }]);
