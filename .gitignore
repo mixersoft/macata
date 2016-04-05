@@ -6,7 +6,8 @@
 .sass-cache
 .idea/
 node_modules/
-bower_components/
+bower_components/*
+!bower_components/manual/
 www/
 plugins/
 platforms/
