@@ -18,9 +18,9 @@ TokensResource = (Resty, amMoment, $q) ->
       expireCount: 100
       expireDate: moment().weekday(4).add(14,'d').hour(20).startOf('hour').toJSON()
       accessors: []
-    '1234567':
-      ownerId: '1'
-      target: 'Event:1'  # ClassName:id
+    'mongo':
+      ownerId: "xBYWvthK5qZ5zHx9T"  # lulu
+      target: 'Event:vYCDTNzc4Ky6CXyi3'  # LastDaysSummer
       views: 3
       expireCount: 10
       expireDate: moment().weekday(4).add(7,'d').hour(20).startOf('hour').toJSON()

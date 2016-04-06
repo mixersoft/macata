@@ -23,13 +23,6 @@ EventDetailCtrl = (
     vm.recipeHelpers = new RecipeHelpers(vm)  # for on.favorite()
     vm.RecipeM = RecipeModel::                # for .isFavorite($item) in view
 
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.currentUser
-      isUser: ()->
-        return true if $rootScope.currentUser
-
-    }
     vm.settings = {
       view:
         show: 'grid'
@@ -53,7 +46,7 @@ EventDetailCtrl = (
     isInvitationRequired = (event)->
       return $q.when()
       .then ()->
-        return true if $state.is('app.event-detail.invitation')
+        return true if $state.is('app.invitation')
         if event.setting['isExclusive'] || $state.params.invitation
           return TokensResource.isValid($state.params.invitation, 'Event', event._id)
       .catch (result)->
@@ -391,11 +384,41 @@ EventDetailCtrl = (
       feedTransforms = new ReactiveTransformSvc(vm, callbacks['Feed'])
       vm.autorun (tracker)->
         feed = vm.getReactively('$$feed', true)
+        if vm.token
+          feed = _.reject feed, {type:"Invitation"}
+          feed.unshift(renderInvitationInFeed(vm.token))
         feedTransforms.onChange(feed)
         .then (filteredFeed)->
           vm['$$filteredFeed'] = filteredFeed
 
+    renderInvitationInFeed = (invite)->
+      $postHead = {
+        ownerId: invite.ownerId
+        eventId: invite.target.split(':').pop()
+        recipientIds: []
+        nextActionBy: 'recipient'
+        tokenId: invite._id || invite.id
+      }
+      if Meteor.userId() != invite.ownerId
+        recipientId = Meteor.userId() || $postHead.tokenId
+        $postHead.recipientIds.push recipientId
 
+      message = invite.comment ||
+        "Welcome! Please accept this invitation to join our event."
+      $postBody = {
+        "createdAt": new Date()
+        "type":"Invitation"
+        "status":"new"      # [new, viewed, closed, hide]
+        "message": message
+        "comments":[]       #$postBody.comments, show msg, regrets here
+      }
+      post = {
+        "type":"Invitation"
+        head: $postHead
+        body: $postBody
+      }
+
+      return post
 
 
     activate = ()->
@@ -403,19 +426,22 @@ EventDetailCtrl = (
       # .then ()->
         # getData()
       .then ()->
-        if $state.is('app.event-detail.invitation')
+        if $state.is('app.invitation')
           if !$stateParams.invitation
             toastr.warning "Sorry, that invitation was not found."
             return $q.reject('MISSING_INVITATION')
 
           eventId = null
           # BUG: $stateParams.invitation != $state.params.invitation
-          return TokensResource.get(stateParams.invitation)
+          return TokensResource.get($stateParams.invitation)
           .then (token)->
             # return $q.reject('INVALID') if !token
             [className, eventId] = token?.target.split(':')
-            return TokensResource.isValid(token, 'Event', eventId)
-          .then ()->
+            valid = TokensResource.isValid(token, 'Event', eventId)
+            return token if valid
+            return $q.reject(valid)
+          .then (token)->
+            vm.token = token
             return eventId
           .catch (err)->
             if err=='EXPIRED'

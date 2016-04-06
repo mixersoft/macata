@@ -62,6 +62,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
                 check['nextAction'] = post.head.ownerId && post.head.ownerId == meId
                 # check['nextAction'] = me && ~event.moderatorIds.indexOf me._id
               when 'recipient'
+                meId ?= post.head.tokenId
                 check['nextAction'] = post.head.recipientIds && ~post.head.recipientIds.indexOf meId
             return _.reject(check).length == 0
 
@@ -116,11 +117,23 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
 
 
           message: ($event, invitation)->
+            return ff.postHelpers.showSignInRegister('sign-in') if !Meteor.userId()
             return ff.postHelpers.respondToInvite invitation, 'viewed'
             .then ()->
               return ff.postHelpers.showCommentForm($event, invitation)
 
           decline: ($event, invitation)->
+            if not Meteor.userId()
+              invitation.body.status = "declined"
+              invitation.body.comments = [{
+                  type: "PostComment"
+                  head:
+                    ownerId: invitation.head.tokenId
+                    tokenId: invitation.head.tokenId
+                  body:
+                    comment: "You have declined this invitation."
+                }]
+              return
             return $q.when()
             .then ()->
               return if invitation.type != 'Invitation'

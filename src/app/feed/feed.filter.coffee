@@ -75,6 +75,8 @@ FeedFilter = ($rootScope, exportDebug)->
         when 'Invitation'
           #  sent by ownerId: owner > [recipientId]
           check['status'] = ~['new','viewed','closed'].indexOf(post.body.status)
+          if head.tokenId == head.recipientIds[0]
+            check.address = 'by-token'
           # check['skip'] = false
         when 'Participation'
           # from action=[Join, ???Invitation[status=accept]  ]

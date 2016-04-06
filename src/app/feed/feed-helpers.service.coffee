@@ -176,7 +176,6 @@ PostHelpers = (
 
     showCommentForm: ($event, post)->
       return if post.type == 'Notification'
-      return @showSignInRegister('sign-in') if !Meteor.userId()
 
       target = $event.currentTarget || $event.target
       $wrap = angular.element utils.getChildOfParent(target, 'item-post', '.post-comments')
@@ -193,6 +192,7 @@ PostHelpers = (
     # @return promise
     ###
     postComment: ($event, post, options)->
+      return @showSignInRegister('sign-in') if !Meteor.userId()
       if !options
         target = $event.currentTarget
         # parent = ionic.DomUtil.getParentWithClass(target, 'comment-form')

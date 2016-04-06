@@ -137,7 +137,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
 
                 if type == 'invitation' # goto Invite
-                  state = 'app.event-detail.invitation'
+                  state = 'app.invitation'
                   params = {invitation: id}
                   # utils.ga_Send('send'
                   #   , 'event', 'social', 'sharing', 'invitation', 20)
@@ -180,7 +180,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
 
         if type == 'invitation' # goto Invite
-          state = 'app.event-detail.invitation'
+          state = 'app.invitation'
           params = {invitation: id}
           # utils.ga_Send('send'
           #   , 'event', 'social', 'sharing', 'invitation', 20)
@@ -216,7 +216,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         .then (participation)->
           options = {}
           participation = vm.getParticipationByUser(person) if !participation
-          if $state.is('app.event-detail.invitation')
+          if $state.is('app.invitation')
             # assume invitation is valid if we got this far
             return $q.reject('INVALID') if !$state.params.invitation
           if $state.is('app.event-detail')
@@ -268,10 +268,10 @@ EventActionHelpers = ($rootScope, $q, $timeout
                 return false if this._response == null
                 switch this._response
                   when 'Yes'
-                    return true if vm.acl.isAnonymous() == false
+                    return true if Meteor.userId()
                     return false
                   when 'No', 'Maybe'
-                    if vm.acl.isAnonymous()
+                    if not Meteor.userId()
                       return true if response.displayName && response.passcode
                       return false
                     return true
@@ -450,7 +450,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
       isInvitationValid: (event)->
         return $q.when()
         .then ()->
-          return true if $state.is('app.event-detail.invitation')
+          return true if $state.is('app.invitation')
           if event.setting.isExclusive || $state.params.invitation
             return TokensResource.isValid($state.params.invitation, 'Event', event._id)
         .catch (result)->
@@ -470,7 +470,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return $q.reject(result) if result?['isError']
           return result
 
-    
+
 
 
       ###
