@@ -33,3 +33,4 @@ accounts-password
 #okland:accounts-phone
 reywood:publish-composite
 tmeasday:publish-counts
+erasaur:meteor-lodash

@@ -1,4 +1,6 @@
 {
+  "public":{
+  },
   "TWILIO": {
     "FROM": "meteor-whatsapp",
     "SID": "__do-NOT-leave-blank__",
