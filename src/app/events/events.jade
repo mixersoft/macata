@@ -48,6 +48,11 @@ ion-view.events(
     scroll-sista="header-subheader"
     scroll-sista-pause="{{show.map}}"
   ) 
+
+    search-refresher(
+      on-refresh="vm.on.refresh()"
+      )
+      set-location
  
     list-item-container.content.condensed(
       collection="vm.rows"
@@ -62,7 +67,7 @@ ion-view.events(
     )
 
       ng-include(src="'events/events.fb-tile.html'" )
-      
+    
   ion-fab(
     animation="fade"
     ng-click="vm.on.fabClick($event, vm)"

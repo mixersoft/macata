@@ -12,8 +12,8 @@
 
 
 
-    IonicModule
-  .controller('$ionicRefresher', [
+  IonicModule
+  .controller('$searchRefresher', [
     '$scope',
     '$attrs',
     '$element',
@@ -25,6 +25,7 @@
           isOverscrolling = false,
           dragOffset = 0,
           lastOverscroll = 0,
+          // ptrThreshold = 60,
           ptrThreshold = 60,
           activated = false,
           scrollTime = 500,
@@ -43,12 +44,12 @@
       $scope.showIcon = isDefined($attrs.refreshingIcon);
 
       $ionicBind($scope, $attrs, {
-        pullingIcon: '@',
-        pullingText: '@',
-        refreshingIcon: '@',
-        refreshingText: '@',
-        spinner: '@',
-        disablePullingRotation: '@',
+        // pullingIcon: '@',
+        // pullingText: '@',
+        // refreshingIcon: '@',
+        // refreshingText: '@',
+        // spinner: '@',
+        // disablePullingRotation: '@',
         $onRefresh: '&onRefresh',
         $onPulling: '&onPulling'
       });
@@ -71,13 +72,19 @@
         startY = e.touches[0].screenY;
       }
 
-      function handleTouchend() {
+      function handleTouchend(e) {
         // reset Y
         startY = null;
         // if this wasn't an overscroll, get out immediately
         if (!canOverscroll && !isDragging) {
           return;
         }
+
+        // prevent ng-click in browser
+        if (ionic.Platform.isWebView() === false) {
+          e.stopImmediatePropagation();
+        }
+
         // the user has overscrolled but went back to native scrolling
         if (!isDragging) {
           dragOffset = 0;
@@ -90,7 +97,10 @@
           // the user has scroll far enough to trigger a refresh
           if (lastOverscroll > ptrThreshold) {
             start();
-            scrollTo(ptrThreshold, scrollTime);
+            var h = $element.prop('clientHeight')
+            scrollTo(h, scrollTime);
+            done();
+
 
           // the user has overscrolled but not far enough to trigger a refresh
           } else {
@@ -101,6 +111,7 @@
       }
 
       function handleTouchmove(e) {
+
         e.touches = e.touches || [{
           screenX: e.screenX,
           screenY: e.screenY
@@ -157,6 +168,7 @@
         // prevent native scroll events while overscrolling
         e.preventDefault();
 
+
         // if not overscrolling yet, initiate overscrolling
         if (!isOverscrolling) {
           isOverscrolling = true;
@@ -174,7 +186,7 @@
 
         } else if (activated && lastOverscroll < ptrThreshold) {
           activated = false;
-          ionic.requestAnimationFrame(deactivate);
+          // ionic.requestAnimationFrame(deactivate);
         }
       }
 
@@ -219,10 +231,10 @@
         // prevent the complete from firing before the scroll has started
         $timeout(function() {
 
-          ionic.requestAnimationFrame(tail);
+          // ionic.requestAnimationFrame(tail);
 
           // scroll back to home during tail animation
-          scrollTo(0, scrollTime, deactivate);
+          // scrollTo(0, scrollTime, deactivate);
 
           // return to native scrolling after tail animation has time to finish
           $timeout(function() {
@@ -377,7 +389,20 @@
 
       function hide() {
         // showCallback
-        $element[0].classList.add('invisible');
+        // $element[0].classList.add('invisible');
+      }
+
+      function done() {
+        $timeout(function() {
+          // // disable scrollChild listeners once the searchRefresher is revealed
+          ionic.off(touchStartEvent, handleTouchstart, scrollChild);
+          ionic.off(touchMoveEvent, handleTouchmove, scrollChild);
+          ionic.off(touchEndEvent, handleTouchend, scrollChild);
+          ionic.off('mousedown', handleMousedown, scrollChild);
+          ionic.off('mousemove', handleTouchmove, scrollChild);
+          ionic.off('mouseup', handleTouchend, scrollChild);
+          // ionic.off('scroll', handleScroll, scrollParent);
+        });
       }
 
       function tail() {
@@ -392,32 +417,31 @@
     }
   ]);
 
-  
+
 
 
   /**
    * @ngdoc directive
-   * @name ionRefresher
+   * @name searchRefresher
    * @module ionic
    * @restrict E
    * @parent ionic.directive:ionContent, ionic.directive:ionScroll
    * @description
-   * Allows you to add pull-to-refresh to a scrollView.
+   * Allows you to add pull-to-refresh to reveal a search tile.
+   * Modified from ionic.directive:ionRefresher
    *
    * Place it as the first child of your {@link ionic.directive:ionContent} or
    * {@link ionic.directive:ionScroll} element.
    *
-   * When refreshing is complete, $broadcast the 'scroll.refreshComplete' event
-   * from your controller.
+   * When the reveal is complete the search tile remains visible
    *
    * @usage
    *
    * ```html
    * <ion-content ng-controller="MyController">
-   *   <ion-refresher
-   *     pulling-text="Pull to refresh..."
-   *     on-refresh="doRefresh()">
-   *   </ion-refresher>
+   *   <search-refresher>
+   *   	<search-tile></search-tile>
+   *   </search-refresher>
    *   <ion-list>
    *     <ion-item ng-repeat="item in items"></ion-item>
    *   </ion-list>
@@ -444,42 +468,27 @@
    * of the refresher.
    * @param {expression=} on-pulling Called when the user starts to pull down
    * on the refresher.
-   * @param {string=} pulling-text The text to display while the user is pulling down.
-   * @param {string=} pulling-icon The icon to display while the user is pulling down.
-   * Default: 'ion-android-arrow-down'.
-   * @param {string=} spinner The {@link ionic.directive:ionSpinner} icon to display
-   * after user lets go of the refresher. The SVG {@link ionic.directive:ionSpinner}
-   * is now the default, replacing rotating font icons. Set to `none` to disable both the
-   * spinner and the icon.
-   * @param {string=} refreshing-icon The font icon to display after user lets go of the
-   * refresher. This is deprecated in favor of the SVG {@link ionic.directive:ionSpinner}.
-   * @param {boolean=} disable-pulling-rotation Disables the rotation animation of the pulling
-   * icon when it reaches its activated threshold. To be used with a custom `pulling-icon`.
    *
    */
   IonicModule
-  .directive('ionRefresher', [function() {
+  .directive('searchRefresher', ['$compile', function($compile) {
     return {
       restrict: 'E',
       replace: true,
-      require: ['?^$ionicScroll', 'ionRefresher'],
-      controller: '$ionicRefresher',
+      transclude: true,
+      require: ['?^$ionicScroll', 'searchRefresher'],
+      controller: '$searchRefresher',
       template:
-      '<div class="scroll-refresher invisible" collection-repeat-ignore>' +
-        '<div class="ionic-refresher-content" ' +
-        'ng-class="{\'ionic-refresher-with-text\': pullingText || refreshingText}">' +
-          '<div class="icon-pulling" ng-class="{\'pulling-rotation-disabled\':disablePullingRotation}">' +
-            '<i class="icon {{pullingIcon}}"></i>' +
-          '</div>' +
-          '<div class="text-pulling" ng-bind-html="pullingText"></div>' +
-          '<div class="icon-refreshing">' +
-            '<ion-spinner ng-if="showSpinner" icon="{{spinner}}"></ion-spinner>' +
-            '<i ng-if="showIcon" class="icon {{refreshingIcon}}"></i>' +
-          '</div>' +
-          '<div class="text-refreshing" ng-bind-html="refreshingText"></div>' +
-        '</div>' +
-      '</div>',
-      link: function($scope, $element, $attrs, ctrls) {
+      '<div class="scroll-refresher invisible" collection-repeat-ignore></div>',
+      link: function($scope, $element, $attrs, ctrls, $transclude) {
+
+        // transclude .search-refresher and add properties
+        $element.append($transclude())
+        $compile($element)($scope);
+        $element[0].classList.add('search-refresher');
+        $element[0].classList.remove('invisible');
+        var h = $element.prop('clientHeight');
+        $element.css('top', -1 * (h+1) + 'px')
 
         // JS Scrolling uses the scroll controller
         var scrollCtrl = ctrls[0],

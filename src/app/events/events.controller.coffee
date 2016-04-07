@@ -119,8 +119,8 @@ EventCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      createNewTile: ()->
-        vm.on.notReady('Create Event')
+      refresh: ()->
+        $ionicScrollDelegate.$getByHandle('events-list-scroll').resize()
 
       fabClick: ()->
         return vm.on['createNewTile']()

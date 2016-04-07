@@ -754,8 +754,8 @@ ion-side-menu > ion-content {
 
 .search-refresher.scroll-refresher {
   height: 110px;
-  top: -110px;
 }
+
 set-location {
 
   .row .col.list-item-wrap {
@@ -770,6 +770,12 @@ set-location {
       top: 15%;
       left: 0;
       right: 0;
+
+      @media(max-width: $grid-responsive-sm-break) {
+        h2 {
+          font-size: 20px;
+        }
+      }
 
       .search-wrap > * {
         height: 34px;
