@@ -39,7 +39,10 @@ ProfileModel::saveLocation = (location, isLatLon=false, userId)->
 methods = {
   'Profile.saveLocation': (loc, isLatLon=false )->
     meId = Meteor.userId()
-    return if !meId
+    if !meId
+      return new Meteor.Error('user-not-signed-in'
+      , 'Cannot save to Profile with no User', null
+      )
     geojson = asGeoJsonPoint(loc, isLatLon)
     modifier = {
       $set:

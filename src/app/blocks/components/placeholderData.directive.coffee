@@ -45,7 +45,7 @@ UnsplashIt = ($http)->
     getImgSrc: (index, offset, options, list)->
       return 'NOT_READY' if not self.isReady
       list ?= _data
-      options = _.extend _defaultSize, options
+      options = _.defaults options, _defaultSize
       if options['face']?
         options = {
           width: 200
@@ -73,8 +73,8 @@ PlaceholderDataDirective = ($compile, unsplashItSvc)->
     restrict: 'A'
     scope: {
       model: '='
-      width: '@'
-      height: '@'
+      width: '&'
+      height: '&'
       size: '@'
     }
     compile: (tElement, tAttrs, transclude)->
@@ -83,8 +83,8 @@ PlaceholderDataDirective = ($compile, unsplashItSvc)->
           return
         post: (scope, element, attrs, ngModel) ->
           options = {}
-          options.height = scope.height if attrs.height
-          options.width = scope.width if attrs.width
+          # options.height = scope.height if attrs.height
+          # options.width = scope.width if attrs.width
           if attrs.size
             options = {
               width: scope.size
@@ -97,6 +97,8 @@ PlaceholderDataDirective = ($compile, unsplashItSvc)->
             offset ?= Math.random()*100
             index = attrs['index'] || attrs['key']
             index ?= Date.now()
+            options.height = scope.height() if scope.height
+            options.width = scope.width() if scope.width
             switch attrs['placeholderData']
               when 'img', 'image'
                 # console.log ['placeholderImg', offset, index]

@@ -23,6 +23,11 @@ ion-side-menus(enable-menu-with-back-views="false")
         ion-item.ink(nav-clear, menu-close, ui-sref="app.recipe") Ideas
         ion-item.ink(nav-clear, menu-close, ui-sref="app.map") Map
         ion-item.ink(nav-clear, menu-close, ui-sref="app.me") My Profile
+        ion-item.ink(nav-clear, menu-close
+          ng-click="vm.getLocation($event)"
+          )
+            i.icon.ion-pinpoint
+              span.padding-left Set Location
         //- ion-item.ink(nav-clear, menu-close, ui-sref="app.grid") Grid
         //
       div#demo-roles.content

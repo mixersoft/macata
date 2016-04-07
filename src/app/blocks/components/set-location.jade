@@ -1,0 +1,37 @@
+div.ng-repeat-grid.row.list-item-summary
+  div.list-item-wrap.col.col-full
+    div.event.tile.set-location.item.item-complex.content.ink(
+      ng-class="calm-bg"
+      )
+      div.hero.content.has-mask-reverse(style="height:100px;")
+
+        div.feature.image(
+          placeholder-data="bg-src" group="tile" index="{{Date.now()}}"
+          width="sl.tileWidth()"
+          model="sl.tile"
+          bg-image="{{sl.tile.bgSrc}}"
+        )
+      div.has-mask-wrap()
+        h2.line-clamp-1 Where do you want to be?
+        div.search-wrap
+          button.button.button-small.button-balanced(
+            ng-click="sl.on.getCurrentPosition($event, 'CURRENT')"
+            )
+            i.icon.ion-pinpoint
+            
+          div.item-input-wrapper
+            input(
+              style="width:100%;"
+              on-blur="sl.on.locationClick($event, value)"
+              type="text"
+              auto-input
+              return-close="true"
+              placeholder="Enter a Location to Search" 
+              ng-model="sl.search" 
+            )
+            
+          button.button.button-small.button-balanced(
+            ng-click="sl.on.getCurrentPosition($event)"
+            )
+            i.icon.ion-ios-arrow-forward
+          

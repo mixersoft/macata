@@ -752,6 +752,40 @@ ion-side-menu > ion-content {
 }
 
 
+.search-refresher.scroll-refresher {
+  height: 110px;
+  top: -110px;
+}
+set-location {
+
+  .row .col.list-item-wrap {
+    margin-bottom: -10px;
+  }
+  .tile.item.set-location {
+    .hero {
+      height: 100px;
+    }
+    .has-mask-wrap {
+      @extend .text-center;
+      top: 15%;
+      left: 0;
+      right: 0;
+
+      .search-wrap > * {
+        height: 34px;
+      }
+
+      .item-input-wrapper {
+        display:inline-flex;
+        width: 75%;
+        ~ .button {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}
+
 /*
  * app.profile
  */

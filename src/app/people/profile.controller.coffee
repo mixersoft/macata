@@ -60,7 +60,7 @@ ProfileCtrl = (
       getLocation: ($ev)->
         return locationHelpers.getCurrentPosition('loading')
         .then (result)->
-          lonlat = result.latlon.reverse()
+          lonlat = angular.copy(result.latlon).reverse()
           vm.call 'Profile.saveLocation', lonlat, (err, retval)->
             'check'
         , (err)->

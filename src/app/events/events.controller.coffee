@@ -71,7 +71,7 @@ EventCtrl = (
           $ meteor mongo
           > db.events.createIndex({geojson:"2dsphere"})
         ###
-        lonlat ?= locationHelpers.asLonLat Meteor.user()?.profile.location
+        lonlat ?= locationHelpers.lastKnownLonLat()
         if !lonlat
           toastr.warning "Your location is not available."
           return $state.go( 'app.events', {filter: 'comingSoon'})
@@ -186,13 +186,16 @@ EventCtrl = (
         # vm.settings.viewId = ["events-view",$scope.$id].join('-')
         # vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
         eventFilter = $stateParams.filter || 'all'
-        location = locationHelpers.asLonLat Meteor.user()?.profile.location
+        if me = Meteor.user()
+          location = locationHelpers.asLonLat me.profile.location
+        else
+          location = locationHelpers.lastKnownLonLat()
         switch eventFilter
           when 'nearby'
             return {eventFilter: eventFilter, location: location} if location
             return locationHelpers.getCurrentPosition('loading')
             .then (result)->
-              lonlat = result.latlon.reverse()
+              lonlat = angular.copy(result.latlon).reverse()
               vm.call 'Profile.saveLocation', lonlat, (err, retval)->
                 'check'
               return {eventFilter: eventFilter, location: lonlat}

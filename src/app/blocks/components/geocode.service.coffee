@@ -571,7 +571,10 @@ ClearFieldDirective = ($compile, $timeout)->
 ClearFieldDirective.$inject = ['$compile', '$timeout']
 
 
-LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading)->
+LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocation)->
+
+  _lastLocation = {}
+  _lastKnownLonLat = null
 
   ERROR_CODES = { # err.code
     1: 'PERMISSION_DENIED'
@@ -610,12 +613,43 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading)->
         coordinates: lonlat # [lon,lat]
       }
 
+
+    ###
+    @params location, object, resolve from geocodeSvc.geocode( result.latlon.join(','))
+    ###
+    lastKnownLocation: (location)->
+      return _lastLocation if typeof location == 'undefined'
+      return _lastLocation = {} if _.isEmpty location
+      _lastLocation = angular.copy location
+      if _lastLocation.latlon
+        _lastLocation.lonlat = angular.copy(_lastLocation.latlon).reverse()
+      return _lastLocation
+
+    # save location if User is not registered
+    lastKnownLonLat: (lonlat)->
+      return _lastKnownLonLat if typeof lonlat == 'undefined'
+      return _lastKnownLonLat = null if _.isEmpty lonlat
+      return _lastKnownLonLat = angular.copy lonlat
+
     asLonLat: (geojsonPoint, isLatLon=false)->
       check = geojsonPoint?.type == 'Point'
       return if not check
       lonlat = geojsonPoint['coordinates']
-      lonlat = lonlat.reverse() if isLatLon
+      lonlat.reverse() if isLatLon
       return lonlat
+
+    ###
+    @description geocode Address and save to self.lastKnownLocation()
+    @return promise
+      resolve: result object {address:String, latlon:[], isCurrentLocation: boolean}
+      reject: err, err.humanize is the humanized error message
+    ###
+    getLocationFromAddress:(address)->
+      return self.geocodeAddress({address: address}, 'force')
+      .then (result)->
+        self.lastKnownLocation(result)
+        self.lastKnownLonLat(self.lastKnownLocation().lonlat)
+        return result
 
     ###
     @description get [lat,lon] from current Position, and geocode=true shows location
@@ -641,10 +675,12 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading)->
           }
       .then ()->
         if ionic.Platform.isWebView()
+          console.info ['WebView: getCurrentPosition() with plugin $cordovaGeolocation']
           options = {timeout: 10000, enableHighAccuracy: false}
           return $cordovaGeolocation.getCurrentPosition( options )
         else
           dfd = $q.defer()
+          console.info ['Browser: getCurrentPosition() with navigator.geolocation']
           navigator.geolocation.getCurrentPosition(
             (result)-> return dfd.resolve(result)
           , (err)-> return dfd.reject(err)
@@ -687,6 +723,10 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading)->
           result.latlon = _.map result.latlon, (v)-> return geocodeSvc.mathRound6(v)
           return self.showConfirm result
         return self.geocodeAddress(result, 'force')
+      .then (result)->
+        self.lastKnownLocation(result)
+        self.lastKnownLonLat(self.lastKnownLocation().lonlat)
+        return result
 
 
     ###
@@ -757,7 +797,9 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading)->
 
   return self
 
-LocationHelpers.$inject = ['geocodeSvc', '$q', '$ionicPopup', '$ionicLoading']
+LocationHelpers.$inject = ['geocodeSvc', '$q', '$ionicPopup'
+  '$ionicLoading', '$cordovaGeolocation'
+]
 
 angular.module 'blocks.components'
   .constant 'API_KEY', null
