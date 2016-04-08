@@ -57,6 +57,7 @@ ionicConfig = ($ionicConfigProvider)->
   $ionicConfigProvider.backButton.text('')
   $ionicConfigProvider.backButton.previousTitleText(false)
   $ionicConfigProvider.views.forwardCache(true)
+  $ionicConfigProvider.scrolling.jsScrolling(false)
   return
 
 ionicConfig.$inject = ['$ionicConfigProvider']

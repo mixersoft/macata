@@ -294,7 +294,10 @@
             var duration = 0;
             // var scrollTop = e.detail.scrollTop;
             // mlin: see https://github.com/djett41/ionic-scroll-sista/issues/30
-            var scrollTop = e.currentTarget.scrollTop || e.detail.scrollTop;
+            var scrollTop = e.currentTarget.scrollTop;
+            if (scrollTop == null){
+              scrollTop = e.detail.scrollTop;
+            }
 
             y = scrollTop >= 0 ? Math.min(defaultEnd, Math.max(0, y + scrollTop - prevScrollTop)) : 0;
 
