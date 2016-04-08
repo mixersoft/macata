@@ -13,12 +13,7 @@ HomeCtrl = (
     vm.title = "Discover"
     vm.me = null      # current user, set in initialize()
     vm.imgAsBg = utils.imgAsBg
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.user
-      isUser: ()->
-        return true if $rootScope.user
-    }
+
     vm.settings = {
       show: 'less'
       loadMore: false

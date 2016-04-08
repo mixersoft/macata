@@ -22,12 +22,6 @@ RecipeCtrl = (
     vm.listItemDelegate = null
     vm.RecipeM = RecipeModel::
 
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.user
-      isUser: ()->
-        return true if $rootScope.user
-    }
     vm.settings = {
       view:
         show: 'grid'

@@ -12,12 +12,7 @@ OnboardCtrl = (
     vm = this
     vm.title = null
     vm.me = null      # current user, set in initialize()
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.user
-      isUser: ()->
-        return true if $rootScope.user
-    }
+
     vm.lookup = {
       # colors: ['royal', 'positive', 'calm', 'balanced', 'energized', 'assertive']
       colors: ['positive', 'balanced', 'assertive', 'royal']

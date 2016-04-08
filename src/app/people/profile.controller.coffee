@@ -22,12 +22,7 @@ ProfileCtrl = (
     vm.title = "Profile"
     vm.me = null      # current user, set in initialize()
     vm.imgAsBg = utils.imgAsBg
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.user
-      isUser: ()->
-        return true if $rootScope.user
-    }
+
     vm.settings = {
       view:
         show: null    # [signin|profile|account]

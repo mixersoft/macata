@@ -11,12 +11,7 @@ GridCtrl = (
     vm = this
     vm.title = "Grid"
     vm.me = null      # current user, set in initialize()
-    vm.acl = {
-      isVisitor: ()->
-        return true if !$rootScope.user
-      isUser: ()->
-        return true if $rootScope.user
-    }
+
     vm.settings = {
       view:
         show: 'grid'
@@ -41,7 +36,7 @@ GridCtrl = (
         id: i
         color: vm.lookup.colors[i %% vm.lookup.colors.length]
       }
- 
+
     vm.on = {
       scrollTo: (anchor)->
         $location.hash(anchor)
@@ -121,10 +116,3 @@ ItemDetailCtrl.$inject = [
 angular.module 'starter.grid'
   .controller 'GridCtrl', GridCtrl
   .controller 'ItemDetailCtrl', ItemDetailCtrl
-
-
-
-
-
-
-
