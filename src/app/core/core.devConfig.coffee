@@ -6,6 +6,12 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
 )->
 
   self = {
+    _backwardCompatibleMeteorUser: (user)->
+      return if !user
+      # backward compatibility for Meteor.user
+      angular.extend user, _.pick user.profile, ['displayName', 'face']
+      user.id = user._id
+
     loginUser : (id, force=true)->
       # manually set current user for testing
       return $q.when( $rootScope.user ) if $rootScope.user? && !force
@@ -27,7 +33,7 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
       .then ()->
         if Meteor.user()
           $rootScope.user = Meteor.user()
-          AAAHelpers._backwardCompatibleMeteorUser($rootScope.user)
+          self._backwardCompatibleMeteorUser($rootScope.user)
           return $rootScope.user
         return $rootScope['user'] if $rootScope['user']?
         return self.loginUser( defaultUserId || "0" )

@@ -22,6 +22,7 @@ EventsUtil = (utils, $document, amMoment,
       return true if event.participantIds && ~event.participantIds.indexOf(userId)
       return false
 
+    # TODO: put into models.event.coffee, handle on server
     setVisibleLocation: (event, userId, removeTrueLocation) ->
       userId ?= Meteor.userId()
       if self.showExactLocation(event, userId)
@@ -40,11 +41,11 @@ EventsUtil = (utils, $document, amMoment,
 
     # TODO: change to like for expiring classes?
     favorite: ($ev, model)->
-      self = this
+      context = this
       return AAAHelpers.requireUser('sign-in')
       .then ()->
         model.className = 'Event' if !model.className
-        self.call 'Event.toggleFavorite', model, (err, result)->
+        context.call 'Event.toggleFavorite', model, (err, result)->
           console.warn ['Meteor::toggleFavorite WARN', err] if err
           console.log ['Meteor::toggleFavorite OK']
 

@@ -122,8 +122,18 @@ EventCtrl = (
       refresh: ()->
         $ionicScrollDelegate.$getByHandle('events-list-scroll').resize()
 
-      fabClick: ()->
-        return vm.on['createNewTile']()
+
+      createNewTile: (parentEl)->
+        vm.settings.show.newTile = !vm.settings.show.newTile
+        if vm.settings.show.newTile
+          # this isn't working
+          $timeout ()->parentEl.querySelector('new-tile input').focus()
+
+      fabClick: ($ev)->
+        return AAAHelpers.requireUser('sign-in')
+        .then ()->
+          parentEl = ionic.DomUtil.getParentWithClass($ev.target, 'events')
+          return vm.on['createNewTile'](parentEl)
 
       notReady: (value)->
         toastr.info "Sorry, " + value + " is not available yet"
@@ -172,9 +182,11 @@ EventCtrl = (
           return Counts.get('countEvents')
 
       }
+
       vm.autorun ()->
         filterBy = vm.getReactively('filter.filterBy', true)
-        console.log ['autorun', filterBy]
+        console.log ['(autorun) events.filterBy=', filterBy]
+
         return
       # exportDebug.set 'vm', vm
       return

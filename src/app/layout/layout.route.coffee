@@ -2,8 +2,12 @@
 
 otherwisePath = '/app/events/'
 
-appRun = (routerHelper) ->
+appRun = (routerHelper, $location, $state) ->
   routerHelper.configureStates getStates(), otherwisePath
+  if not $location.path()
+    location.href = '#' + otherwisePath
+  else
+    location.href = '#/app'
 
 getStates = ->
   [
@@ -56,7 +60,7 @@ getStates = ->
 
   ]
 
-appRun.$inject = ['routerHelper']
+appRun.$inject = ['routerHelper', '$location', '$state']
 
 angular
   .module 'starter.layout'
