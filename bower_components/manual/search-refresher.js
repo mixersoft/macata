@@ -82,7 +82,9 @@
 
         // prevent ng-click in browser
         if (ionic.Platform.isWebView() === false) {
-          e.stopImmediatePropagation();
+          if (isDragging) {
+              e.stopImmediatePropagation();
+          }
         }
 
         // the user has overscrolled but went back to native scrolling
