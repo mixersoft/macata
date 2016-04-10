@@ -9,7 +9,7 @@ div.ng-repeat-grid.row.list-item-summary
           model="sl.tile"
           bg-image="{{sl.tile.bgSrc}}"
         )
-      div.has-mask-wrap()
+      div.has-mask-wrap
         h2.line-clamp-1 Where do you want to be?
         div.search-wrap
           button.button.button-small.button-balanced(
@@ -17,16 +17,17 @@ div.ng-repeat-grid.row.list-item-summary
             )
             i.icon.ion-pinpoint
             
-          div.item-input-wrapper
-            input(
-              style="width:100%;"
-              on-blur="sl.on.locationClick($event, value)"
-              type="text"
-              auto-input
-              return-close="true"
-              placeholder="Enter a Location to Search" 
-              ng-model="sl.search" 
-            )
+          div.item-input-wrapper(style="background-color:white;")
+            div.auto-input-wrapper
+              input(
+                style="width:100%;"
+                on-blur="sl.on.locationClick($event, value)"
+                type="text"
+                auto-input
+                return-close="true"
+                placeholder="Enter a Location to Search" 
+                ng-model="sl.search" 
+              )
             
           button.button.button-small.button-balanced(
             ng-click="sl.on.getCurrentPosition($event)"

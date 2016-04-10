@@ -25,35 +25,40 @@ ion-modal-view#new-tile-modal-view
       div.body
         ion-input.item.item-input.item-stacked-label
           ion-label Title
-          input(type="text" ng-model="mm.data.title" 
-            auto-input 
-            placeholder="Title" 
-            )
+          div.auto-input-wrapper
+            input(type="text" ng-model="mm.data.title" 
+              auto-input 
+              placeholder="Title" 
+              )
         ion-input.item.item-input.item-stacked-label.patch-border
           ion-label Description
-          textarea.item-input-textarea(
-          rows="4" 
-          ng-model="mm.data.description"
-          auto-input
-          placeholder="Description" )
+          div.auto-input-wrapper
+            textarea.item-input-textarea(
+            rows="4" 
+            ng-model="mm.data.description"
+            auto-input
+            placeholder="Description" )
         ion-input.item.item-input.item-stacked-label
           ion-label Source
-          input(type="text" ng-model="mm.data.site_name" 
-            auto-input 
-            placeholder="Source"
-            )
+          div.auto-input-wrapper
+            input(type="text" ng-model="mm.data.site_name" 
+              auto-input 
+              placeholder="Source"
+              )
         ion-input.item.item-input
           i.icon.ion-share.positive.larger.padding-right
-          input(type="text" ng-model="mm.data.url" 
-            auto-input 
-            placeholder="Enter Link"
-            )
+          div.auto-input-wrapper
+            input(type="text" ng-model="mm.data.url" 
+              auto-input 
+              placeholder="Enter Link"
+              )
         ion-input.item.item-input
           i.icon.ion-image.positive.larger.padding-right
-          input(type="text" ng-model="mm.data.image" 
-            auto-input 
-            placeholder="Enter Url for Photo" 
-            )
+          div.auto-input-wrapper
+            input(type="text" ng-model="mm.data.image" 
+              auto-input 
+              placeholder="Enter Url for Photo" 
+              )
           
         ion-input.item-input.item.flex-item-wrap(ng-show="mm.geo.setting.show.location")
           div.item-input-inset.flex-icon-bar.location
@@ -71,14 +76,15 @@ ion-modal-view#new-tile-modal-view
               
             div.item-input-wrapper
               i.icon.ion-ios-location.positive.padding-right
-              input(
-                on-blur="mm.on.locationClick($event, value)"
-                type="text"
-                auto-input
-                return-close="true"
-                placeholder="Enter an Address to Set Location" 
-                ng-model="mm.data.address" 
-              )
+              div.auto-input-wrapper
+                input(
+                  on-blur="mm.on.locationClick($event, value)"
+                  type="text"
+                  auto-input
+                  return-close="true"
+                  placeholder="Enter an Address to Set Location" 
+                  ng-model="mm.data.address" 
+                )
             div.spinner-wrap
               i.icon.ion-ios-arrow-forward.positive(
                 ng-show="!show.spinner.newTile"

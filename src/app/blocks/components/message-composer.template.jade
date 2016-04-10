@@ -94,15 +94,18 @@ ion-input.item-input.item-stacked-label.message-composer(
         
       div.item-input-wrapper
         i.icon.ion-ios-location.positive.icon-left.padding-right
-        input(
-          on-blur="$mc.on.locationClick($event, value)"
-          type="text"
-          auto-input
-          return-close="true"
-          placeholder="Enter an Address to Set Location" 
-          ng-model="$mc.scope.address" 
+        div.auto-input-wrapper
+          input(
+            on-blur="$mc.on.locationClick($event, value)"
+            type="text"
+            auto-input
+            return-close="true"
+            placeholder="Enter an Address to Set Location" 
+            ng-model="$mc.scope.address" 
+          )
+      div.spinner-wrap.push-right(
+        ng-click="$mc.on.locationClick($event, $mc.scope.address)"
         )
-      div.spinner-wrap.push-right
         i.icon.ion-ios-arrow-forward.positive(
           ng-show="!show.spinner.newTile"
         )

@@ -52,13 +52,15 @@ InputDirective = ($compile, $timeout)->
           return
 
         element.bind 'blur', (e)->
-          return if ngModel.$isEmpty element.val()
-          if scope.onBlur
-            console.log ['autoInput blur', element.val()]
-            $timeout ()->
+          $timeout(200)
+          .then ()->
+            # wrap in $timeout(200) because blur event occurs
+            # before clear event, give time to clear
+            return if ngModel.$isEmpty element.val()
+            if scope.onBlur
+              # console.log ['autoInput blur', element.val()]
               scope.onBlur({$event: e, value: element.val()})
-              return
-          return
+            return
 
         element.bind 'keydown', (e)->
           if e.which == 13

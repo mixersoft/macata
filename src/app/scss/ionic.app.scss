@@ -150,7 +150,6 @@ ion-input {
         @extend .text-center;
       }
       & > .icon {
-        height: 34px !important;
         // same as: .item-input .item-input-inset .item-input-wrapper .icon
         padding: 5px 4px;
         display: inline-block;
@@ -158,6 +157,7 @@ ion-input {
       }
     }
     .item-input-wrapper {
+      background-color: white;
       input {
         height: 100%;
         padding-right: 0;
@@ -167,6 +167,9 @@ ion-input {
       }
     }
     .spinner-wrap {
+      .icon {
+        height: 34px !important;
+      }
       &.push-right {
         margin-right: -10px;
       }
@@ -185,7 +188,21 @@ ion-input {
 /*
  * auto-input directive
  */
-.item-input {
+.auto-input-wrapper {
+  @extend .item-input-wrapper;
+  background: white;
+  padding-left: 0;
+  padding-right: 0;
+  input {
+    padding-right: 0;
+  }
+  .icon {
+    height: 29px;
+    padding: 5px 4px;
+  }
+}
+
+.xxxitem-input {
   .item-input-inset  {
     .item-input-wrapper {
       .icon {
