@@ -1,7 +1,7 @@
 'use strict'
 
 RecipeHelpers = (
-  $timeout, utils, tileHelpers, AAAHelpers
+  $q, $timeout, utils, tileHelpers, AAAHelpers
 )->
   class RecipeHelpersClass
     constructor: (@context)->
@@ -19,29 +19,38 @@ RecipeHelpers = (
           console.log ['Meteor::toggleFavorite OK']
 
     edit: (event, item)->
-      data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-      return tileHelpers.modal_showTileEditor(data)
-      .then (result)->
-        console.log ["edit", data]
-        data.isOwner = true
-        return
+      self = @
+      return AAAHelpers.requireUser('sign-in')
+      .then (me)->
+        return $q.reject("WARN: no permission to edit") if item.ownerId != me._id
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          # post to Meteor
+          angular.extend result, _.pick(item, ['_id','className','ownerId'])
+          self.call 'Recipe.update', result, (err, result)->
+            console.warn ['Meteor::edit WARN', err] if err
+            console.log ['Meteor::edit OK']
+          return
 
     forkTile: ($event, item)->
-      data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
-      # from new-tile.directive fn:_showTileEditorAsModal
-      return tileHelpers.modal_showTileEditor(data)
-      .then (result)->
-        console.log ['forkTile',result]
-        # return vm.on.submitNewTile(result)
-      .then ()->
-        item.isOwner = true
-      .catch (err)->
-        console.warn ['forkTile', err]
+      self = @
+      return AAAHelpers.requireUser('sign-in')
+      .then (me)->
+        data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+        # from new-tile.directive fn:_showTileEditorAsModal
+        return tileHelpers.modal_showTileEditor(data)
+        .then (result)->
+          # post to Meteor
+          self.call 'Recipe.insert', result, (err, result)->
+            console.warn ['Meteor::edit WARN', err] if err
+            console.log ['Meteor::edit OK']
+
 
 
   return RecipeHelpersClass
 
-RecipeHelpers.$inject = ['$timeout', 'utils', 'tileHelpers', 'AAAHelpers']
+RecipeHelpers.$inject = ['$q', '$timeout', 'utils', 'tileHelpers', 'AAAHelpers']
 
 angular.module 'starter.recipe'
   .factory 'RecipeHelpers', RecipeHelpers

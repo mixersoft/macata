@@ -50,6 +50,21 @@ RecipeModel::findProfiles = (model={})-> # use with publishComposite.children
     model = @context
   return Meteor.users.find(model.ownerId, options['profile'])
 
+RecipeModel::setAsGeoJsonPoint = (model={})->
+  if @context
+    model = @context
+  if model['latlon']
+    model['lonlat'] = angular.copy(model.latlon).reverse()
+  if model['latlon']
+    model['geojson'] = {
+      type: "Point"
+      coordinates: model['latlon']
+    }
+  model = _.omit model, ['lonlat','latlon', 'location']
+  return model
+
+
+
 
 
 global['mcRecipes'] = mcRecipes = new Mongo.Collection('recipes', {
@@ -99,6 +114,47 @@ methods = {
     profileFavorite = {"profile.favorites": { _id: model._id, className: 'Recipe' }}
     modifier[action] = profileFavorite
     Meteor.users.update({_id: meId}, modifier )
+    return
+
+  'Recipe.insert': (model)->
+    meId = Meteor.userId()
+    data = _.pick model, [
+      'url','title','description','image', 'site_name', 'extras'
+      'lonlat', 'latlon'
+    ]
+    data['className'] = 'Recipe'
+    data['createdAt'] = new Date()
+    data['ownerId'] = meId
+    RecipeModel::setAsGeoJsonPoint(data)
+    mcRecipes.insert(data)
+
+  'Recipe.update': (model)->
+    meId = Meteor.userId()
+    # if model.className != 'Recipe'
+    #   found = mcRecipes.findOne(model._id)
+    #   if found.className != 'Recipe'
+    #     return new Meteor.Error('invalid-class'
+    #     , 'className does not match', null
+    #     )
+    if model.ownerId != meId
+      return new Meteor.Error('no-permission'
+      , 'You do not have permission to update', null
+      )
+    data = _.pick model, [
+      'url','title','description','image', 'site_name', 'extras'
+      'lonlat', 'latlon'
+    ]
+    data['modifiedAt'] = new Date()
+    RecipeModel::setAsGeoJsonPoint(data)
+
+    # legacy: deprecate
+    data['className'] = 'Recipe'
+    data['createdAt'] = new Date()
+
+    modifier = {}
+    modifier['$set'] = data
+    # console.log modifier
+    mcRecipes.update(model._id, modifier )
     return
 
 }

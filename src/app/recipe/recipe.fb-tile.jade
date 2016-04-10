@@ -8,9 +8,10 @@ list-item-summary.animate-fade-slide-in-right(
 ) 
   div.scope-locals.hide
     {{ vm=$parent.$parent.vm;''}}
+    {{ $me=$parent.$root.currentUser;''}}
     {{ $recipeHelpers=vm.recipeHelpers;''}}
     {{ $owner=vm.collHelpers.findOne('User', $item.ownerId);'' }}
-    {{ $owner.$isOwner=$owner._id==Meteor.userId();'' }}
+    {{ $owner.$isOwner=$item.ownerId==$me._id;'' }}
   div.tile.recipe.item.item-complex.content.ink(
     xxx-ng-class="[$item.color,'bg'].join('-')"
     ng-click="$listItemDelegate.select($event, $item, $index)"

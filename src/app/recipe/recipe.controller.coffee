@@ -4,7 +4,7 @@ RecipeCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
-  appModalSvc, tileHelpers, openGraphSvc
+  appModalSvc, tileHelpers, openGraphSvc, AAAHelpers
   $reactive
   CollectionHelpers, RecipeHelpers
   utils, devConfig, exportDebug
@@ -59,10 +59,12 @@ RecipeCtrl = (
 
       # activate <new-tile>
       createNewTile: ()->
-        vm.settings.show.newTile = !vm.settings.show.newTile
-        if vm.settings.show.newTile
-          # this isn't working
-          $timeout ()->document.querySelector('new-tile input').focus()
+        return AAAHelpers.requireUser('sign-in')
+        .then (me)->
+          vm.settings.show.newTile = !vm.settings.show.newTile
+          if vm.settings.show.newTile
+            # this isn't working
+            $timeout ()->document.querySelector('new-tile input').focus()
 
       'forkTile': vm.recipeHelpers['forkTile']
       'edit': vm.recipeHelpers['edit']
@@ -71,16 +73,18 @@ RecipeCtrl = (
 
       # called by <new-tile[on-complete]>
       submitNewTile: (result)->
-        # new Tile has been submitted to $metor and should be added to collection
-        # ?:use a $on listener instead?
-        console.log ['submitNewTile', result]
-        vm.settings.show.newTile = false
-        # console.log "newTile=" + JSON.stringify result
-        # check result.body for details
-        if result
-          result.ownerId = $rootScope.currentUser._id
-          mcRecipes.insert(result)
-          return
+        return AAAHelpers.requireUser('sign-in')
+        .then (me)->
+          # new Tile has been submitted to $metor and should be added to collection
+          # ?:use a $on listener instead?
+          console.log ['submitNewTile', result]
+          vm.settings.show.newTile = false
+          # console.log "newTile=" + JSON.stringify result
+          # check result.body for details
+          if result
+            result.ownerId = me._id
+            mcRecipes.insert(result)
+            return
 
 
     }
@@ -145,7 +149,7 @@ RecipeCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
-  'appModalSvc', 'tileHelpers', 'openGraphSvc'
+  'appModalSvc', 'tileHelpers', 'openGraphSvc', 'AAAHelpers'
   '$reactive'
   'CollectionHelpers', 'RecipeHelpers'
   'utils', 'devConfig', 'exportDebug'
