@@ -49,6 +49,8 @@ ion-view.events(
     scroll-sista-pause="{{show.map}}"
   ) 
 
+    set-location.empty-list(ng-if="show.emptyList")
+    
     search-refresher(
       on-refresh="vm.on.refresh()"
       )

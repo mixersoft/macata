@@ -41,6 +41,7 @@ EventCtrl = (
         'new': false
       show:
         map: false
+        emptyList: false
         newTile: false
         spinner:
           newTile: false
@@ -169,6 +170,8 @@ EventCtrl = (
           onReady: ()->
             # arguments == []
             console.info ["EventsCtrl subscribe: Events onReady"]
+            $timeout().then ()->
+              vm.settings.show.emptyList = !mcEvents.find().count()
         }
       vm.helpers {
         'rows': ()->
