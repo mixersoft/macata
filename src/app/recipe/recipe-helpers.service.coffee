@@ -24,6 +24,7 @@ RecipeHelpers = (
       .then (me)->
         return $q.reject("WARN: no permission to edit") if item.ownerId != me._id
         data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+        data['modal_title'] = 'Edit Recipe'
         return tileHelpers.modal_showTileEditor(data)
         .then (result)->
           # post to Meteor
@@ -38,13 +39,14 @@ RecipeHelpers = (
       return AAAHelpers.requireUser('sign-in')
       .then (me)->
         data = _.pick item, ['url','title','description','image', 'site_name', 'extras']
+        data['modal_title'] = 'Copy Recipe'
         # from new-tile.directive fn:_showTileEditorAsModal
         return tileHelpers.modal_showTileEditor(data)
         .then (result)->
           # post to Meteor
           self.call 'Recipe.insert', result, (err, result)->
-            console.warn ['Meteor::edit WARN', err] if err
-            console.log ['Meteor::edit OK']
+            console.warn ['Meteor::insert WARN', err] if err
+            console.log ['Meteor::insert OK']
 
 
 

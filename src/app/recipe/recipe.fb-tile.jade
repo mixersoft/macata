@@ -52,6 +52,10 @@ list-item-summary.animate-fade-slide-in-right(
 list-item-detail 
   //- $item == $listItemDelegate.selected(), e.g. selected model
   div.tile.tile-detail(ng-controller="RecipeDetailCtrl as dvm")
+    div.scope-locals.hide
+      {{ $me=$parent.$root.currentUser;''}}
+      {{ $owner=dvm.collHelpers.findOne('User', $item.ownerId) }}
+      {{ $owner.$isOwner=$item.ownerId==$me._id }}
     ion-item.item-complex.in.done
       div.item-body.padding
         div.title {{$item['title']}}
@@ -82,7 +86,7 @@ list-item-detail
         ng-click="action = $owner.$isOwner ? 'edit' : 'forkTile'; dvm.on[action]($event, $item); "
         )
         i.icon.positive.ink(
-        ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
+        ng-class="{'ion-edit': $owner.$isOwner, 'ion-fork': !$owner.$isOwner}"
         )
       button.button
         i.icon.positive.ion-ios-upload.larger.ink(

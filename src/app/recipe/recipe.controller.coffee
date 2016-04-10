@@ -75,17 +75,12 @@ RecipeCtrl = (
       submitNewTile: (result)->
         return AAAHelpers.requireUser('sign-in')
         .then (me)->
-          # new Tile has been submitted to $metor and should be added to collection
-          # ?:use a $on listener instead?
-          console.log ['submitNewTile', result]
-          vm.settings.show.newTile = false
-          # console.log "newTile=" + JSON.stringify result
-          # check result.body for details
-          if result
-            result.ownerId = me._id
-            mcRecipes.insert(result)
-            return
-
+          # post to Meteor
+          vm.call 'Recipe.insert', result, (err, result)->
+            console.warn ['Meteor::insert WARN', err] if err
+            console.log ['Meteor::insert OK']
+            console.log ['submitNewTile', result]
+            vm.settings.show.newTile = false
 
     }
 
@@ -165,11 +160,13 @@ RecipeCtrl.$inject = [
 
 RecipeDetailCtrl = (
   $scope, $rootScope, $q, $state
-  tileHelpers, openGraphSvc, RecipeHelpers
+  tileHelpers, openGraphSvc
+  CollectionHelpers, RecipeHelpers
   $log, toastr
   ) ->
     vm = this
     vm.recipeHelpers = new RecipeHelpers(vm)
+    vm.collHelpers = new CollectionHelpers(vm)
     vm.on = {
       'gotoTarget':(event, item)->
         event.stopImmediatePropagation()
@@ -199,7 +196,8 @@ RecipeDetailCtrl = (
 
 RecipeDetailCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$state'
-  'tileHelpers', 'openGraphSvc', 'RecipeHelpers'
+  'tileHelpers', 'openGraphSvc'
+  'CollectionHelpers', 'RecipeHelpers'
   '$log', 'toastr'
 ]
 

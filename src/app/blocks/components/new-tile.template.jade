@@ -2,15 +2,15 @@
 //
 style#new-tile-style
 ion-modal-view#new-tile-modal-view
+  div.scope-locals.hide
+    {{mm.data = data;''}}
   ion-header-bar.bar-positive 
-    h1.title Create Tile
+    h1.title {{ mm.data.modal_title || "Create Tile" }}
     button.button.button-icon.button-clear.ion-close(
       ng-click="closeModal('CANCELED')"
     )
-  ion-content {{mm.data = data;''}}
-  
     
-      
+  ion-content
     div.list
       div.preview
         div.tile.recipe.item.item-complex.content.ink
