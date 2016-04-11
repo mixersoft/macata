@@ -153,57 +153,9 @@ RecipeCtrl.$inject = [
 
 
 
-
-###
-# @description  RecipeDetailCtrl, controller for directive:list-item-detail
-###
-
-RecipeDetailCtrl = (
-  $scope, $rootScope, $q, $state
-  tileHelpers, openGraphSvc
-  CollectionHelpers, RecipeHelpers
-  $log, toastr
-  ) ->
-    vm = this
-    vm.recipeHelpers = new RecipeHelpers(vm)
-    vm.collHelpers = new CollectionHelpers(vm)
-    vm.on = {
-      'gotoTarget':(event, item)->
-        event.stopImmediatePropagation()
-        switch item.className
-          when 'Events'
-            return $state.go('app.event-detail', {id:item.id})
-            # return "app.events({id:'" + item.id + "'})"
-          else
-            return  $state.go('app.recipe', {id:item.id})
-            # return "app.recipe({id:'" + item.id + "'})"
-
-
-      'click': (event, item)->
-        event.stopImmediatePropagation()
-        $log.info ['RecipeDetailCtrl.on.click', item.name]
-        angular.element(
-          document.querySelector('.list-item-detail')
-        ).toggleClass('slide-under')
-        return
-
-      'forkTile': vm.recipeHelpers['forkTile']
-      'edit': vm.recipeHelpers['edit']
-
-    }
-    console.log ["RecipeDetailCtrl initialized scope.$id=", $scope.$id]
-    return vm
-
-RecipeDetailCtrl.$inject = [
-  '$scope', '$rootScope', '$q', '$state'
-  'tileHelpers', 'openGraphSvc'
-  'CollectionHelpers', 'RecipeHelpers'
-  '$log', 'toastr'
-]
-
-
 ###
 # @description  RecipeSearchCtrl, controller for search/filter recipe modal
+#   when attaching Recipe from directive:newTile
 ###
 
 RecipeSearchCtrl = (
