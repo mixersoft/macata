@@ -44,11 +44,13 @@ MapView = ( CollectionHelpers )->
       # http://angular-ui.github.io/angular-google-maps/#!/api/IsReady
 
       # 'FEED_DB_TRIGGERS', 'EventActionHelpers'
+      'exportDebug'
       'utils', 'toastr'
       ($scope, $q, $state, $timeout, $window
       uiGmapGoogleMapApi, geocodeSvc
       uiGmapIsReady
       # FEED_DB_TRIGGERS, EventActionHelpers
+      exportDebug
       utils, toastr)->
 
         mv = this
@@ -87,22 +89,36 @@ MapView = ( CollectionHelpers )->
             .replace(/%bottom%/g, mapBot)
           return mapH
 
-        _getRowsAsGeocodeResult = (rows)->
+        _getRowsAsGeocodeResult = (rows, keymap)->
+          # angular-google-maps api expecting { latitude: longitude: formatted_address: }
           rows ?= mv.rows
           return _.map rows, (o, i, rows)->
-            if _.isArray o.location
-              [lat,lon] = o.location
-            else if o.location?.lat
-              lat = o.location.lat?() || o.location.lat
-              lon = o.location.lng?() || o.location.lon
+            result = {}
+            value = o[ keymap['location'] ] if keymap
+            value ?= o['geojson'] || o['location'] # deprecate
+            if value?.type == 'Point'
+              # result = value  # geojsonPoint is acceptable
+              angular.extend result, {
+                latitude: geocodeSvc.mathRound6 value.coordinates[1]
+                longitude: geocodeSvc.mathRound6 value.coordinates[0]
+              }
+            if _.isArray value
+              [lat,lon] = value
+              angular.extend result, {
+                lat: geocodeSvc.mathRound6 lat
+                lon: geocodeSvc.mathRound6 lon
+              }
+            else if value?.lat
+              lat = value.lat?() || value.lat
+              lon = value.lng?() || value.lon
+              angular.extend result, {lat:lat, lon:lon}
 
-            o.geometry = {
-              location:
-                lat: ()->return lat
-                lng: ()->return lon
+            angular.extend result, {
+              id: o[ keymap['id'] ] + ''
+              # formatted_address: o.formatted_address || o.address
+              # label: o[ keymap['label'] ]
             }
-            o.formatted_address = o.address
-            return o
+            return result
 
         _selectMarker = (id)->
           mv.gMap.renderSelectedMarker(id)
@@ -120,7 +136,7 @@ MapView = ( CollectionHelpers )->
           action = if newV then 'addClass' else 'removeClass'
           angular.element(nextChild)[action]('has-map')
           if newV
-            $timeout(0).then ()->
+            $timeout(300).then ()->
               console.log mv.map
               mv.gMap.Control.refresh?()
               mv.gMap.setMapBounds()
@@ -141,7 +157,6 @@ MapView = ( CollectionHelpers )->
         $scope.$watchCollection 'mv.rows', (newV, oldV)->
           return if !newV
           rows = newV
-          # TODO: debounce
           # console.warn ["=", mv.mapId, mv.settings.viewId]
           # mv.mapId = mv.settings.viewId if mv.settings.viewId?
           debounced_setupMap(rows)
@@ -156,20 +171,22 @@ MapView = ( CollectionHelpers )->
               return
 
             if markerCount == 1
-              selectedLocation = rows[0]
+              rows = _getRowsAsGeocodeResult rows, keymap
               mapOptions = {
                 type: 'oneMarker'
-                location: [selectedLocation.lat, selectedLocation.lon]
-                draggableMarker: false
+                marker: rows[0]
+                # location: rows[0] # deprecate
+                draggableMarker: true
                 dragendMarker: (marker, eventName, args)->
                   return
               }
+              console.log ['oneMarker', JSON.stringify mapOptions.marker]
 
             if markerCount > 1
               mapOptions = {
                 type: 'manyMarkers'
                 draggableMarker: true     # BUG? click event doesn't work unless true
-                markers: _getRowsAsGeocodeResult(rows)
+                markers: _getRowsAsGeocodeResult(rows, keymap)
                 options:
                   icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
                   labelClass: 'map-marker-label-class'
@@ -202,6 +219,7 @@ MapView = ( CollectionHelpers )->
 
 
         initialize = ()->
+          exportDebug.set('mv', mv)
           # mv.gMap['ControlsReady'] = mv.gMap['Dfd'].promise
           mv.gMap['ControlsReady'] = uiGmapIsReady.promise(1)
           # Guard with jade: ui-gmap-google-map(ng-if="$map")
@@ -252,12 +270,15 @@ MapView = ( CollectionHelpers )->
           # use uiGmapIsReady instead?
           ControlsReady : 'promise'
           renderSelectedMarker: (marker, markers)->
+            return if mv.map.type != 'manyMarkers'
             return mv.gMap.ControlsReady
             .then ()->
-              markers ?= mv.gMap.MarkersControl.getGMarkers()
-              if _.isString marker
-                marker = _.find markers, (o)-> return o.model._id == marker
+              markers ?= mv.gMap.MarkersControl.getGMarkers?()
 
+              if _.isString marker
+                marker = _.find markers || [], (o)-> return o.model._id == marker
+
+              return if !marker
               _.each markers, (m)->
                 if m.resetIcon?
                   m.setIcon(m.resetIcon)
@@ -286,6 +307,8 @@ MapView = ( CollectionHelpers )->
               return marker
 
           setMapBounds: (map, markers)->
+            return
+            return if mv.map.type != 'manyMarkers'
             return mv.gMap.ControlsReady
             .then ()->
               map ?= mv.gMap.Control.getGMap()

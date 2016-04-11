@@ -8,7 +8,7 @@ ion-view.events(
 
   ion-nav-buttons(side="secondary") 
     button.button.button-icon.button-clear.ion-map(
-      ng-click="show.map = !show.map"
+      ng-click="vm.on.showOnMap($event)"
     )
       
   div(
@@ -35,7 +35,7 @@ ion-view.events(
 
   map-view(
     mapId="vm.viewId"
-    rows="vm.rows"
+    rows="vm.mapRows"
     keymap="{{vm.markerKeymap}}"
     selected-id="vm.selectedItemId"
     show="show.map"

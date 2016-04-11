@@ -285,12 +285,14 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
       }
       switch options.type
         when 'circle'
-          gMapPoint = {
-            latitude: mathRound6( options.location[0])
-            longitude: mathRound6( options.location[1])
-          }
+          center = options.marker
+          if options.location?
+            center = {
+              latitude: mathRound6( options.location[0])
+              longitude: mathRound6( options.location[1])
+            }
           mapConfigOptions['circle'] = {
-            center: gMapPoint
+            center: center
             stroke:
               color: '#FF0000'
               weight: 1
@@ -299,34 +301,34 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
               color: '#FF0000'
               opacity: '0.2'
           }
+
         when 'oneMarker'
-          gMapPoint = {
-            latitude: mathRound6( options.location[0])
-            longitude: mathRound6( options.location[1])
+          marker = options.marker || {
+            # legacy from locationHelpers.geocodeSvc
+            id:'1'
+            latitude: options.location[0]
+            longitude: options.location[1]
           }
+          # marker.id = '1'
           mapConfigOptions['oneMarker'] = {
-            idKey: '1'
-            coords: gMapPoint
+            idKey: marker.id
+            coords: marker
+            # coords:
+            #   latitude: options.marker.coordinates[1]
+            #   longitude: options.marker.coordinates[0]
             options: {
               draggable: options.draggableMarker
+              icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
             }
           }
           if options.draggableMarker
             mapConfigOptions['oneMarker']['events'] = {
               'dragend': options.dragendMarker
             }
+          center = marker
         when 'manyMarkers'
-          markers = _.map options.markers, (o, i, l)->
-            point = o['geometry'][keymap['location']]
-            return _.defaults {
-              'id': o[keymap['id']] || i+''
-              'latitude': mathRound6 point.lat()
-              'longitude': mathRound6 point.lng()
-              'formatted_address': o.formatted_address
-            }, o
-
           mapConfigOptions['manyMarkers'] = {
-            models: markers
+            models: options.markers
             options: _.extend options.options, {
               draggable: options.draggableMarker
             }
@@ -336,12 +338,13 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
           }
           if options.draggableMarker
             mapConfigOptions['manyMarkers']['events']['dragend'] = options.dragendMarker
-          gMapPoint = markers[0]
+          center = options.markers[0]
+
 
 
       return mapConfig = {
         type: options.type
-        center: _.pick gMapPoint, ['latitude','longitude']
+        center: center
         zoom: 14
         scrollwheel: false
         control: {}

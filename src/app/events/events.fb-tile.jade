@@ -5,10 +5,13 @@
 
 list-item-summary.animate-fade-slide-in-right(
   opt-collection="vm.rows"
-) {{vm=$parent.$parent.vm;''}}
+)
+  div.scope-locals.hide
+    {{ vm=$parent.$parent.vm;''}}
+    {{ $me=$parent.$root.currentUser;''}}
+    {{ $owner=vm.collHelpers.findOne('User', $item.ownerId);'' }}
+    {{ $owner.$isOwner=$item.ownerId==$me._id;'' }}
   div.tile.event.item.item-complex.content.ink(
-    xxx-ng-class="[$item.color,'bg'].join('-')"
-    ng-click="$event.stopImmediatePropagation()"
     ui-sref="app.event-detail({'id':$item._id})"
   )
     div.hero.content.has-mask(style="height:160px;")
@@ -29,54 +32,17 @@ list-item-summary.animate-fade-slide-in-right(
           ng-click="vm.on.favorite($event, $item)"
           )
         i.button.button-clear.larger.ion-map.ink(
-          ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"
+          ng-click="vm.on.showLocationOnMap($event, $item)"
           )
-        i.button.button-clear.larger.ink(
-          ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
-          ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+        i.button.button-clear.larger.ink.hide(
+          ng-class="{'ion-edit': $owner.$isOwner, 'ion-fork': !$owner.$isOwner}"
+          ng-click="action = $owner.$isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
           )         
         i.button.button-clear.ion-ios-upload.larger.ink(
           )
       div.feature.image(
         bg-image="{{$item['image']}}"
       )
-    div.has-mask-wrap()
+    div.has-mask-wrap
       h2.line-clamp-1 {{$item.title}}
-
-
-xxx-list-item-detail.hide
-  //- $item == $listItemDelegate.selected(), e.g. selected model
-  div.tile.tile-detail(ng-controller="RecipeDetailCtrl as dvm")
-    ion-item.item-complex.in.done
-      div.item-body.padding
-        div.title {{$item['title']}}
-        p(style="margin-top:0;") {{$item['description']}}
-      
-    div.button-bar.condensed.positive(
-      ng-show="true"
-      ng-click="$event.stopImmediatePropagation()"
-      )
-      a.button(
-        href="{{$item['url']}}"
-        target="_blank"
-        )
-        i.icon.positive.ion-android-open.ink(
-        )
-      button.button(
-        ng-click="$item.favorite = !$item.favorite"
-        )
-        i.icon.positive.ink(
-        ng-class=" $item.favorite ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
-        )
-      button.button
-        i.icon.positive.ion-map.ink(
-        )
-      button.button(
-        ng-click="action = $item.isOwner ? 'edit' : 'forkTile'; dvm.on[action]($event, $item); "
-        )
-        i.icon.positive.ink(
-        ng-class="{'ion-edit': $item.isOwner, 'ion-fork': !$item.isOwner}"
-        )
-      button.button
-        i.icon.positive.ion-ios-upload.larger.ink(
-        )
+      p.hide(style="margin-top:0;") {{$item['description']}}
