@@ -41,7 +41,7 @@ SetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
               .then (result)->
                 sl.location = locationHelpers.lastKnownLocation()
                 sl.search = sl.lastLocationString()
-                Meteor.call 'Profile.saveLocation', lonlat, (err, retval)->
+                Meteor.call 'Profile.saveLocation', sl.location.lonlat, (err, retval)->
                   'check'
               , (err)->
                 console.warn ["WARNING: getCurrentPosition", err]
