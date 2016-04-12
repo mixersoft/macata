@@ -253,7 +253,7 @@ EventDetailCtrl = (
 
 
     }
-
+    _getByIds = (ids=[])-> return {_id: {$in: ids}}
     callbacks = {
       'Feed':
         onChange: (feed)->
@@ -276,10 +276,10 @@ EventDetailCtrl = (
 
           return $q.when(event)
           .then (event)->
-            _getByIds = (ids)-> return {_id: {$in: ids}}
             _lookups = {
               '$$participants': (event)->
                 participantIds = [event['ownerId']].concat event['participantIds']
+                return if !participantIds
                 Meteor.users.find(_getByIds(participantIds)).fetch()
               # '$$participations': mcRecipes.find(_getByIds(event['participationIds'])).fetch()
             }
@@ -367,7 +367,7 @@ EventDetailCtrl = (
 
       eventTransforms = new ReactiveTransformSvc(vm, callbacks['Event'])
 
-      _getByIds = (ids)-> return {_id: {$in: ids}}
+
       vm.helpers {
         'event': ()->
           return mcEvents.findOne( vm.getReactively('eventId') )

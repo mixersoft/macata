@@ -69,7 +69,7 @@ EventsUtil = (utils, $document, amMoment,
 
       if event.participations.length == 0
         # create mock data for event.participations
-        _getByIds = (ids)-> return {_id: {$in: ids}}
+        _getByIds = (ids=[])-> return {_id: {$in: ids}}
         vm.$$menuItems = mcRecipes.find(_getByIds(event['menuItemIds'])).fetch()
 
         _.each vm.$$menuItems, (mi, i)->
