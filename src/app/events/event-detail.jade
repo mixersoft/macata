@@ -119,7 +119,8 @@ ion-view.event-detail(
               //- eatwith: exact location provided upon booking
               span {{ event.visible.address}} &nbsp;
           ion-item.event-detail-map.item-complex
-            div.hide
+            //- TODO: convert to <map-view>
+            div.scope-locals.hide
               {{map=vm.location.map;''}}
               {{opt=map.options;''}}
             div.wrap(
@@ -129,7 +130,6 @@ ion-view.event-detail(
                 center='map.center'
                 zoom='map.zoom'
                 options='opt.map.options'
-                xxcontrol='map.control'
                 control='vm.location.gMap.Control'
                 events='map.events'
               )

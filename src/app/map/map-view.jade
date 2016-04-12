@@ -26,11 +26,12 @@ div.map-view.content.has-header(
         stroke="$opt.circle.stroke"
         )
       ui-gmap-marker(
-        ng-if="mv.isValidMarker()"
+        ng-if="$map.type=='oneMarker'"
         idKey="$opt.oneMarker.idKey"
         coords="$opt.oneMarker.coords"
         options="$opt.oneMarker.options"
         events="$opt.oneMarker.events"
+        control="$gMap.MarkersControl"
         )
       ui-gmap-markers(
         ng-if="$map.type=='manyMarkers'"

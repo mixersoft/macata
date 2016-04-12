@@ -18,6 +18,7 @@ EventCtrl = (
 
     # required for directive:map-view
     vm.rows = []
+    vm.mapRows = null
     vm.markerKeymap = {
       id: '_id'
       location: 'location'
@@ -39,6 +40,7 @@ EventCtrl = (
       view:
         show: 'grid'
         'new': false
+        mapMarker: 'oneMarker'
       show:
         map: false
         emptyList: false
@@ -143,6 +145,22 @@ EventCtrl = (
       'favorite': ()->
         eventUtils['favorite'].apply vm, arguments
 
+
+      showOnMap: ($ev, limit=5)->
+        return vm.settings.show.map = false if vm.settings.show.map
+        vm.mapRows = vm.rows.slice(0,limit)
+        vm.settings.show.map = true
+
+
+      showLocationOnMap: ($ev, $item)->
+        location = $item.geojson
+        console.log ['geojsonPoint', location]
+        vm.mapRows = [$item]
+        eventUtils.setVisibleLocation($item)
+        vm.settings.view.mapMarker = $item.visible.type
+        vm.settings.show.map = true
+        return
+
     }
 
 
@@ -196,6 +214,7 @@ EventCtrl = (
 
 
     activate = ()->
+      vm.settings.show.map = false
       return $q.when()
       .then ()->
         # vm.settings.viewId = ["events-view",$scope.$id].join('-')

@@ -21,7 +21,7 @@ CSS_STYLE_TEMPLATE = """
 """
 
 
-MapView = ( CollectionHelpers )->
+MapView = ( )->
   return {
     restrict: 'E'
     scope: {}
@@ -31,8 +31,7 @@ MapView = ( CollectionHelpers )->
       'keymap': '@'
       'selectedId': '='
       'show': '='
-      #
-      'reactiveContext': '='
+      'markerType': '='
     }
     templateUrl: (elem, attr)->
       return 'map/map-view.html'
@@ -87,30 +86,13 @@ MapView = ( CollectionHelpers )->
             .replace(/%bottom%/g, mapBot)
           return mapH
 
-        _getRowsAsGeocodeResult = (rows)->
-          rows ?= mv.rows
-          return _.map rows, (o, i, rows)->
-            if _.isArray o.location
-              [lat,lon] = o.location
-            else if o.location?.lat
-              lat = o.location.lat?() || o.location.lat
-              lon = o.location.lng?() || o.location.lon
-
-            o.geometry = {
-              location:
-                lat: ()->return lat
-                lng: ()->return lon
-            }
-            o.formatted_address = o.address
-            return o
-
         _selectMarker = (id)->
           mv.gMap.renderSelectedMarker(id)
           return
           $timeout(0).then ()->
             # select marker by $index
             # markers = mv.gMap.MarkersControl.getGMarkers()
-            # marker = _.find markers, (o)-> return `o.model._id==id`
+            # marker = _.find markers, (o)-> return `o.model.id==id`
             mv.gMap.renderSelectedMarker(id)
 
         $scope.$watch 'mv.show', (newV, oldV)->
@@ -137,6 +119,7 @@ MapView = ( CollectionHelpers )->
           return if !newV || newV == oldV
           id = newV
           _selectMarker id
+          return
 
         $scope.$watchCollection 'mv.rows', (newV, oldV)->
           return if !newV
@@ -156,10 +139,12 @@ MapView = ( CollectionHelpers )->
               return
 
             if markerCount == 1
-              selectedLocation = rows[0]
+              marker = geocodeSvc.mapLocations(rows[0], keymap)
               mapOptions = {
-                type: 'oneMarker'
-                location: [selectedLocation.lat, selectedLocation.lon]
+                type: mv.markerType || 'oneMarker'
+                # type: 'oneMarker'
+                marker: marker
+                location: [marker.latitude, marker.longitude]
                 draggableMarker: false
                 dragendMarker: (marker, eventName, args)->
                   return
@@ -169,7 +154,7 @@ MapView = ( CollectionHelpers )->
               mapOptions = {
                 type: 'manyMarkers'
                 draggableMarker: true     # BUG? click event doesn't work unless true
-                markers: _getRowsAsGeocodeResult(rows)
+                markers: geocodeSvc.mapLocations(rows, keymap)
                 options:
                   icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
                   labelClass: 'map-marker-label-class'
@@ -180,7 +165,7 @@ MapView = ( CollectionHelpers )->
                 # control: {}   # see: mv.gMap.MarkersControl
                 clickMarker: (marker, eventName, model, skip, silent)->
                   # console.log ["clicked, i="+index, mv.rows[index]]
-                  mv.selectedId = marker.model._id
+                  mv.selectedId = marker.model[ 'id' ]
                   return
               }
             mapOptions['markerKeymap'] = keymap
@@ -232,13 +217,6 @@ MapView = ( CollectionHelpers )->
           # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
 
 
-        # if not this.reactiveContext.getReactively
-        #   throw new Error "ERROR: expecting reactiveContext"
-
-        mv.collHelpers = new CollectionHelpers(mv.reactiveContext)
-        mv.me = mv.collHelpers.findOne('User', Meteor.userId())
-
-
 
         # gMap initialization & methods
         # mv.gMap.Control, mv.gMap.MarkersControl:
@@ -256,7 +234,7 @@ MapView = ( CollectionHelpers )->
             .then ()->
               markers ?= mv.gMap.MarkersControl.getGMarkers()
               if _.isString marker
-                marker = _.find markers, (o)-> return o.model._id == marker
+                marker = _.find markers, (o)-> return o.model.id == marker
 
               _.each markers, (m)->
                 if m.resetIcon?
@@ -267,8 +245,8 @@ MapView = ( CollectionHelpers )->
                 return
 
               # set selected marker
-              label = marker.model.title[0...20]
-              label += '...' if marker.model.title.length>20
+              label = marker.model['label'][0...20]
+              label += '...' if marker.model['label'].length>20
               marker.set('labelContent', label )
               marker.set('labelVisible', true)
               # marker.set('labelStyle', {color: 'white'})
@@ -299,13 +277,6 @@ MapView = ( CollectionHelpers )->
               return
         }
 
-
-        mv.on = {
-          isValidMarker: ()->
-            return
-
-        }
-
         initialize()
         return mv
       ]
@@ -314,7 +285,7 @@ MapView = ( CollectionHelpers )->
 
 
 
-MapView.$inject = [ 'CollectionHelpers']
+MapView.$inject = [ ]
 
 angular.module 'starter.map'
   .directive 'mapView', MapView

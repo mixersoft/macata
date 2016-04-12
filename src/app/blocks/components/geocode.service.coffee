@@ -206,6 +206,63 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
       .catch (err)->
         return $q.reject(err)
 
+    ###
+    # @description get a location array from an array of objects
+    #     GEOCODER.instance.geocode() result
+    #     marker from ui-gmap-marker dragend event on map
+    #     model from ui-gmap-markers click event
+    #       {id: latitude: longitude: formatted_address:}
+    # @param rows array or object, array of object with location attrs
+    #   objects will be converted to array
+    # @param keymap object, dictionary of location attr keys
+    # @return [lat,lon] round to 6 decimals for google Maps API
+    ###
+    mapLocations : (rows, keymap={})->
+      # angular-google-maps api expecting { latitude: longitude: formatted_address: }
+      return [] if !rows
+      if not _.isArray rows
+        rows = [rows]
+        unwrap = true
+      keymap = _.defaults keymap, {
+        id: '_id'
+        location: 'location'
+        label: 'title'
+      }
+      result = _.map rows, (o, i, rows)->
+
+        result = {}
+        value = _.get( o, keymap['location']) if keymap
+        value ?= o['geojson'] || o['location'] # deprecate
+        if value?.type == 'Point'
+          # result = value  # geojsonPoint is acceptable
+          angular.extend result, {
+            latitude: mathRound6 value.coordinates[1]
+            longitude: mathRound6 value.coordinates[0]
+          }
+        else if _.isArray value
+          [lat,lon] = value
+          angular.extend result, {
+            latitude: mathRound6 lat
+            longitude: mathRound6 lon
+          }
+        else if value?.lat
+          lat = value.lat?() || value.lat
+          lon = value.lng?() || value.lon
+          angular.extend result, {
+            latitude: mathRound6 lat
+            longitude: mathRound6 lon
+          }
+
+        angular.extend result, {
+          id: _.get( o, keymap['id']) + ''
+          formatted_address: o.formatted_address || o.address
+          label: _.get( o, keymap['label'])
+        }
+
+        return result
+        # return angular.extend o, result
+      return result[0] if unwrap
+      return result
 
 
     ###
@@ -214,10 +271,11 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
     #     GEOCODER.instance.geocode() result
     #     marker from ui-gmap-marker dragend event on map
     #     model from ui-gmap-markers click event
-    #       {id: latitude: longititde: formatted_address:}
+    #       {id: latitude: longitude: formatted_address:}
     # @return [lat,lon] round to 6 decimals for google Maps API
     ###
-    getLocationFromObj : (point={})->
+    # TODO: refactor, return as lonlat
+    getLatLonFromObj : (point={})->
       if point['geometry']?.location?
         # geocode result
         return [
@@ -285,10 +343,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
       }
       switch options.type
         when 'circle'
-          gMapPoint = {
-            latitude: mathRound6( options.location[0])
-            longitude: mathRound6( options.location[1])
-          }
+          gMapPoint = _.pick options.marker, ['latitude', 'longitude']
           mapConfigOptions['circle'] = {
             center: gMapPoint
             stroke:
@@ -300,15 +355,13 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
               opacity: '0.2'
           }
         when 'oneMarker'
-          gMapPoint = {
-            latitude: mathRound6( options.location[0])
-            longitude: mathRound6( options.location[1])
-          }
+          gMapPoint = _.pick options.marker, ['latitude', 'longitude']
           mapConfigOptions['oneMarker'] = {
-            idKey: '1'
+            idKey: options.marker.id
             coords: gMapPoint
             options: {
               draggable: options.draggableMarker
+              icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
             }
           }
           if options.draggableMarker
@@ -316,15 +369,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
               'dragend': options.dragendMarker
             }
         when 'manyMarkers'
-          markers = _.map options.markers, (o, i, l)->
-            point = o['geometry'][keymap['location']]
-            return _.defaults {
-              'id': o[keymap['id']] || i+''
-              'latitude': mathRound6 point.lat()
-              'longitude': mathRound6 point.lng()
-              'formatted_address': o.formatted_address
-            }, o
-
+          markers = options.markers
           mapConfigOptions['manyMarkers'] = {
             models: markers
             options: _.extend options.options, {
@@ -337,6 +382,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
           if options.draggableMarker
             mapConfigOptions['manyMarkers']['events']['dragend'] = options.dragendMarker
           gMapPoint = markers[0]
+
 
 
       return mapConfig = {
@@ -413,7 +459,7 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
 
   parseLocation = (geoCodeResultOrModel, target)->
     return {} if _.isEmpty geoCodeResultOrModel
-    location0 = geocodeSvc.getLocationFromObj( geoCodeResultOrModel )
+    location0 = geocodeSvc.getLatLonFromObj( geoCodeResultOrModel )
     resp = {
       'location': location0
       'latlon': location0.join(', ')
@@ -444,17 +490,25 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
 
     if markerCount == 1
       selectedLocation = model || vm['geoCodeResults'][0]
-      parseLocation( selectedLocation, vm )
+      retval = parseLocation( selectedLocation, vm )
       vm['marker-moved'] = false
       mapOptions = {
         type: if isZeroResult then 'none' else 'oneMarker'
         location: vm['location']
+        marker:
+          id: '1'
+          latitude: vm['location'][0]
+          longitude: vm['location'][1]
+          label: null
+          formatted_address: vm['addressFormatted']
         draggableMarker: true
         dragendMarker: (marker, eventName, args)->
           # for type=oneMarker
-          vm['location'] = geocodeSvc.getLocationFromObj marker
+          vm['location'] = geocodeSvc.getLatLonFromObj marker
           vm['latlon'] = vm['location'].join(', ')
+          vm['lonlat'] = vm['location'].join(', ').reverse()
           vm['marker-moved'] = true
+          vm['addressFormatted'] = ''
           return
       }
       mapConfig = geocodeSvc.getMapConfig mapOptions

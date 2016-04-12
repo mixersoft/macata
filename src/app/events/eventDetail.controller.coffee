@@ -70,10 +70,16 @@ EventDetailCtrl = (
         return $q.when() if !event.visible.marker
         return uiGmapGoogleMapApi
         .then ()->
+          keymap = {
+            id: '_id'
+            location: 'visible.marker'
+            label: 'title'
+          }
           # markerCount==1
           mapOptions = {
             type: event.visible.type
             location: event.visible.marker
+            marker: geocodeSvc.mapLocations(event, keymap)
             # draggableMap: true  # set in activate()
             draggableMarker: false
             dragendMarker: (marker, eventName, args)->
