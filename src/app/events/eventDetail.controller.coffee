@@ -78,7 +78,6 @@ EventDetailCtrl = (
           # markerCount==1
           mapOptions = {
             type: event.visible.type
-            location: event.visible.marker
             marker: geocodeSvc.mapLocations(event, keymap)
             # draggableMap: true  # set in activate()
             draggableMarker: false

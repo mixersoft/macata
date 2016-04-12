@@ -136,9 +136,9 @@ TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
           console.warn ['Err location', err]
       return
     geocodeAddress : (force)->
-      if mm.data.latlon && mm.data.isCurrentLocation && force
-        location = mm.data.latlon.join(',')
-      if mm.data.latlon && !force
+      if mm.data.displayLatLon && mm.data.isCurrentLocation && force
+        location = mm.data.displayLatLon.join(',')
+      if mm.data.displayLatLon && !force
         console.log ['locationClick()', _.pick( mm.data, ['latlon','address'] ) ]
         return $q.when mm.data
       location ?= mm.data.address
@@ -146,7 +146,7 @@ TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
       return locationHelpers.getLatLon( location )
       .then (result)->
         console.log ['locationClick()', result]
-        mm.data.latlon = result?.location
+        mm.data.displayLatLon = result?.location
         mm.data.address = result?.address
         return mm.data
   }
@@ -158,8 +158,10 @@ TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
     site_name: null
     image: null
     extras: null
+    # use messageComposer Post format
     address: null
-    latlon: null
+    location: {}
+    displayLatLon: null
   }
 
 
@@ -188,10 +190,10 @@ TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
             document.querySelector(selector).scrollIntoView()
           return $q.reject('ERROR: Expecting address')
         # note: geocodeSvc.geocode() will parse "lat,lon" values
-        if mm.data.latlon && mm.data.isCurrentLocation
+        if mm.data.displayLatLon && mm.data.isCurrentLocation
           return $q.when(value) # keep current latlon, just updating address field
 
-        if mm.data.latlon
+        if mm.data.displayLatLon
           # repeat: geocode current address
           promise = locationHelpers.geocodeAddress({address:value}, 'force')
         else
@@ -199,15 +201,17 @@ TileEditorCtrl = (scope, $q, locationHelpers, $timeout, $cordovaGeolocation)->
 
       return promise
       .then (result)->
-        mm.data.latlon = result.latlon
+        mm.data.displayLatLon = result.latlon
         mm.data.address = result.address
+        mm.data.location = result
       , (err)->
         mm.geo.errorMsg.location = err.humanize
 
       return
 
     done: (ev)->
-      # post to $meteor
+      # post to $meteor from scope.onComplete
+      delete mm.data['displayLatLon']
       mm.closeModal mm.data
   }
 
@@ -266,6 +270,8 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
             return data if tileHelpers.isTileComplete(data) && !force
             return tileHelpers.modal_showTileEditor(data)
           .then (result)->
+            # format like messageComposer
+            result.location = _.omit result.location, 'latlon'
             scope.onComplete?({result: result})
           , (err)->
             scope.onComplete?({result: null})

@@ -92,20 +92,25 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         return result if _.isString result  # NOT FOUND, ERROR?
 
         if result.override?.location
-          location = result.override?.location
+          latlon = result.override?.location
         else
           location = result['geometry']['location']
-          location = [location.lat() , location.lng()]
+          latlon = [location.lat() , location.lng()]
 
         # round to 6 significant digits
-        location = _.map location, (v)->
+        latlon = _.map latlon, (v)->
           return mathRound6 v
 
         # console.log ['getLatLon location', location]
+        lonlat = angular.copy(latlon).reverse()
 
         resp = {
           address: result.override?.address || result['formatted_address']
-          location: location  # resolve [lat,lon]
+          location: latlon  # resolve [lat,lon]
+          geojson:
+            type: 'Point'
+            coordinates: lonlat
+          lonlat: lonlat
           geoCodeResult: result
         }
         resp['place_id'] = result['place_id'] if !result.override
@@ -128,7 +133,8 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
 
         return self.showResultsAsMap(address, results)
         .then (result)->
-          # console.log ["displayGeocode", result]
+          console.log ["displayGeocode", result]
+          # convert location to  geojsonPoint
           return result
 
       .catch (err)->
@@ -506,7 +512,6 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
           # for type=oneMarker
           vm['location'] = geocodeSvc.getLatLonFromObj marker
           vm['latlon'] = vm['location'].join(', ')
-          vm['lonlat'] = vm['location'].join(', ').reverse()
           vm['marker-moved'] = true
           vm['addressFormatted'] = ''
           return
@@ -675,7 +680,8 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       return _lastLocation if typeof location == 'undefined'
       return _lastLocation = {} if _.isEmpty location
       _lastLocation = angular.copy location
-      if _lastLocation.latlon
+      if _lastLocation.latlon && !_lastLocation.lonlat
+        console.warn "WARN: lastKnownLocation() deprecate use of latlon"
         _lastLocation.lonlat = angular.copy(_lastLocation.latlon).reverse()
       return _lastLocation
 
@@ -808,8 +814,11 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       return geocodeSvc.getLatLon( location )
       .then (result)->
         console.log ['locationClick()', result]
-        retval = {}
-        retval.latlon = result?.location
+        retval = {
+          geojson: result.geojson
+          lonlat: result.lonlat
+        }
+        retval.latlon = result?.location # deprecate
         retval.address = result?.address
         retval.isCurrentLocation = true if options.isCurrentLocation
         return retval
@@ -841,7 +850,7 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
         return result if ok
         return self.geocodeAddress(result, 'force')
         .then (confirmResult)->
-          return confirmResult if confirmResult?.latlon
+          return confirmResult if confirmResult?.lonlat
           return result
   }
 

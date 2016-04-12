@@ -25,16 +25,17 @@ EventsUtil = (utils, $document, amMoment,
     # TODO: put into models.event.coffee, handle on server
     setVisibleLocation: (event, userId, removeTrueLocation) ->
       userId ?= Meteor.userId()
+      # TODO: refactor, use geojsonPoint format
       if self.showExactLocation(event, userId)
         event.visible = {
           address: event.address
-          marker: event.location
+          marker: event.geojson
           type: 'oneMarker'
         }
       else
         event.visible = {
           address: event.neighborhood
-          marker: utils.maskLatLon(event.location, event.title)
+          marker: utils.maskLatLon(event.geojson, event.title)
           type: 'circle'
         }
       return event

@@ -174,8 +174,8 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
             return promise
             .then (result)->
               $mc.scope.address = result.address
-              $mc.scope.address ?= result.latlon?.join(', ') || ''
-              $mc.scope.location = result
+              $mc.scope.address ?= [result.lonlat[1],result.lonlat[0] ].join(', ')
+              $mc.scope.location = _.omit result, 'latlon'
             , (err)->
               $mc.geo.errorMsg.location = err.humanize
 
