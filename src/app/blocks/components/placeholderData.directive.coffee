@@ -107,7 +107,11 @@ PlaceholderDataDirective = ($compile, unsplashItSvc)->
               when 'bg-src', 'bgSrc'
                 # console.log ['bg-img', offset, index]
                 src = unsplashItSvc.getImgSrc(index , offset, options)
-                scope.model?['bgSrc'] = src
+                if scope.model?
+                  scope.model['bgSrc'] = src
+                else
+                  element.addClass('bg-image')
+                    .css('background-image', "url({src})".replace('{src}', src) )
               when 'bg-image'
                 # just move src to background-image
                 # element.attr('bg-image', src)
