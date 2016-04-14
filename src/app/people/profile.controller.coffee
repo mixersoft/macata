@@ -63,11 +63,12 @@ ProfileCtrl = (
 
 
       signOut: ()->
-        Meteor.logout()
-        $rootScope.user = null
-        vm.me = null
-        $rootScope.$emit 'user:sign-out'
-        activate()
+        Meteor.logout (err)->
+          return console.warn ['sign-out err=', err] if err
+          $rootScope.user = null
+          vm.me = null
+          $rootScope.$emit 'user:sign-out'
+          activate()
     }
 
     initialize = ()->
