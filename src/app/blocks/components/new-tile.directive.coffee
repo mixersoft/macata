@@ -253,7 +253,7 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
           scope.isFetching = true
           return openGraphSvc.get(url)
           .then (og)->
-            scope.isFetching = false
+
             data = openGraphSvc.normalize(og)
             angular.extend dm.data, data
             # TODO?: merge with dm.data.field?
@@ -261,7 +261,9 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
             return data
           , (err)->
             console.warn ['openGraphSvc.get()', err]
-            return
+            return $q.reject err
+          .finally ()->
+            scope.isFetching = false
 
 
         _showTileEditorAsModal = (data, force)->
@@ -277,6 +279,18 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
             scope.onComplete?({result: null})
           .finally _reset
 
+        _getValidatedTile = (data)->
+          return _getOpenGraph( data.url )
+          .catch (err)->
+            if err == 'NOT FOUND'
+              # show "No preview" message
+              return data
+            return $q.reject(err)
+          .then (data)->
+            return _showTileEditorAsModal(data)
+
+        return if element.children().scope()
+        # already compiled/linked
 
         # initialize directive model (dm)
         scope.dm = dm = {
@@ -316,9 +330,7 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
             if dm.data.url != matched
               dm.data.url = matched
               console.log "blur: "+dm.data.url
-              _getOpenGraph( dm.data.url )
-              .then (data)->
-                return _showTileEditorAsModal(data)
+              _getValidatedTile( dm.data )
           else
             dm.data.title = dm.field
             return _showTileEditorAsModal(dm.data, 'force')
@@ -340,9 +352,7 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
             if matched
               dm.data.url = matched
               console.log "keydown: "+dm.data.url
-              _getOpenGraph( dm.data.url )
-              .then (data)->
-                return _showTileEditorAsModal(data)
+              _getValidatedTile( dm.data )
             else
               console.log "keydown: end in space but no match"
           if attrs.onKeyDown
