@@ -35,13 +35,13 @@
           scrollParent,
           scrollChild;
 
-      if (!isDefined($attrs.pullingIcon)) {
-        $attrs.$set('pullingIcon', 'ion-android-arrow-down');
-      }
-
-      $scope.showSpinner = !isDefined($attrs.refreshingIcon) && $attrs.spinner != 'none';
-
-      $scope.showIcon = isDefined($attrs.refreshingIcon);
+      // if (!isDefined($attrs.pullingIcon)) {
+      //   $attrs.$set('pullingIcon', 'ion-android-arrow-down');
+      // }
+      //
+      // $scope.showSpinner = !isDefined($attrs.refreshingIcon) && $attrs.spinner != 'none';
+      //
+      // $scope.showIcon = isDefined($attrs.refreshingIcon);
 
       $ionicBind($scope, $attrs, {
         // pullingIcon: '@',
@@ -50,6 +50,8 @@
         // refreshingText: '@',
         // spinner: '@',
         // disablePullingRotation: '@',
+        reveal: '=',
+        $onReveal:'&onReveal',
         $onRefresh: '&onRefresh',
         $onPulling: '&onPulling'
       });
@@ -223,34 +225,50 @@
         } else {
           ionic.requestAnimationFrame(function() {
             scrollChild.classList.remove('overscroll');
-            hide();
+            // hide();
             deactivate();
           });
         }
       }
 
-      $scope.$on('scroll.refreshComplete', function() {
-        // NOTE: disable tail animation
-        return;
-        // prevent the complete from firing before the scroll has started
-        $timeout(function() {
+      $scope.$on('overscrollTile.reveal', function(scope, show) {
+        if (show) {
 
-          ionic.requestAnimationFrame(tail);
+          start();
+          var h = $element.prop('clientHeight')
+          scrollTo(h, scrollTime);
+          done('silent');
 
-          // scroll back to home during tail animation
-          scrollTo(0, scrollTime, deactivate);
-
-          // return to native scrolling after tail animation has time to finish
+        } else {
+          // prevent the complete from firing before the scroll has started
           $timeout(function() {
 
-            if (isOverscrolling) {
-              isOverscrolling = false;
-              setScrollLock(false);
-            }
+            // ionic.requestAnimationFrame(tail);
 
-          }, scrollTime);
+            // scroll back to home during tail animation
+            scrollTo(0, scrollTime, deactivate);
 
-        }, scrollTime);
+            // return to native scrolling after tail animation has time to finish
+            $timeout(function() {
+
+              if (isOverscrolling) {
+                isOverscrolling = false;
+                setScrollLock(false);
+              }
+
+              // # reactivate listeners
+              ionic.on(touchStartEvent, handleTouchstart, scrollChild);
+              ionic.on(touchMoveEvent, handleTouchmove, scrollChild);
+              ionic.on(touchEndEvent, handleTouchend, scrollChild);
+              ionic.on('mousedown', handleMousedown, scrollChild);
+              ionic.on('mousemove', handleTouchmove, scrollChild);
+              ionic.on('mouseup', handleTouchend, scrollChild);
+              // $scope.$onReveal({value:false})
+
+            }, scrollTime);
+
+          }, 0);
+        }
       });
 
       function scrollTo(Y, duration, callback) {
@@ -393,10 +411,10 @@
 
       function hide() {
         // showCallback
-        // $element[0].classList.add('invisible');
+        $element[0].classList.add('invisible');
       }
 
-      function done() {
+      function done(silent) {
         $timeout(function() {
           // // disable scrollChild listeners once the searchRefresher is revealed
           ionic.off(touchStartEvent, handleTouchstart, scrollChild);
@@ -410,6 +428,7 @@
             isOverscrolling = false;
             setScrollLock(false);
           }
+          !silent && $scope.$onReveal({value:true})
         });
       }
 
@@ -417,6 +436,13 @@
         // tailCallback
         $element[0].classList.add('refreshing-tail');
       }
+
+      $scope.$watch('reveal', function(newV, oldV) {
+        if (newV === oldV) {
+          return;
+        }
+        return $scope.$emit('overscrollTile.reveal', newV);
+      });
 
       // for testing
       self.__handleTouchmove = handleTouchmove;
@@ -447,7 +473,7 @@
    *
    * ```html
    * <ion-content ng-controller="MyController">
-   *   <search-refresher>
+   *   <search-refresher reveal="revealOverscroll" on-reveal="onReveal(value)">
    *   	<search-tile></search-tile>
    *   </search-refresher>
    *   <ion-list>
@@ -464,17 +490,20 @@
    *      .success(function(newItems) {
    *        $scope.items = newItems;
    *      })
-   *      .finally(function() {
-   *        // Stop the ion-refresher from spinning
-   *        $scope.$broadcast('scroll.refreshComplete');
-   *      });
-   *   };
+   *   $scope.revealOverscroll = false
+   *   $scope.onReveal = function(value){
+   *   	 // callback when the overscrollTile is
+   *   	 // revealed by a touchend event
+   *   	 // but NOT when $scope.revealOverscroll = true
+   *   }
    * });
    * ```
-   *
-   * @param {expression=} on-refresh Called when the user pulls down enough and lets go
+   * @param {expression=} reveal, manually reveal/hide overscrollTile
+   * @param {expression&} on-reveal, Called when the overscroll Tile is revealed
+   * by a pull-down, i.e. touchend
+   * @param {expression&} on-refresh Called when the user pulls down enough and lets go
    * of the refresher.
-   * @param {expression=} on-pulling Called when the user starts to pull down
+   * @param {expression&} on-pulling Called when the user starts to pull down
    * on the refresher.
    *
    */
@@ -492,7 +521,7 @@
 
         // transclude .search-refresher and add properties
         $element.append($transclude())
-        $compile($element)($scope);
+        // $compile($element)($scope);
         $element[0].classList.add('search-refresher');
         $element[0].classList.remove('invisible');
         var h = $element.prop('clientHeight');

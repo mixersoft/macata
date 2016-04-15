@@ -54,6 +54,8 @@ RecipeCtrl = (
         , {notify:false}
         )
         return if silent
+      overscrollReveal: (show)->
+        vm.settings.show.newTile = show
 
       # activate <new-tile>
       createNewTile: ()->

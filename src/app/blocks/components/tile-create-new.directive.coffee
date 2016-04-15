@@ -9,11 +9,12 @@ TileCreateNew = ()->
     restrict: 'E'
     scope: {}
     bindToController: {
+      'reveal': '='
       'onNewTile': '&'
       'getWidth': '&'  # optional
     }
     templateUrl: 'blocks/components/tile-create-new.html'
-    # require: ['?^searchRefresher', 'tileCreateNew']   # ???: enforce dependency?
+    require: ['?^searchRefresher', 'tileCreateNew']   # ???: enforce dependency?
     controllerAs: 'tc'
     controller: [
       '$scope', '$window'
@@ -40,6 +41,9 @@ TileCreateNew = ()->
             if tc.onNewTile?
               tc.onNewTile({result:result})
         }
+
+        $scope.$watch 'tc.reveal', (newV,oldV)->
+          return
 
         return tc
       ]

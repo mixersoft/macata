@@ -18,9 +18,11 @@ ion-view(
     scroll-sista="header-subheader"
   ) 
     
-    
-    search-refresher()
-      //-  make directive:tile-create-new
+    // refactor: overflow-scroll-tile or pull-to-reveal
+    search-refresher(
+      reveal="$show.newTile"
+      on-reveal="vm.on.overscrollReveal(value)"
+      )
       //-     refactor: set-location -> tile-set-location
       tile-create-new(
         on-new-tile="vm.on.submitNewTile(result)"
