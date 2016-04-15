@@ -230,13 +230,15 @@
       }
 
       $scope.$on('scroll.refreshComplete', function() {
+        // NOTE: disable tail animation
+        return;
         // prevent the complete from firing before the scroll has started
         $timeout(function() {
 
-          // ionic.requestAnimationFrame(tail);
+          ionic.requestAnimationFrame(tail);
 
           // scroll back to home during tail animation
-          // scrollTo(0, scrollTime, deactivate);
+          scrollTo(0, scrollTime, deactivate);
 
           // return to native scrolling after tail animation has time to finish
           $timeout(function() {
@@ -404,6 +406,10 @@
           ionic.off('mousemove', handleTouchmove, scrollChild);
           ionic.off('mouseup', handleTouchend, scrollChild);
           // ionic.off('scroll', handleScroll, scrollParent);
+          if (isOverscrolling) {
+            isOverscrolling = false;
+            setScrollLock(false);
+          }
         });
       }
 
