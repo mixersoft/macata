@@ -1,13 +1,13 @@
 div.ng-repeat-grid.row.list-item-summary
   div.list-item-wrap.col.col-full
-    div.event.tile.set-location.item.item-complex.content.ink
-      div.hero.content.has-mask-reverse
+    div.tile.overscroll-tile.item.item-complex.content.ink
+      div.hero.content.has-mask-reverse(
+        ng-click="sl.on.hide($event)"
+        )
 
         div.feature.image(
           placeholder-data="bg-src" group="tile" index="{{Date.now()}}"
           width="sl.tileWidth()"
-          model="sl.tile"
-          bg-image="{{sl.tile.bgSrc}}"
         )
       div.has-mask-wrap
         h2.line-clamp-1 Where do you want to be?

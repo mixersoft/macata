@@ -1,0 +1,28 @@
+div.ng-repeat-grid.row.list-item-summary
+  div.list-item-wrap.col.col-full
+    div.tile.overscroll-tile.item.item-complex.content.ink
+      div.hero.content.has-mask-reverse(
+        )
+        div.feature.image(
+          placeholder-data="bg-src" group="tile" index="{{Date.now()}}"
+          width="tc.tileWidth()"
+        )
+      div.has-mask-wrap
+        h2.line-clamp-1 Create a New Tile
+        div.search-wrap
+          div.item-input-wrapper(style="background-color:white;")
+            i.icon.ion-link.larger.padding-right
+            new-tile(
+              style="width:100%;"
+              return-close="true"
+              is-fetching="tc.show.spinner"
+              on-complete="tc.on.newTile(result)"
+            )
+          button.button.button-small.button-balanced
+            i.icon.ion-ios-arrow-forward(
+              ng-show="!tc.show.spinner"
+            )
+            ion-spinner.spinner-light(
+              icon="ios-small"
+              ng-show="tc.show.spinner"
+            )

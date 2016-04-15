@@ -28,8 +28,6 @@ RecipeCtrl = (
         'new': false
       show:
         newTile: false
-        spinner:
-          newTile: false
     }
 
     vm.lookup = {
@@ -78,25 +76,47 @@ RecipeCtrl = (
           # post to Meteor
           vm.call 'Recipe.insert', result, (err, result)->
             console.warn ['Meteor::insert WARN', err] if err
+            return if !result || result.errorType == 'Meteor.Error'
             console.log ['Meteor::insert OK']
             console.log ['submitNewTile', result]
             vm.settings.show.newTile = false
+            $timeout(50).then ()->
+              vm.selectedItemId = result
+              data = mcRecipes.findOne(vm.selectedItemId)
+              vm.on.select(data, null, 'silent')
+
 
     }
 
-    initialize = ()->
+    getAsPublishSpec = (filterSort)->
+      return [
+        filterSort.filterBy
+        {
+          limit: parseInt(filterSort.perpage)
+          skip: parseInt( (filterSort.page - 1) * filterSort.perpage )
+          sort: filterSort.sortBy
+        }
+      ]
 
+    initialize = ()->
 
       vm.subscribe 'myVisibleRecipes'
       ,()->
-        filterBy = null
-        paginate = null
-        return subscription = [ filterBy, paginate  ]
+        return getAsPublishSpec( vm.getReactively('filterSort', true) )
 
       vm.helpers {
         'rows': ()->
-          mcRecipes.find({})
+          return mcRecipes.find(
+            {}
+            ,{
+              sort: vm.getReactively('filterSort.sortBy', true)
+            })
       }
+      vm.autorun ()->
+        filterSort = vm.getReactively('filterSort', true)
+        console.log ['sortBy', JSON.stringify filterSort.sortBy]
+
+      exportDebug.set('vm', vm)
       return
 
     activate = ()->

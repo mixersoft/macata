@@ -6,6 +6,29 @@
 #   - use appModalSvc modals for detail view
 #   - allow manual editing of open-graph delegate-handle
 #   - usage: <new-tile></new-tile>
+#     example usage in header:
+###
+    div.bar.has-header.bar-inset-wrap.bar-subheader
+      div.item-input-inset.no-padding
+        div.item-input-wrapper
+          i.icon.ion-link.larger
+          new-tile(
+            style="width:100%;"
+            return-close="true"
+            is-fetching="$show.spinner.newTile"
+            on-complete="vm.on.submitNewTile(result)"
+          )
+        button.button.button-dark.button-clear
+          i.icon.ion-ios-arrow-forward(
+            ng-show="!$show.spinner.newTile"
+          )
+          ion-spinner.spinner-white(
+            icon="ios-small"
+            ng-show="$show.spinner.newTile"
+          )
+###
+#
+#
 #
 
 

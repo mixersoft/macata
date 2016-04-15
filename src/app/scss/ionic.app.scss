@@ -741,8 +741,10 @@ ion-side-menu > ion-content {
     .has-mask-wrap {
       /*vertical-align text to bottom because has-mask-reverse bug in ionicMaterial*/
       position: absolute;
-      bottom: 2px;
-      right: 135px;
+      // bottom: 2px;
+      // right: 135px;
+      bottom: 24px;
+      right: 10px;
       left: 10px;
       p {
         text-overflow: ellipsis;
@@ -768,25 +770,48 @@ ion-side-menu > ion-content {
   }
 }
 
-
 .search-refresher.scroll-refresher {
   height: 110px;
+  &.active.refreshing {
+    -webkit-transition: -webkit-transform 0.2s;
+    transition: -webkit-transform 0.2s;
+    -webkit-transition: transform 0.2s;
+    transition: transform 0.2s;
+    -webkit-transform: scale(1, 1);
+    transform: scale(1, 1); }
+  &.active.refreshing.refreshing-tail {
+    -webkit-transform: scale(0, 0);
+    transform: scale(0, 0); }
 }
 
-set-location {
-
+set-location, tile-create-new {
   .row .col.list-item-wrap {
     margin-bottom: -10px;
   }
-  .tile.item.set-location {
+  .tile.overscroll-tile {
     .hero {
       height: 100px;
     }
     .has-mask-wrap {
       @extend .text-center;
+      position: absolute;
       top: 15%;
       left: 0;
       right: 0;
+      p {
+        text-overflow: ellipsis;
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        color: #fff;
+        font-weight: bold;
+        position: relative;
+        text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+        z-index: 1;
+      }
+      h2 {
+        font-size: 24px;
+      }
 
       @media(max-width: $grid-responsive-sm-break) {
         h2 {

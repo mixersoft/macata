@@ -14,8 +14,8 @@ SetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
     templateUrl: 'blocks/components/set-location.html'
     controllerAs: 'sl'
     controller: [
-      '$q', '$window'
-      ($q, $window)->
+      '$scope', '$window'
+      ($scope, $window)->
 
         sl = this
 
@@ -50,6 +50,10 @@ SetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
               sl.location = locationHelpers.lastKnownLocation()
               sl.search = sl.lastLocationString()
               return sl.search
+          'hide': ($ev)->
+            $scope.$emit('overscrollTile.reveal', false);
+            return
+
         }
 
         return sl

@@ -45,8 +45,10 @@ EventCtrl = (
         map: false
         emptyList: false
         newTile: false
-        spinner:
-          newTile: false
+        overscrollTile: ()->
+          return true if vm.settings.show.emptyList
+          return true if vm.settings.show.newTile
+          return false
         fabIcon: 'ion-plus'
     }
 
@@ -122,8 +124,9 @@ EventCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      refresh: ()->
-        $ionicScrollDelegate.$getByHandle('events-list-scroll').resize()
+      overscrollReveal: ()->
+        # is this required?
+        # $ionicScrollDelegate.$getByHandle('events-list-scroll').resize()
 
 
       createNewTile: (parentEl)->
