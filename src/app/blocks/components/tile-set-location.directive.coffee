@@ -4,14 +4,14 @@
   NOTE: using component-directives form,
     see https://angular.io/docs/ts/latest/guide/upgrade.html#!#using-component-directives
 ###
-SetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
+TileSetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
   return {
     restrict: 'E'
     scope: {}
     bindToController: {
       'show': '='
     }
-    templateUrl: 'blocks/components/set-location.html'
+    templateUrl: 'blocks/components/tile-set-location.html'
     controllerAs: 'sl'
     controller: [
       '$scope', '$window'
@@ -51,7 +51,7 @@ SetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
               sl.search = sl.lastLocationString()
               return sl.search
           'hide': ($ev)->
-            $scope.$emit('overscrollTile.reveal', false);
+            $scope.$emit('overscrollTile.reveal', false)
             return
 
         }
@@ -63,7 +63,7 @@ SetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
 
 
 
-SetLocation.$inject = [ 'locationHelpers', 'FeedHelpers', 'PostHelpers']
+TileSetLocation.$inject = [ 'locationHelpers', 'FeedHelpers', 'PostHelpers']
 
 angular.module 'blocks.components'
-  .directive 'setLocation', SetLocation
+  .directive 'tileSetLocation', TileSetLocation

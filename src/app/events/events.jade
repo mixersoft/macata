@@ -38,11 +38,12 @@ ion-view.events(
         slider="vm.pullToReveal.slider"
         )
         ion-slide-page
-          set-location
+          tile-set-location
         ion-slide-page
           tile-create-new(
             on-new-tile="vm.on.submitNewTile(result)"
             )
+        
  
     list-item-container.content.condensed(
       collection="vm.rows"

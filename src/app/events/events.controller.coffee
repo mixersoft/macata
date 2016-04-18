@@ -38,15 +38,16 @@ EventCtrl = (
 
     vm.pullToReveal = {
       options:
-        initialSlide: 0
+        initialSlide: 1
       slider: null
       slide: (name)->
         self = vm.pullToReveal
         switch name
           when 'setLocation'
             self.slider.slideTo(0)
-          when 'newTile'
             self.slider.slideTo(1)
+          when 'newTile'
+            self.slider.slideTo(2)
             selector = '#' + vm.viewId + ' new-tile input'
             setTimeout ()->return document.querySelector(selector ).focus()
             return
