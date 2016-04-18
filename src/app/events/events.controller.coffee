@@ -36,6 +36,23 @@ EventCtrl = (
     vm.filter = {
     }
 
+    vm.pullToReveal = {
+      options:
+        initialSlide: 0
+      slider: null
+      slide: (name)->
+        self = vm.pullToReveal
+        switch name
+          when 'setLocation'
+            self.slider.slideTo(0)
+          when 'newTile'
+            self.slider.slideTo(1)
+            selector = '#' + vm.viewId + ' new-tile input'
+            setTimeout ()->return document.querySelector(selector ).focus()
+            return
+          when 'default'
+            self.slider.slideTo(self.options.initialSlide)
+    }
     vm.settings = {
       view:
         show: 'grid'
@@ -44,10 +61,10 @@ EventCtrl = (
       show:
         map: false
         emptyList: false
-        newTile: false
+        pulltoReveal: false
         overscrollTile: ()->
           return true if vm.settings.show.emptyList
-          return true if vm.settings.show.newTile
+          return true if vm.settings.show.pullToReveal
           return false
         fabIcon: 'ion-plus'
     }
@@ -124,16 +141,19 @@ EventCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      overscrollReveal: ()->
-        # is this required?
-        # $ionicScrollDelegate.$getByHandle('events-list-scroll').resize()
+      overscrollReveal: (value)->
+        return if value
+        vm.pullToReveal.slide('setLocation')
+        return
 
 
       createNewTile: (parentEl)->
-        vm.settings.show.newTile = !vm.settings.show.newTile
-        if vm.settings.show.newTile
-          # this isn't working
-          $timeout ()->parentEl.querySelector('new-tile input').focus()
+        vm.settings.show.pullToReveal = !vm.settings.show.pullToReveal
+        if vm.settings.show.pullToReveal
+          vm.pullToReveal.slide('newTile')
+        else
+          $timeout(250).then ()->vm.pullToReveal.slide('default')
+
 
       fabClick: ($ev)->
         return AAAHelpers.requireUser('sign-in')

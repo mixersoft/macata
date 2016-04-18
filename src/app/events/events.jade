@@ -33,11 +33,16 @@ ion-view.events(
       reveal="show.overscrollTile()"
       on-reveal="vm.on.overscrollReveal(value)"
       )
-      set-location
-      tile-create-new(
-        ng-show="show.newTile"
-        on-new-tile="vm.on.submitNewTile(result)"
+      ion-slides(
+        options="vm.pullToReveal.options"
+        slider="vm.pullToReveal.slider"
         )
+        ion-slide-page
+          set-location
+        ion-slide-page
+          tile-create-new(
+            on-new-tile="vm.on.submitNewTile(result)"
+            )
  
     list-item-container.content.condensed(
       collection="vm.rows"
