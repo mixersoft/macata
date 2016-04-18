@@ -39,13 +39,17 @@ EventCtrl = (
     vm.pullToReveal = {
       options:
         initialSlide: 1
+        pagination: false
       slider: null
       slide: (name)->
         self = vm.pullToReveal
         switch name
           when 'setLocation'
             self.slider.slideTo(0)
+          when 'searchSort'
             self.slider.slideTo(1)
+            selector = '#' + vm.viewId + ' input'
+            setTimeout ()->return document.querySelector(selector ).focus()
           when 'newTile'
             self.slider.slideTo(2)
             selector = '#' + vm.viewId + ' new-tile input'
@@ -143,9 +147,9 @@ EventCtrl = (
         return vm.settings.view.show = value
 
       overscrollReveal: (value)->
-        return if value
-        vm.pullToReveal.slide('setLocation')
-        return
+        if !location = locationHelpers.lastKnownLonLat()
+          return vm.pullToReveal.slide('setLocation')
+        return vm.pullToReveal.slide('searchSort')
 
 
       createNewTile: (parentEl)->
@@ -183,6 +187,29 @@ EventCtrl = (
         eventUtils.setVisibleLocation($item)
         vm.settings.view.mapMarker = $item.visible.type
         vm.settings.show.map = true
+        return
+
+      filterBy: ($ev, value)->
+        eventFilter = $stateParams.filter || 'all'
+        location = locationHelpers.lastKnownLonLat()
+        baseFilter = _filters[ eventFilter ](location)
+        return vm.filter = baseFilter if !value
+        match = _.map value.split(' '), (word)->
+          return "(?=.*" + word + ")"
+        match = match.join('')
+        baseFilter.filterBy = {
+          $and:[
+            baseFilter.filterBy
+            $or: [
+              { title: {$regex: match, $options: 'i'} }
+              { description: {$regex: match, $options: 'i'} }
+              { neighborhood: {$regex: match, $options: 'i'} }
+            ]
+          ]
+        }
+
+        vm.filter = baseFilter
+        exportDebug.set('filter', vm.filter)
         return
 
     }
@@ -229,9 +256,10 @@ EventCtrl = (
       }
 
       vm.autorun ()->
-        filterBy = vm.getReactively('filter.filterBy', true)
-        console.log ['(autorun) events.filterBy=', filterBy]
-
+        vm.filter = vm.getReactively('filter', true)
+        console.log ['(autorun) events.filterBy=', vm.filter.filterBy]
+        vm.title = vm.filter.label
+        vm.pg.sort = vm.filter.sortBy
         return
       # exportDebug.set 'vm', vm
       return
@@ -264,9 +292,7 @@ EventCtrl = (
             return {eventFilter: eventFilter}
       .then (result)->
         vm.filter = _filters[ result.eventFilter ](result.location)
-        # exportDebug.set('filter', vm.filter)
-        vm.title = vm.filter.label
-        vm.pg.sort = vm.filter.sortBy
+        exportDebug.set('filter', vm.filter)
       .then ()->
         # // Set Ink
         ionic.material?.ink.displayEffect()

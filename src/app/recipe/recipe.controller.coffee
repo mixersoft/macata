@@ -22,12 +22,46 @@ RecipeCtrl = (
     vm.listItemDelegate = null
     vm.RecipeM = RecipeModel::
 
+    vm.pullToReveal = {
+      options:
+        initialSlide: 0
+        pagination: false
+      slider: null
+      slide: (name)->
+        self = vm.pullToReveal
+        switch name
+          # when 'setLocation'
+          #   self.slider.slideTo(0)
+          when 'searchSort'
+            self.slider.slideTo(0)
+            selector = '#' + vm.viewId + ' input'
+            setTimeout ()->return document.querySelector(selector ).focus()
+            return
+          when 'newTile'
+            self.slider.slideTo(2)
+            selector = '#' + vm.viewId + ' new-tile input'
+            setTimeout ()->return document.querySelector(selector ).focus()
+            return
+          when 'default'
+            self.slider.slideTo(self.options.initialSlide)
+    }
     vm.settings = {
       view:
         show: 'grid'
         'new': false
       show:
-        newTile: false
+        pullToReveal: false
+    }
+
+    vm.filterSort = {
+      label: null
+      defaultFilterBy: {}
+      filterBy: {}
+      sortBy: {
+        "title":1
+      }
+      page: 1
+      perpage: 20
     }
 
     vm.lookup = {
@@ -55,16 +89,40 @@ RecipeCtrl = (
         )
         return if silent
       overscrollReveal: (show)->
-        vm.settings.show.newTile = show
+        # if !location = locationHelpers.lastKnownLonLat()
+        #   return vm.pullToReveal.slide('setLocation')
+        return vm.pullToReveal.slide('searchSort')
+
+      filterBy: ($ev, value)->
+        baseFilter = vm.filterSort
+        if !value
+          vm.filterSort.filterBy = vm.filterSort.defaultFilterBy
+          return
+        match = _.map value.split(' '), (word)->
+          return "(?=.*" + word + ")"
+        match = match.join('')
+        baseFilter.filterBy = {
+          $and:[
+            baseFilter.defaultFilterBy
+            $or: [
+              { title: {$regex: match, $options: 'i'} }
+              { description: {$regex: match, $options: 'i'} }
+            ]
+          ]
+        }
+
+        exportDebug.set('filter', vm.filterSort)
+        return
 
       # activate <new-tile>
       createNewTile: ()->
+        # vm.filterSort.sortBy.title = -1 * vm.filterSort.sortBy.title
+        # return
         return AAAHelpers.requireUser('sign-in')
         .then (me)->
-          vm.settings.show.newTile = !vm.settings.show.newTile
-          if vm.settings.show.newTile
-            # this isn't working
-            $timeout ()->document.querySelector('new-tile input').focus()
+          vm.settings.show.pullToReveal = !vm.settings.show.pullToReveal
+          if vm.settings.show.pullToReveal
+            vm.pullToReveal.slide('newTile')
 
       'forkTile': vm.recipeHelpers['forkTile']
       'edit': vm.recipeHelpers['edit']
@@ -86,8 +144,6 @@ RecipeCtrl = (
               vm.selectedItemId = result
               data = mcRecipes.findOne(vm.selectedItemId)
               vm.on.select(data, null, 'silent')
-
-
     }
 
     getAsPublishSpec = (filterSort)->
@@ -109,7 +165,7 @@ RecipeCtrl = (
       vm.helpers {
         'rows': ()->
           return mcRecipes.find(
-            {}
+            vm.getReactively('filterSort.filterBy')
             ,{
               sort: vm.getReactively('filterSort.sortBy', true)
             })
@@ -117,6 +173,8 @@ RecipeCtrl = (
       vm.autorun ()->
         filterSort = vm.getReactively('filterSort', true)
         console.log ['sortBy', JSON.stringify filterSort.sortBy]
+        vm.title = filterSort.label
+        return
 
       exportDebug.set('vm', vm)
       return

@@ -20,13 +20,21 @@ ion-view(
     
     // refactor: overflow-scroll-tile or pull-to-reveal
     search-refresher(
-      reveal="$show.newTile"
+      reveal="$show.pullToReveal"
       on-reveal="vm.on.overscrollReveal(value)"
       )
-      //-     refactor: set-location -> tile-set-location
-      tile-create-new(
-        on-new-tile="vm.on.submitNewTile(result)"
+      ion-slides(
+        options="vm.pullToReveal.options"
+        slider="vm.pullToReveal.slider"
         )
+        ion-slide-page
+          tile-search-sort(
+            on-filter-by="vm.on.filterBy($event, value)"
+            )
+        ion-slide-page
+          tile-create-new(
+            on-new-tile="vm.on.submitNewTile(result)"
+            )
         
     list-item-container.content.condensed(
       collection="vm.rows"
@@ -38,6 +46,7 @@ ion-view(
       item-height="160"
       todo-use-collection-repeat="true"
       detail-by-reference="true"
+      selected-id="vm.selectedItemId"
       on-select="vm.on.select($item,$index,silent)"
     )
 

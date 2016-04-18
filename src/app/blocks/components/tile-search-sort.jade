@@ -1,0 +1,32 @@
+div.ng-repeat-grid.row.list-item-summary
+  div.list-item-wrap.col.col-full
+    div.tile.overscroll-tile.item.item-complex.content.ink
+      div.hero.content.has-mask-reverse(
+        ng-click="ss.on.hide($event)"
+        )
+
+        div.feature.image(
+          placeholder-data="bg-src" group="tile" index="{{Date.now()}}"
+          width="ss.tileWidth()"
+        )
+      div.has-mask-wrap
+        h2.line-clamp-1 Filter
+        div.search-wrap
+            
+          div.item-input-wrapper(style="background-color:white;")
+            div.auto-input-wrapper
+              input(
+                style="width:100%;"
+                on-keydown="ss.onFilterBy({$event:$event, value:value})"
+                type="text"
+                auto-input
+                return-close="true"
+                placeholder="Enter a Search Phrase" 
+                ng-model="ss.filter" 
+              )
+            
+          button.button.button-small.button-balanced(
+            ng-click="ss.on.hide($event)"
+            )
+            i.icon.ion-search
+          

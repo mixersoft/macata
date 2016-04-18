@@ -14,6 +14,7 @@ InputDirective = ($compile, $timeout)->
       'onReturn': '&'
       'onFocus': '&'
       'onBlur': '&'
+      'onKeydown': '&'
     },
     link:
       pre: (scope, element, attrs, ngModel) ->
@@ -49,6 +50,8 @@ InputDirective = ($compile, $timeout)->
           scope.$apply()
           if scope.onFocus
             $timeout ()-> scope.onFocus()
+          if scope.onKeydown
+            $timeout ()-> scope.onKeydown({$event:e, value: element.val()})
           return
 
         element.bind 'blur', (e)->
@@ -71,6 +74,8 @@ InputDirective = ($compile, $timeout)->
             return
           scope.enabled = !ngModel.$isEmpty element.val()
           scope.$apply()
+          if scope.onKeydown
+            $timeout ()-> scope.onKeydown({$event:e, value: element.val()})
           return
 
 

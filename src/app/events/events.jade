@@ -40,6 +40,10 @@ ion-view.events(
         ion-slide-page
           tile-set-location
         ion-slide-page
+          tile-search-sort(
+            on-filter-by="vm.on.filterBy($event, value)"
+            )
+        ion-slide-page
           tile-create-new(
             on-new-tile="vm.on.submitNewTile(result)"
             )
