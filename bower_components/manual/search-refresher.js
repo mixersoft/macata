@@ -278,7 +278,9 @@
             from = lastOverscroll;
 
         if (from === Y) {
-          callback();
+          if (typeof callback == 'function'){
+            callback();
+          }
           return; /* Prevent scrolling to the Y point if already there */
         }
 
