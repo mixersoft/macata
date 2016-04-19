@@ -18,10 +18,9 @@ ion-view(
     scroll-sista="header-subheader"
   ) 
     
-    // refactor: overflow-scroll-tile or pull-to-reveal
-    search-refresher(
+    pull-to-reveal(
       reveal="$show.pullToReveal"
-      on-reveal="vm.on.overscrollReveal(value)"
+      on-pulled="vm.on.pulledToReveal(value)"
       )
       ion-slides(
         options="vm.pullToReveal.options"

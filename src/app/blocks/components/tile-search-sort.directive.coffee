@@ -31,7 +31,7 @@ TileSearchSort = ( FeedHelpers, PostHelpers)->
 
         ss.on = {
           'hide': ($ev)->
-            $scope.$emit('overscrollTile.reveal', false)
+            $scope.$emit('pullToReveal.reveal', false)
             return
 
         }

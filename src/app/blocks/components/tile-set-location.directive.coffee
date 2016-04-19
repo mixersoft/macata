@@ -51,7 +51,7 @@ TileSetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
               sl.search = sl.lastLocationString()
               return sl.search
           'hide': ($ev)->
-            $scope.$emit('overscrollTile.reveal', false)
+            $scope.$emit('pullToReveal.reveal', false)
             return
 
         }

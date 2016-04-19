@@ -770,7 +770,7 @@ ion-side-menu > ion-content {
   }
 }
 
-.search-refresher.scroll-refresher {
+.pull-to-reveal.scroll-refresher {
   height: 110px;
   &.active.refreshing {
     -webkit-transition: -webkit-transform 0.2s;

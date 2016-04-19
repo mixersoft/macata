@@ -17,7 +17,7 @@
     "manual/ion-fab.css",
     "manual/ion-fab.js",
     "manual/publish-counts.js",
-    "manual/search-refresher.js",
+    "manual/pull-to-reveal.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [

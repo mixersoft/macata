@@ -88,7 +88,9 @@ RecipeCtrl = (
         , {notify:false}
         )
         return if silent
-      overscrollReveal: (show)->
+        # use vm.selectedItemId to select/scroll to $index
+
+      pulledToReveal: (show)->
         # if !location = locationHelpers.lastKnownLonLat()
         #   return vm.pullToReveal.slide('setLocation')
         return vm.pullToReveal.slide('searchSort')

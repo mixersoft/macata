@@ -66,10 +66,11 @@ EventCtrl = (
       show:
         map: false
         emptyList: false
-        pulltoReveal: false
-        overscrollTile: ()->
-          return true if vm.settings.show.emptyList
-          return true if vm.settings.show.pullToReveal
+        pullToReveal: false
+        overscrollTile: (value)->
+          self = vm.settings.show
+          return true if self.emptyList
+          return true if self.pullToReveal
           return false
         fabIcon: 'ion-plus'
     }
@@ -146,7 +147,7 @@ EventCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      overscrollReveal: (value)->
+      pulledToReveal: (value)->
         if !location = locationHelpers.lastKnownLonLat()
           return vm.pullToReveal.slide('setLocation')
         return vm.pullToReveal.slide('searchSort')

@@ -9,7 +9,6 @@ TileCreateNew = ()->
     restrict: 'E'
     scope: {}
     bindToController: {
-      'reveal': '='
       'onNewTile': '&'
       'getWidth': '&'  # optional
     }
@@ -41,9 +40,6 @@ TileCreateNew = ()->
             if tc.onNewTile?
               tc.onNewTile({result:result})
         }
-
-        $scope.$watch 'tc.reveal', (newV,oldV)->
-          return
 
         return tc
       ]

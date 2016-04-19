@@ -13,7 +13,7 @@
 
 
   IonicModule
-  .controller('$searchRefresher', [
+  .controller('$pullToReveal', [
     '$scope',
     '$attrs',
     '$element',
@@ -25,7 +25,6 @@
           isOverscrolling = false,
           dragOffset = 0,
           lastOverscroll = 0,
-          // ptrThreshold = 60,
           ptrThreshold = 60,
           activated = false,
           scrollTime = 500,
@@ -35,25 +34,11 @@
           scrollParent,
           scrollChild;
 
-      // if (!isDefined($attrs.pullingIcon)) {
-      //   $attrs.$set('pullingIcon', 'ion-android-arrow-down');
-      // }
-      //
-      // $scope.showSpinner = !isDefined($attrs.refreshingIcon) && $attrs.spinner != 'none';
-      //
-      // $scope.showIcon = isDefined($attrs.refreshingIcon);
-
       $ionicBind($scope, $attrs, {
-        // pullingIcon: '@',
-        // pullingText: '@',
-        // refreshingIcon: '@',
-        // refreshingText: '@',
-        // spinner: '@',
-        // disablePullingRotation: '@',
         reveal: '=',
-        $onReveal:'&onReveal',
-        $onRefresh: '&onRefresh',
-        $onPulling: '&onPulling'
+        // $onRefresh: '&onRefresh',
+        $onPulling: '&onPulling',
+        $onPulled: '&onPulled'
       });
 
       function handleMousedown(e) {
@@ -82,9 +67,9 @@
           return;
         }
 
-        // prevent ng-click in browser
         if (ionic.Platform.isWebView() === false) {
           if (isDragging) {
+              // prevent ng-click in browser while dragging
               e.stopImmediatePropagation();
           }
         }
@@ -98,7 +83,7 @@
           isDragging = false;
           dragOffset = 0;
 
-          // the user has scroll far enough to trigger a refresh
+          // the user has scroll far enough to trigger a reveal
           if (lastOverscroll > ptrThreshold) {
             start();
             var h = $element.prop('clientHeight')
@@ -106,7 +91,7 @@
             done();
 
 
-          // the user has overscrolled but not far enough to trigger a refresh
+          // the user has overscrolled but not far enough to trigger a reveal
           } else {
             scrollTo(0, scrollTime, deactivate);
             isOverscrolling = false;
@@ -231,9 +216,21 @@
         }
       }
 
-      $scope.$on('overscrollTile.reveal', function(scope, show) {
-        if (show) {
-
+      $scope.$on('pullToReveal.reveal', function(ev, reveal) {
+        // console.log(["Check scope", ev.targetScope.$id, $scope.$id]);
+        evScope = ev.targetScope;
+        while (evScope && evScope.$parent) {
+          if (evScope.$id == $scope.$id){
+            break;
+          }
+          evScope = evScope.$parent;
+        }
+        if (evScope.$id != $scope.$id){
+          return;
+        }
+        // child/transclude directives can manually trigger reveal/hide
+        // with: $scope.$emit('pullToReveal.reveal', [boolean]
+        if (reveal) {
           start();
           var h = $element.prop('clientHeight')
           scrollTo(h, scrollTime);
@@ -244,6 +241,7 @@
           $timeout(function() {
 
             // ionic.requestAnimationFrame(tail);
+            $scope.isRevealed = false;
 
             // scroll back to home during tail animation
             scrollTo(0, scrollTime, deactivate);
@@ -263,7 +261,6 @@
               ionic.on('mousedown', handleMousedown, scrollChild);
               ionic.on('mousemove', handleTouchmove, scrollChild);
               ionic.on('mouseup', handleTouchend, scrollChild);
-              // $scope.$onReveal({value:false})
 
             }, scrollTime);
 
@@ -339,7 +336,7 @@
 
         if (!scrollParent || !scrollParent.classList.contains('ionic-scroll') ||
           !scrollChild || !scrollChild.classList.contains('scroll')) {
-          throw new Error('Refresher must be immediate child of ion-content or ion-scroll');
+          throw new Error('<pull-to-reveal> must be immediate child of ion-content or ion-scroll');
         }
 
 
@@ -369,7 +366,7 @@
 
       // DOM manipulation and broadcast methods shared by JS and Native Scrolling
       // getter used by JS Scrolling
-      self.getRefresherDomMethods = function() {
+      self.getRevealDomMethods = function() {
         return {
           activate: activate,
           deactivate: deactivate,
@@ -397,13 +394,7 @@
       function start() {
         // startCallback
         $element[0].classList.add('refreshing');
-        var q = $scope.$onRefresh();
-
-        if (q && q.then) {
-          q['finally'](function() {
-            $scope.$broadcast('scroll.refreshComplete');
-          });
-        }
+        $scope.isRevealed = true;
       }
 
       function show() {
@@ -412,13 +403,13 @@
       }
 
       function hide() {
-        // showCallback
+        // hideCallback
         $element[0].classList.add('invisible');
       }
 
       function done(silent) {
         $timeout(function() {
-          // // disable scrollChild listeners once the searchRefresher is revealed
+          // // disable scrollChild listeners once the pullToReveal is revealed
           ionic.off(touchStartEvent, handleTouchstart, scrollChild);
           ionic.off(touchMoveEvent, handleTouchmove, scrollChild);
           ionic.off(touchEndEvent, handleTouchend, scrollChild);
@@ -430,7 +421,7 @@
             isOverscrolling = false;
             setScrollLock(false);
           }
-          !silent && $scope.$onReveal({value:true})
+          !silent && $scope.$onPulled()
         });
       }
 
@@ -443,7 +434,11 @@
         if (newV === oldV) {
           return;
         }
-        return $scope.$emit('overscrollTile.reveal', newV);
+        if ($scope.isRevealed) {
+          // WARN: there is a bug on toggle if $scope.reveal is a function
+          return $scope.$emit('pullToReveal.reveal', false);
+        }
+        return $scope.$emit('pullToReveal.reveal', newV);
       });
 
       // for testing
@@ -458,7 +453,7 @@
 
   /**
    * @ngdoc directive
-   * @name searchRefresher
+   * @name pullToReveal
    * @module ionic
    * @restrict E
    * @parent ionic.directive:ionContent, ionic.directive:ionScroll
@@ -474,12 +469,20 @@
    * @usage
    *
    * ```html
-   * <ion-content ng-controller="MyController">
-   *   <search-refresher reveal="revealOverscroll" on-reveal="onReveal(value)">
+   * <ion-content ng-controller="MyController" overflow-scroll="true">
+   *   <pull-to-reveal
+   *   		style="height:110px;"
+   *   		reveal="revealOverscroll"
+   *   		on-pulled="onPulled(value)">
    *   	<search-tile></search-tile>
-   *   </search-refresher>
+   *   </pull-to-reveal>
    *   <ion-list>
    *     <ion-item ng-repeat="item in items"></ion-item>
+   *     <button
+   *     		class="button button-positive"
+   *     		ng-click="revealOverscroll = !revealOverscroll"
+   *     > Toggle Reveal
+   *     </button
    *   </ion-list>
    * </ion-content>
    * ```
@@ -487,13 +490,8 @@
    * angular.module('testApp', ['ionic'])
    * .controller('MyController', function($scope, $http) {
    *   $scope.items = [1,2,3];
-   *   $scope.doRefresh = function() {
-   *     $http.get('/new-items')
-   *      .success(function(newItems) {
-   *        $scope.items = newItems;
-   *      })
    *   $scope.revealOverscroll = false
-   *   $scope.onReveal = function(value){
+   *   $scope.onPulled = function(value){
    *   	 // callback when the overscrollTile is
    *   	 // revealed by a touchend event
    *   	 // but NOT when $scope.revealOverscroll = true
@@ -508,46 +506,46 @@
    * @param {expression&} on-pulling Called when the user starts to pull down
    * on the refresher.
    *
+   * NOTES:
+   * 	- seems to only work with native scrolling, overflow-scroll="true"
+   * 	- give the pull-to-reveal element an explicit height via inline style attr
+   *
+   * also, the child/transclude element can manually reveal/hide with
+   * 		$scope.$emit('pullToReveal.reveal', [boolean])
    */
   IonicModule
-  .directive('searchRefresher', ['$compile', function($compile) {
+  .directive('pullToReveal', [function() {
     return {
       restrict: 'E',
       replace: true,
       transclude: true,
-      require: ['?^$ionicScroll', 'searchRefresher'],
-      controller: '$searchRefresher',
+      require: ['?^$ionicScroll', 'pullToReveal'],
+      controller: '$pullToReveal',
       template:
       '<div class="scroll-refresher invisible" collection-repeat-ignore></div>',
       link: function($scope, $element, $attrs, ctrls, $transclude) {
 
         // transclude .search-refresher and add properties
         $element.append($transclude())
-        // $compile($element)($scope);
-        $element[0].classList.add('search-refresher');
+        $element[0].classList.add('pull-to-reveal');
         $element[0].classList.remove('invisible');
         var h = $element.prop('clientHeight');
         $element.css('top', -1 * (h+1) + 'px')
 
         // JS Scrolling uses the scroll controller
         var scrollCtrl = ctrls[0],
-            refresherCtrl = ctrls[1];
+            revealCtrl = ctrls[1];
         if (!scrollCtrl || scrollCtrl.isNative()) {
           // Kick off native scrolling
-          refresherCtrl.init();
+          revealCtrl.init();
         } else {
           $element[0].classList.add('js-scrolling');
+          // not sure if we need this. legacy from ionRefresher
           scrollCtrl._setRefresher(
             $scope,
             $element[0],
-            refresherCtrl.getRefresherDomMethods()
+            revealCtrl.getRevealDomMethods()
           );
-
-          $scope.$on('scroll.refreshComplete', function() {
-            $scope.$evalAsync(function() {
-              scrollCtrl.scrollView.finishPullToRefresh();
-            });
-          });
         }
 
       }

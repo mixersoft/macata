@@ -29,9 +29,9 @@ ion-view.events(
     scroll-sista-pause="{{show.map}}"
   ) 
 
-    search-refresher(
+    pull-to-reveal(
       reveal="show.overscrollTile()"
-      on-reveal="vm.on.overscrollReveal(value)"
+      on-pulled="vm.on.pulledToReveal(value)"
       )
       ion-slides(
         options="vm.pullToReveal.options"
