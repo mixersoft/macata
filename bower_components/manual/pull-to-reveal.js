@@ -469,42 +469,50 @@
    * @usage
    *
    * ```html
-   * <ion-content ng-controller="MyController" overflow-scroll="true">
-   *   <pull-to-reveal
-   *   		style="height:110px;"
-   *   		reveal="revealOverscroll"
-   *   		on-pulled="onPulled(value)">
-   *   	<search-tile></search-tile>
+   * <ion-content overflow-scroll="true">
+   *   <pull-to-reveal reveal="showOverscroll" on-pulled="onPulled()" style="height:115px;">
+   *     <div class="card">
+   *       <ion-item class="item-balanced" ng-click="onToggleReveal()"> pull-to-reveal (click to hide) </ion-item>
+   *       <ion-item>
+   *         Hello, I am hidden in the overscroll!
+   *         <span style="color:red;">{{wasPulled ? "I was pulled to reveal" : "I was manually revealed"}}</span>
+   *       </ion-item>
+   *     </div>
    *   </pull-to-reveal>
-   *   <ion-list>
-   *     <ion-item ng-repeat="item in items"></ion-item>
-   *     <button
-   *     		class="button button-positive"
-   *     		ng-click="revealOverscroll = !revealOverscroll"
-   *     > Toggle Reveal
-   *     </button
-   *   </ion-list>
+   *
+   *   <div class="list">
+   *     <ion-item ng-repeat="item in list">{{item}}</ion-item>
+   *   </div>
    * </ion-content>
    * ```
    * ```js
    * angular.module('testApp', ['ionic'])
-   * .controller('MyController', function($scope, $http) {
-   *   $scope.items = [1,2,3];
-   *   $scope.revealOverscroll = false
-   *   $scope.onPulled = function(value){
-   *   	 // callback when the overscrollTile is
-   *   	 // revealed by a touchend event
-   *   	 // but NOT when $scope.revealOverscroll = true
+   * .controller('MainCtrl', function($scope) {
+   *   // manually reveal by setting this value
+   *   $scope.showOverscroll = false;
+   *   $scope.wasPulled = null;
+   *   $scope.onPulled = function(value) {
+   *     $scope.wasPulled = true;
+   *     $scope.showOverscroll = true;
    *   }
+   *   $scope.onToggleReveal = function() {
+   *     $scope.showOverscroll = !$scope.showOverscroll
+   *     if ($scope.showOverscroll == false) {
+   *       $scope.wasPulled = null
+   *     }
+   *   }
+   *   $scope.list = [1,2,3,4,5]
    * });
-   * ```
-   * @param {expression=} reveal, manually reveal/hide overscrollTile
-   * @param {expression&} on-reveal, Called when the overscroll Tile is revealed
+   *```
+   * @param {expression=} reveal, manually reveal/hide `pull-to-reveal`
+   * @param {expression&} on-reveal, Called when the `pull-to-reveal` is revealed
    * by a pull-down, i.e. touchend
    * @param {expression&} on-refresh Called when the user pulls down enough and lets go
-   * of the refresher.
+   * of `pull-to-reveal`.
    * @param {expression&} on-pulling Called when the user starts to pull down
-   * on the refresher.
+   * on `pull-to-reveal`.
+   *
+   * demo: see http://codepen.io/anon/pen/aNKvWq
    *
    * NOTES:
    * 	- seems to only work with native scrolling, overflow-scroll="true"
