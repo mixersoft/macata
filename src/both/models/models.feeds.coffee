@@ -35,11 +35,37 @@ FeedModel::isAdmin = (model, userId)->
   return true if model.head.ownerId == userId
   return false
 
+FeedModel::requiresAction = (model, userId, event)->
+  # model (post) requires Action by userId
+  if @context
+    model = @context
+    [userid, event] = arguments
+  userId ?= Meteor.userId()   # available in Meteor.methods
+  check = {}
+  switch model.type
+    when 'Invitation'
+      check['status'] = ~['new', 'pending', 'viewed'].indexOf(model.body.status)
+    when 'Participation'
+      check['status'] = ~['new', 'pending', 'viewed'].indexOf(model.body.status)
+      check['response'] = ~['Yes','Message'].indexOf( model.body.response)
+  return false if _.reject(check).length
+
+  switch model.head.nextActionBy
+    when 'owner'
+      return true if model.head.ownerId && model.head.ownerId == userId
+    when 'recipient'
+      return true if model.head.recipientIds && ~model.head.recipientIds.indexOf userId
+    when 'moderator'
+      return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
+      if event
+        return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
+  return false
+
+
 FeedModel::isModerator = (model, userId, event)->
   if @context
     model = @context
     [userid, event] = arguments
-  return false if !event
   userId ?= Meteor.userId()   # available in Meteor.methods
   return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
   return true if model.head.ownerId == userId
@@ -227,11 +253,20 @@ methods = {
 
 
   'DEV.Post.resetFeed': ()->
+    # run from console: Meteor.call('DEV.Post.resetFeed')
     mcFeeds.remove({"head.createdAt": { $gt:moment().subtract(3,'day').toDate()} })
+    withCommentIds = _.map(mcFeeds.find( {'body.comments':{$exists: true}}).fetch(), '_id')
+    mcFeeds.update( {_id:{$in:withCommentIds}}
+    , {$set:{'body.comments':[], 'body.status':"new", 'body.response': null}}
+    , {multi:true})
+    mcEvents.update("3X8pxfsEhBrpHcdfD", {$pull:
+      participations: {ownerId:"L8EdePbduQ3Aj3r3W"}
+      participantId: "L8EdePbduQ3Aj3r3W"
+    })
+    return
 
 
 }
-
 
 global['mcFeeds'].allow allow
 Meteor.methods methods

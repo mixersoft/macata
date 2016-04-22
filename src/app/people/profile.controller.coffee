@@ -56,8 +56,8 @@ ProfileCtrl = (
         return locationHelpers.getCurrentPosition('loading')
         .then (result)->
           lonlat = angular.copy(result.latlon).reverse()
-          vm.call 'Profile.saveLocation', lonlat, (err, retval)->
-            'check'
+          Meteor.call 'Profile.saveLocation', lonlat, (err, retval)->
+            return
         , (err)->
           console.warn ["WARNING: getCurrentPosition", err]
 

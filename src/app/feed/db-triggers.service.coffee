@@ -158,15 +158,17 @@ FeedDbTriggers = ( notificationTemplates )->
             seatsOpen: event.seatsOpen
             toNow: moment(event.startTime).fromNow()
           }
-
-          if event.setting.isExclusive
-            shareTemplate = 'event.booking.sendInvites'
-            # vm.settings.show.hideInvitations = false
-          else
-            shareTemplate = 'event.booking.shareEvent'
-          notify.message = notificationTemplates.get(shareTemplate, notify)
-          # promises.push share = EventActionHelpers.FeedHelpers.notify(event, post, vm)
-          shareNotification = self.context.feedHelpers.postNotificationToFeed(notify)
+          # TODO: handle with subclass
+          switch event.type
+            when 'progressive-invite'
+              if event.setting.isExclusive
+                shareTemplate = 'event.booking.sendInvites'
+                # vm.settings.show.hideInvitations = false
+              else
+                shareTemplate = 'event.booking.shareEvent'
+              notify.message = notificationTemplates.get(shareTemplate, notify)
+              # promises.push share = EventActionHelpers.FeedHelpers.notify(event, post, vm)
+              shareNotification = self.context.feedHelpers.postNotificationToFeed(notify)
         else
           notify = {
             ownerId: null

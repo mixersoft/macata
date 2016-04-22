@@ -40,7 +40,7 @@ methods = {
   'Profile.saveLocation': (loc, isLatLon=false )->
     meId = Meteor.userId()
     if !meId
-      return new Meteor.Error('user-not-signed-in'
+      throw new Meteor.Error('user-not-signed-in'
       , 'Cannot save to Profile with no User', null
       )
     geojson = asGeoJsonPoint(loc, isLatLon)
@@ -52,7 +52,7 @@ methods = {
           $each: [geojson]
           $slice: -10
     }
-    Meteor.users.update(meId, modifier)
+    return Meteor.users.update(meId, modifier, (err, result)->'async')
 
 }
 

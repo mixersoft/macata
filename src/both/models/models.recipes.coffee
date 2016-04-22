@@ -117,6 +117,10 @@ methods = {
     return
 
   'Recipe.insert': (model)->
+    if !model
+      throw new Meteor.Error('no-data'
+      , 'Expecting something to insert', null
+      )
     meId = Meteor.userId()
     data = _.pick model, [
       'url','title','description','image', 'site_name', 'extras'
@@ -137,7 +141,7 @@ methods = {
     #     , 'className does not match', null
     #     )
     if model.ownerId != meId
-      return new Meteor.Error('no-permission'
+      throw new Meteor.Error('no-permission'
       , 'You do not have permission to update', null
       )
     data = _.pick model, [

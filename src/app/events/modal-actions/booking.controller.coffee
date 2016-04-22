@@ -52,18 +52,14 @@ EventBookingCtrl = (
       particip = {
         type: 'Participation'
         head:
+          ownerId: booking.userId || Meteor.userId()
           eventId: event._id
-          moderatorIds: [event.ownerId] # TODO: add invitation.head.ownerId
-          nextActionBy: "moderator"
-          isPublic: false
         body:
-          'xxx-type': 'Participation'
           status: 'new'
           response: 'Yes'
           seats: parseInt booking.seats
           message: booking.message
           attachment: booking.attachment
-          'xxx-address': booking.address  # deprecate?
           location: booking.location  # booking.location = {address: latlon:}
       }
       # check for existing participation

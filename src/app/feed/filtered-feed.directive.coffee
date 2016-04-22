@@ -34,6 +34,11 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ff.postHelpers = new PostHelpers(ff.reactiveContext)
         ff.me = ff.collHelpers.findOne('User', Meteor.userId())
 
+        ff.requiresAction = (post, types)->
+          return false if not ~types.indexOf post.type
+          meId = Meteor.userId()
+          return FeedModel::requiresAction(post, meId, ff.event)
+
         ff.on = {
           edit: ()-> console.warn "attachment.edit: See RecipeHelpers"
           forkTile: ()-> console.warn "attachment.forkTile: See RecipeHelpers"
@@ -49,23 +54,6 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         DB_TRIGGERS = new FEED_DB_TRIGGERS(ff)
 
         ff.inviteActions = {
-          requiresAction: (post, me)->
-            return if post.type != 'Invitation'
-            meId = me?._id || Meteor.userId()
-            check = {
-              type: post.type == 'Invitation'
-              status: ~['new', 'viewed'].indexOf(post.body.status)
-            }
-            nextAction = post.head.nextActionBy
-            switch nextAction
-              when 'owner'
-                check['nextAction'] = post.head.ownerId && post.head.ownerId == meId
-                # check['nextAction'] = me && ~event.moderatorIds.indexOf me._id
-              when 'recipient'
-                meId ?= post.head.tokenId
-                check['nextAction'] = post.head.recipientIds && ~post.head.recipientIds.indexOf meId
-            return _.reject(check).length == 0
-
           accept: ($event, invitation)->
             return $q.when()
             .then ()->
@@ -73,7 +61,6 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
 
               # return vm.on.beginBooking($rootScope.currentUser, ff.event)
               return ff.postHelpers.showSignInRegister('sign-in') if !Meteor.userId()
-
               return EventActionHelpers.bookingWizard(Meteor.user(), ff.event)
             .then (participation)->
               if participation == 'CANCELED'
@@ -91,22 +78,39 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
 
                 return participation
               .then (participation)->
-                # post Booking/Partcipation, appears on Moderator's feed
-                # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
-                participation.head['invitationId'] = invitation._id
-                participation.head['moderatorIds'].push invitation.head.ownerId
+                # requiresAction addressing
+                switch ff.event.type
+                  when "progressive-invite"
+                    # post Booking/Partcipation, appears on Moderator's feed
+                    # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
+                    participation.head['invitationId'] = invitation._id
+                    participation.head['recipientIds'] = [invitation.head.ownerId]
+                    participation.head['moderatorIds'] = [invitation.head.ownerId, ff.event.ownerId]
+                    participation.head['nextActionBy'] = 'recipient'
+                    participation.head['isPublic'] = false
+                  when "kickstarter", "booking"
+                  else
+                    # post Booking/Partcipation, appears on Moderator's feed
+                    # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
+                    participation.head['invitationId'] = invitation._id
+                    participation.head['recipientIds'] = [invitation.head.ownerId]
+                    participation.head['moderatorIds'] = [ff.event.ownerId]
+                    participation.head['nextActionBy'] = 'moderator'
+                    participation.head['isPublic'] = false
+                return participation
+              .then (participation)->
                 cont = ff.feedHelpers.postToFeed( participation
                 ,{
                   onSuccess: ()->
                     'skip'
                   })
                 return participation
-              .then (participation)->
-                toastr.info("DEMO: invitation responses will be automatically accepted.")
-                return $timeout(3000)
-              .then ()->
-                # TODO: need to change ParticipationResponse.head.ownerId
-                vm.moderatorActions.accept($event, ff.event, participation)
+              # .then (participation)->
+              #   toastr.info("DEMO: invitation responses will be automatically accepted.")
+              #   return $timeout(3000)
+              # .then ()->
+              #   # TODO: need to change ParticipationResponse.head.ownerId
+              #   vm.moderatorActions.accept($event, ff.event, participation)
 
             .then ()->
               target = $event.target
@@ -118,7 +122,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
 
           message: ($event, invitation)->
             return ff.postHelpers.showSignInRegister('sign-in') if !Meteor.userId()
-            return ff.postHelpers.respondToInvite invitation, 'viewed'
+            return ff.postHelpers.respondToInvite invitation, 'pending'
             .then ()->
               return ff.postHelpers.showCommentForm($event, invitation)
 
@@ -147,32 +151,6 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         }
 
         ff.moderatorActions = {
-
-          # TODO: check
-          requiresAction: (post, me)->
-            return if not ff.event
-            return if not ~['Participation'].indexOf post.type
-
-            meId = me?._id || Meteor.userId()
-            check = {
-              type: post.type == 'Participation'
-              status: ~['new', 'pending', 'viewed'].indexOf(post.body.status)
-              response: ~['Yes','Message'].indexOf post.body.response
-            }
-
-            nextAction = post.head.nextActionBy
-            switch nextAction
-              when 'owner'
-                check['nextAction'] = me && post.head.ownerId == meId
-                check['nextAction'] = check['nextAction'] || ff.event.ownerId == meId
-              when 'moderator'
-                check['nextAction'] = me && ~post.head.moderatorIds.indexOf meId
-                check['nextAction'] = check['nextAction'] ||
-                  (ff.event.moderatorIds && ~ff.event.moderatorIds.indexOf meId)
-              when 'recipient'
-                check['nextAction'] = me && ~post.head.recipientIds.indexOf meId
-            return _.reject(check).length == 0
-
           accept: ($event, post)->
             # confirm sign-in
             # add booking to event
@@ -194,7 +172,8 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
             .then ()->
               # update event
               dfd = $q.defer()
-              ff.reactiveContext.call 'Event.updateBooking', ff.event, post, (err, result)->
+              # NOTE: if we use $q, can we just do Meteor.call() to get back into $digest
+              Meteor.call 'Event.updateBooking', ff.event, post, (err, result)->
                 if err
                   dfd.reject(err)
                   return console.warn ['Meteor::Event.updateBooking WARN', action, err]

@@ -74,19 +74,14 @@ FeedFilter = ($rootScope, exportDebug)->
       switch post.type
         when 'Invitation'
           #  sent by ownerId: owner > [recipientId]
-          check['status'] = ~['new','viewed','closed'].indexOf(post.body.status)
+          check['response'] = post.body.response != 'accepted'
           if head.tokenId == head.recipientIds[0]
             check.address = 'by-token'
           # check['skip'] = false
         when 'Participation'
-          # from action=[Join, ???Invitation[status=accept]  ]
-          #   need to notify event.moderatorId, or head.moderatorIds
-          check['status'] = ~['new','pending','accepted'].indexOf(post.body.status)
-          check['status'] = true
-          if post.body.response == 'accepted'
-            check['acl'] = true
-          else
-            check['acl'] = FeedModel::isModerator(post, meId)
+          check['acl'] = post.body.response == 'declined' && post.head.ownerId == meId
+          check['acl'] = check['acl'] || post.body.response == 'accepted' # [accepted, declined]
+          check['acl'] = check['acl'] || FeedModel::requiresAction(post, meId)
           check.address =  true if check.acl
         when 'ParticipationResponse'
           # from action=Participation[response='accepted']

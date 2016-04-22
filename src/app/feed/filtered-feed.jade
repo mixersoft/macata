@@ -50,7 +50,7 @@ ion-list.feed
         
       //- Invitation Actions  
       div.card.invitation-actions(
-        ng-if='ff.inviteActions.requiresAction($post)'
+        ng-if='ff.requiresAction($post, ["Invitation"])'
         )
         ion-item.item-divider.item-royal
           div Invitation Actions
@@ -74,7 +74,7 @@ ion-list.feed
                       
       //- Moderator Actions
       div.card.moderator-actions(
-        ng-if='ff.moderatorActions.requiresAction($post)'
+        ng-if='ff.requiresAction($post, ["Participation"])'
         )
         ion-item.item-divider.item-balanced
           div Moderator Actions
