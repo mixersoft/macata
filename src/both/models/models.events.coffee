@@ -167,9 +167,9 @@ methods = {
     event.modifiedAt = now
 
     # de-normalize certain fields
-    event.participantIds = _.pluck event.participations, 'ownerId'
+    event.participantIds = _.map event.participations, 'ownerId'
     event.menuItemIds = _.reduce event.participations, (result, p)->
-      ids = _.chain(p.contributions).filter({className:'Recipe'}).pluck('_id').value()
+      ids = _.chain(p.contributions).filter({className:'Recipe'}).map('_id').value()
       return result = result.concat ids
     ,[]
     seatsBooked = _.sum event.participations, 'seats'

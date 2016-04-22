@@ -71,7 +71,7 @@ EventContributionCtrl = (
         return $q.when()
         .then ()->
           _fakeFilter = (value)->
-            return _.unique( value.split(' ') )
+            return _.uniq( value.split(' ') )
           mm.autocomplete.options = _fakeFilter(value)
           return mm.autocomplete
 
@@ -84,7 +84,7 @@ EventContributionCtrl = (
           toastr.warning("You are booking for a different person. name=" +
             person.displayName)
 
-        participantIds = _.pluck $scope.vm.lookup['Participations'], 'participantId'
+        participantIds = _.map $scope.vm.lookup['Participations'], 'participantId'
         return mm.createParticipation(person, event, booking, participantIds)
         .then (participation)->
           participation.type = 'Participation'

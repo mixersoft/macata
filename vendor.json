@@ -5,7 +5,7 @@
   ],
   "dev": [
     "ionic/fonts/*",
-    "lodash/lodash.min.js",
+    "lodash/dist/lodash.min.js",
     "angular-toastr/dist/angular-toastr.tpls.min.js",
     "angular-toastr/dist/angular-toastr.min.css",
     "ionic-material/dist/ionic.material.DEBUG.js",

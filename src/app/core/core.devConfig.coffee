@@ -77,8 +77,8 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
           fromHost = _.find ideas, {ownerId: event.ownerId}
           event.$$menuItems = [fromHost]
           event.$$menuItems = event.$$menuItems.concat( _.sample ideas[0...3], 3 )
-          event.$$menuItems = _.unique(event.$$menuItems)
-          event.menuItemIds = _.pluck event.$$menuItems, 'id'
+          event.$$menuItems = _.uniq(event.$$menuItems)
+          event.menuItemIds = _.map event.$$menuItems, 'id'
 
           event.seatsOpen = event.seatsTotal
           event.$$participations ?= []

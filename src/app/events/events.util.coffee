@@ -97,7 +97,7 @@ EventsUtil = (utils, $document, amMoment,
 
       # sum seatsOpen
       seatsTaken = _.chain event.participations
-        .pluck('seats')
+        .map('seats')
         .sum()
         .value()
       event.seatsOpen = event.seatsTotal - seatsTaken

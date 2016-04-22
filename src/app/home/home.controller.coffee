@@ -54,7 +54,7 @@ HomeCtrl = (
     appendCardClasses = (items)->
       promises = []
       events = _.filter items, {class:'event'}
-      promises.push EventsResource.get( _.pluck( events, 'classId')).then (classItems)->
+      promises.push EventsResource.get( _.map( events, 'classId')).then (classItems)->
         _.each events, (item)->
           event = _.find classItems, {id: item.classId}
           if event
@@ -67,7 +67,7 @@ HomeCtrl = (
         return classItems
 
       menuItems = _.filter items, {class:'menuItem'}
-      promises.push IdeasResource.get( _.pluck( menuItems, 'classId')).then (classItems)->
+      promises.push IdeasResource.get( _.map( menuItems, 'classId')).then (classItems)->
         _.each menuItems, (item)->
           mitem = _.find classItems, {id: item.classId}
           if mitem
