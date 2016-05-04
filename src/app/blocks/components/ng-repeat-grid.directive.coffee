@@ -43,7 +43,7 @@ NgRepeatGridSvc = ($rootScope, $window)->
   vm.resetColWidth = (minW)->
     return _getColWidth.cache.delete(minW) if minW
     # hack: how do you clear the memoize cache properly?
-    _getColWidth.cache.__data__ = {}
+    _getColWidth.cache.clear()
     return
 
   # use ng-class="getColWidth()"
