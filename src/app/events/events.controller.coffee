@@ -172,7 +172,7 @@ EventCtrl = (
         return false
 
       'favorite': ()->
-        eventUtils['favorite'].apply vm, arguments
+        eventUtils['favorite']( arguments )
 
 
       showOnMap: ($ev, limit=5)->

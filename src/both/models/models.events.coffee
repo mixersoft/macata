@@ -159,7 +159,7 @@ methods = {
           participation.contributions.push booking.body.attachment
         else
           # TODO: show a placeholder in event.menuItems?
-          console.info 'Event.updateBooking ???:attach a placeholder?'
+          console.info 'Event.updateBooking no Attachment ???:attach a placeholder?'
 
     if not found
       event.participations ?=[]

@@ -59,9 +59,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
             .then ()->
               return $q.reject("Invitation Not Found") if invitation.type != 'Invitation'
 
-              # return vm.on.beginBooking($rootScope.currentUser, ff.event)
-              return ff.postHelpers.showSignInRegister('sign-in') if !Meteor.userId()
-              return EventActionHelpers.bookingWizard(Meteor.user(), ff.event)
+              return EventActionHelpers.bookingWizard(ff.event)
             .then (participation)->
               if participation == 'CANCELED'
                 cont = ff.postHelpers.respondToInvite invitation, 'viewed'

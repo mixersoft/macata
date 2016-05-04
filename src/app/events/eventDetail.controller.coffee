@@ -194,17 +194,44 @@ EventDetailCtrl = (
       # TODO: change params to (event, person)
       # see also: filteredFeed.inviteActions.accept()
       'beginBooking': (person, event)->
-        return EventActionHelpers.bookingWizard(person, event, vm)
+        # return AAAHelpers.showSignInRegister('sign-in') if !Meteor.userId()
+        return EventActionHelpers.bookingWizard(vm.event)
         .then (participation)->
-          return if participation == 'CANCELED'
-          # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
-          vm.feedHelpers.postCommentToFeed(participation, {
-            onSuccess: ()->
-              dfd.resolve()
-            })
-        return dfd.promise
-        .then (participation)->
+          return $q.reject('CANCELED') if participation == 'CANCELED'
           return participation
+        .then (participation)->
+          switch vm.event.type
+            when 'progressive-invite'
+              participation.head['invitationId'] = invitation._id
+              participation.head['recipientIds'] = [invitation.head.ownerId]
+              # invite owner responds to booking request
+              participation.head['moderatorIds'] = [invitation.head.ownerId]
+              participation.head['nextActionBy'] = 'moderator'
+              participation.head['isPublic'] = false
+              return participation
+              break
+            when 'kickstarter', 'booking'
+              break
+            else
+              # post Booking/Participation, appears on Moderator's feed
+              # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
+              participation.head['invitationId'] = invitation._id
+              participation.head['recipientIds'] = [invitation.head.ownerId]
+              # event owner responds to booking request
+              participation.head['moderatorIds'] = [vm.event.ownerId]
+              participation.head['nextActionBy'] = 'moderator'
+              participation.head['isPublic'] = false
+              return participation
+        .then (participation)->
+          cont = vm.feedHelpers.postToFeed( participation
+          ,{
+            onSuccess: ()->
+              'skip'
+            })
+          return participation
+        .then (participation)->
+          # scroll to Participation in Feed
+          return
 
       'postToFeed': (comment)->
         vm.feedHelpers.postCommentToFeed(comment)

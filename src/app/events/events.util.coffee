@@ -42,11 +42,11 @@ EventsUtil = (utils, $document, amMoment,
 
     # TODO: change to like for expiring classes?
     favorite: ($ev, model)->
-      context = this
       return AAAHelpers.requireUser('sign-in')
       .then ()->
         model.className = 'Event' if !model.className
-        context.call 'Event.toggleFavorite', model, (err, result)->
+        # NOTE: use $reactiveContext.call when you need to run callback in $digest
+        return Meteor.call 'Event.toggleFavorite', model, (err, result)->
           console.warn ['Meteor::toggleFavorite WARN', err] if err
           console.log ['Meteor::toggleFavorite OK']
 

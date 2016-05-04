@@ -39,11 +39,16 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
 
     self = {
-      'bookingWizard': (person, event, vm)->
-        templateName = "request-seat.modal.html"
-        return self.beginBooking(templateName, person, event, vm)
+      'bookingWizard': (event)->
+        return $q.when()
+        .then ()->
+          return AAAHelpers.showSignInRegister('sign-in') if !Meteor.userId()
+          return Meteor.user()
+        .then (person)->
+          # switch event.type
+          templateName = "request-seat.modal.html"
+          return self.beginBooking(templateName, person, event)
         .then (result)->
-          return if !result
           return participation = result
 
       getShareLinks: (event, vm)->
