@@ -183,6 +183,7 @@ ListItemContainerDirective = (ngRepeatGridSvc)->
             return newV == (o._id || o.id)
           return if !item
           index = _.findIndex $scope.collection, item
+          # console.log ["listItemSummary, scrollTo index=", index]
           vm.$listItemDelegate.select(null, item, index, 'silent')
 
 

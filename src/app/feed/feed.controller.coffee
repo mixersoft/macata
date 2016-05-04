@@ -36,11 +36,6 @@ FeedCtrl = (
     }
 
 
-    vm.DEV = {
-      resetFeed: ()->
-        vm.call 'DEV.Post.resetFeed'
-    }
-
     callbacks = {
       'Feed':
         onLoad: (feed)->

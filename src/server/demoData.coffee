@@ -273,7 +273,7 @@ demoData = {
       # where:
       neighborhood: "Lozenets, Sofia"
       address: 'Ulitsa Bogatitsa'
-      location: [42.671027, 23.316299] # search/filter
+      location: [42.690626, 23.316678]# search/filter
 
       seatsTotal: 16
       seatsOpen: null
@@ -307,6 +307,58 @@ demoData = {
         yes: 0
         maybe: 0
         no: 0
+
+    5:
+      # what
+      title: "Variations on the Theme of Rice"
+      description: """
+      We're going to Spain for the Easter break,
+      and that's got me in the mood for Paella.
+
+      Please join us for dinner this Saturday,
+      as we explore the limits of this rice dish
+      as it crosses over to the American South.
+      """
+
+      image: "http://viajerosblog.com/wp-content/uploads/2012/04/la-boqueria.jpg"
+
+      # when: 4=Thur
+      startTime: moment('2016-04-16').hour(18).startOf('hour').toJSON()
+      duration: moment.duration(5, 'hours').asMilliseconds()
+
+      # where:
+      neighborhood: "Lozenets, Sofia"
+      address: 'Ulitsa Bogatitsa 36, et 5 ap9'
+      location: [42.670676, 23.313738] # search/filter
+
+      seatsTotal: 12
+      seatsOpen: null
+
+      # host:
+      ownerId: "gTpZTsnMeKtor7aJ9" # michael
+      menuItemIds: ['e2xqAjR8jCdGNuiXx', 'CoN3tSkwDayJE3pHF', 'sq7ekDt7w4DngJDrq']
+      isPublic: true # searchable
+
+
+      setting:
+        isExclusive: false   # invite Only
+        denyGuestShare: true # guests can share event, same as denyForward
+        denyRsvpFriends: false # guests can rsvp friends
+        rsvpFriendsLimit: 12 # guests rsvp limit for friends
+        allowSuggestedFee: false # monentary fee in lieu of donation
+        allowPublicAddress: true    # only guests see address
+        denyParticipantList: false # guests can see Maybe,No responses
+        denyWaitlist: true    # use waitlist if full
+        feedVisibility: "public"  # [public|guests|none]
+        denyAddMenu: false    # only host can update menu Items
+
+      wrapUp:
+        rating: null          # guest ratings
+
+      controlPanel:
+        yes: 0
+        maybe: 0
+        no: 0
   },
   'mcFeeds': [
     # Event: 'LastDaysSummer' = 'vYCDTNzc4Ky6CXyi3'
@@ -317,7 +369,7 @@ demoData = {
       head:
         "createdAt":"2016-01-28T14:37:41.983Z",
         "ownerId": "xSs5BigB8yCkqRbxA" # markymark
-        "eventId": "vYCDTNzc4Ky6CXyi3"
+        "eventId": "3X8pxfsEhBrpHcdfD"
         "isPublic": true
       body:
         "type":"Comment"
@@ -331,7 +383,7 @@ demoData = {
         id: Date.now()
         "createdAt": moment()
         "expiresAt": null
-        "eventId":"vYCDTNzc4Ky6CXyi3"
+        "eventId": "3X8pxfsEhBrpHcdfD"
         "ownerId": "xBYWvthK5qZ5zHx9T" # lulu
       body:
         message: "<b>Hello!</b> This is a notification. It might be appear as a mobile notification in the App."
@@ -343,7 +395,7 @@ demoData = {
       head:
         # "id":"1453967670694"
         "createdAt": moment().subtract(7, 'hours').toJSON()
-        "eventId":"vYCDTNzc4Ky6CXyi3"
+        "eventId": "3X8pxfsEhBrpHcdfD"
         "ownerId": "xBYWvthK5qZ5zHx9T" # lulu      # for .item-post .item-avatar
         "recipientIds": ["L8EdePbduQ3Aj3r3W"]  # filterBy: feed.type chuckychu
         "nextActionBy": 'recipient' # [recipient, owner]
@@ -355,13 +407,15 @@ demoData = {
         "comments":[]       #$postBody.comments, show msg, regrets here
     }
     {
+      # from an open booking
       "type":"Participation"
       head:
         # "id":"1453967670695"
         "createdAt": moment().subtract(23, 'minutes').toJSON()
-        "eventId":"vYCDTNzc4Ky6CXyi3"
+        "eventId": "3X8pxfsEhBrpHcdfD"
         "ownerId": "xSs5BigB8yCkqRbxA" # markymark
-        "nextActionBy": 'moderator' # [recipient, moderator, owner]
+        "recipientIds": ["xBYWvthK5qZ5zHx9T"] # lulu
+        "nextActionBy": 'recipient' # [owner, recipient, moderator, xxeventOwner]
       body:
         "type":"Participation"
         "status":"new"
@@ -377,8 +431,9 @@ demoData = {
 
 }
 
+
 # coffeelint: enable=max_line_length
-loadData = ()->
+loadData = (collection)->
   context = @
   count = {}
   asGeoJsonPoint = (latlon)->
@@ -389,7 +444,11 @@ loadData = ()->
       type: "Point"
       coordinates: lonlat # [lon,lat]
     }
-  _.each demoData, (data, collection)->
+  loadset =
+    if collection
+    then _.pick loadset, collection
+    else demoData
+  _.each loadset, (data, collection)->
     count[collection] = context[collection]?.find().count()
     if count[collection]==0
       console.log ['loading demoData for ', collection]
@@ -406,5 +465,14 @@ loadData = ()->
       count[collection] = context[collection].find().count()
 
   console.log ["demoData count=", count]
+
+Meteor.methods {
+  'Admin.resetData': (collection)->
+    context[collection].remove({})
+    loadData(collection)
+    return
+
+
+}
 
 Meteor.startup loadData

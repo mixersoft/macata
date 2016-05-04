@@ -88,7 +88,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
                     participation.head['isPublic'] = false
                   when "kickstarter", "booking"
                   else
-                    # post Booking/Partcipation, appears on Moderator's feed
+                    # post Booking/Participation, appears on Moderator's feed
                     # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
                     participation.head['invitationId'] = invitation._id
                     participation.head['recipientIds'] = [invitation.head.ownerId]

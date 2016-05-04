@@ -40,6 +40,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
     self = {
       'bookingWizard': (event)->
+        # called by filteredFeed.inviteActions.accept() or EventDetailCtrl.on.beginBooking
         return $q.when()
         .then ()->
           return AAAHelpers.showSignInRegister('sign-in') if !Meteor.userId()

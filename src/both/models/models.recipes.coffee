@@ -137,7 +137,7 @@ methods = {
     # if model.className != 'Recipe'
     #   found = mcRecipes.findOne(model._id)
     #   if found.className != 'Recipe'
-    #     return new Meteor.Error('invalid-class'
+    #     throw new Meteor.Error('invalid-class'
     #     , 'className does not match', null
     #     )
     if model.ownerId != meId

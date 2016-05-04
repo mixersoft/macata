@@ -166,6 +166,7 @@ PostHelpers = (
 
     respondToInvite: (invite, action, options={})->
       dfd = $q.defer()
+      # NOTE: does use of $q.defer automatically wrap callback in $digest loop?
       @context.call 'Post.respondToInvite', invite, action, options, (err, result)->
         if err
           dfd.reject(err)
