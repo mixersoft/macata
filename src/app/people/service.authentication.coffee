@@ -24,6 +24,10 @@ AAAHelpers = ($rootScope, $q, $timeout
         return true if not Meteor.user()
         return false
 
+      notReady: (value)->
+        toastr.info "Sorry, " + value + " is not available yet"
+        return false
+
       signIn: (person)->
         dfd = $q.defer()
         Meteor.loginWithPassword(
@@ -59,15 +63,14 @@ AAAHelpers = ($rootScope, $q, $timeout
           err['isError'] = true
           return $q.reject err
 
-      # exaple AAAHelpers.showSignInRegister.apply(vm, arguments)
+      # exaple AAAHelpers.showSignInRegister(arguments)
       showSignInRegister: (initialSlide)->
-        vm = this
         return signInRegisterSvc.showSignInRegister(null, {
           signIn: self.signIn
           # checkIfUserExists: (data)->
           #   return UsersResource.query({username:data.username})
           register: self.register
-          notImplemented: vm.on?.notReady
+          notImplemented: self.notReady
         })
         .then (user)->
           console.log ['SignInRegisterSvc, user=', user]
