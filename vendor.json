@@ -12,6 +12,7 @@
     "robotodraft/fonts/**/*",
     "angular-meteor/dist/angular-meteor.bundle.js",
     "angular-meteor-auth/dist/angular-meteor-auth.bundle.js",
+    "angular-simple-logger/dist/angular-simple-logger.js",
     "angular-google-maps/dist/angular-google-maps.js",
     "manual/ionic.scroll.sista.js",
     "manual/ion-fab.css",

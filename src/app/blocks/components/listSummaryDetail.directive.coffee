@@ -303,14 +303,13 @@ ListSummaryDirective = ($filter, $window, $controller, $ionicScrollDelegate)->
       <div name="list-summary-wrap" class="list-item-summary row ng-repeat-grid">
         <div class="list-item-wrap col"
           ng-class="$listItemDelegate.getColWidth()"
-          ng-repeat="$item in collection"
+          ng-repeat="$item in rows"
           ng-transclude-parent="parent">
         </div>
       </div>
     """
-    scope: {
-      collection:"="
-    }
+    scope:
+      collection: '='
     compile: (tElement, tAttrs, transclude)->
       link = {
         pre: (scope, element, attrs, controller, transclude) ->
@@ -320,18 +319,18 @@ ListSummaryDirective = ($filter, $window, $controller, $ionicScrollDelegate)->
         post: (scope, element, attrs, controller, transclude) ->
           # NOTE: controller == vm from ListItemContainerDirective.controller
           scope.$listItemDelegate = controller['$listItemDelegate']
-
+          scope.rows = []
           scope.$watchCollection ()->
             return scope.collection if attrs.collection?
-            # list-item-summary[collection] takes precedence
+            # # list-item-summary[collection] takes precedence
             return scope.$listItemDelegate.collection()
           , (newV, oldV)->
             # console.warn ['collection.count=', newV.length]
             filter = scope.$listItemDelegate.filter?.split(':')
             if filter
-              scope.collection = $filter(filter.shift()).apply(this, [newV].concat(filter))
+              scope.rows = $filter(filter.shift()).apply(this, [newV].concat(filter))
             else
-              scope.collection = newV
+              scope.rows = newV
             scope.$broadcast 'list-item-summary:changed'
             return
 

@@ -26,7 +26,7 @@ MapView = ( )->
     restrict: 'E'
     scope: {}
     bindToController: {
-      'mapId': '='
+      # 'mapId': '='
       'rows': '='
       'keymap': '@'
       'selectedId': '='
@@ -51,7 +51,6 @@ MapView = ( )->
       utils, toastr)->
 
         mv = this
-
         # mv.mapId ?= 'map-view-' + $scope.$id
         keymap = $scope.$eval(mv.keymap)
         keymap = _.defaults keymap, {
@@ -99,11 +98,11 @@ MapView = ( )->
           return if newV == oldV
           selector = '#%id% .map-view-list'.replace(/%id%/g, mv.mapId)
           nextChild = document.querySelector(selector)
-          action = if newV then 'addClass' else 'removeClass'
-          angular.element(nextChild)[action]('has-map')
+          action = if newV then 'add' else 'remove'
+          nextChild.classList[action]('has-map')
           if newV
+            initializeMap()
             $timeout(0).then ()->
-              console.log mv.map
               mv.gMap.Control.refresh?()
               mv.gMap.setMapBounds()
               return
@@ -185,36 +184,42 @@ MapView = ( )->
           trailing: true
         }
 
-
-        initialize = ()->
-          # mv.gMap['ControlsReady'] = mv.gMap['Dfd'].promise
-          mv.gMap['ControlsReady'] = uiGmapIsReady.promise(1)
-          # Guard with jade: ui-gmap-google-map(ng-if="$map")
-          mv.gMap['ControlsReady']
-          .then (result)->
-            return if result == 'gMapControls ready'
-            instances = result
-            instances.forEach (inst)->
-              $window.mapInstance = inst
-              map = inst.map
-              uuid = map.uiGmap_id
-              mapInstanceNumber = inst.instance
-            console.info "uiGmapIsReady.promise resolve"
-          ,(err)->
-            console.warn ["uiGmapIsReady", err]
-            mv.gMap['ControlsReady'] = mv.gMap['Dfd'].promise
+        # just in case. using uiGmapIsReady.reset() seems to fix init bug
+        gMapIsReadyHACK = ()->
+          controlsReadyHACK = $q.defer()
+          mv.gMap['ControlsReady'] = controlsReadyHACK.promise
 
           # wait for map controls ready by watching MarkersControl.getGMarkers
-          # because uiGmapIsReady.promise(1) doesn't seem to work
+          # because uiGmapIsReady.promise(1) didn't seem to work
           unwatch = $scope.$watch 'mv.gMap.MarkersControl.getGMarkers', (newV)->
             if newV && mv.gMap['Control'].getGMap
               unwatch?()
-              console.info "gMap && gMap Markers ready"
-              mv.gMap.Dfd.resolve('gMapControls ready')
-
-              $window.gMap = mv.gMap
+              console.warn "WARNING: had to use gMap.Dfd to resolve gMap && gMap Markers ready"
+              controlsReadyHACK.resolve('gMapIsReadyHACK')
           # NOTE: 'map-ready' fired once for each $ionicView.loaded ONLY
           # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
+          return controlsReadyHACK.promise
+
+
+        initializeMap = ()->
+          return if mv.gMap.isReady
+          # reset count to ignore cached Maps
+          uiGmapIsReady.reset()
+          mapInstanceCount = 1
+          retries = 50
+          mv.gMap['ControlsReady'] = uiGmapIsReady.promise(mapInstanceCount, retries)
+          .then (result)->
+            mv.gMap.isReady = true
+            return 'gMapIsReadyHACK' if result == 'gMapIsReadyHACK'
+            instances = result
+            instances.forEach (inst)->
+              map = inst.map
+              console.info ['uiGmapIsReady', inst.instance, inst.map.uiGmap_id]
+            return 'uiGmapIsReady'
+          ,(err)->
+            console.warn ["uiGmapIsReady", err]
+            $window.gMap = mv.gMap
+            return gMapIsReadyHACK()
 
 
 
@@ -226,8 +231,6 @@ MapView = ( )->
         mv.gMap = {
           Control : {}
           MarkersControl : {}
-          Dfd : $q.defer()
-          # use uiGmapIsReady instead?
           ControlsReady : 'promise'
           renderSelectedMarker: (marker, markers)->
             return mv.gMap.ControlsReady
@@ -266,7 +269,8 @@ MapView = ( )->
           setMapBounds: (map, markers)->
             return mv.gMap.ControlsReady
             .then ()->
-              map ?= mv.gMap.Control.getGMap()
+              map ?= mv.gMap.Control.getGMap?()
+              return console.warn "WARN: map controls not ready" if !map
               markers ?= mv.gMap.MarkersControl.getGMarkers()
               # console.info ["setMapBounds for ", markers]
               latlngbounds = new google.maps.LatLngBounds()
@@ -277,7 +281,7 @@ MapView = ( )->
               return
         }
 
-        initialize()
+        # initializeMap()
         return mv
       ]
 
