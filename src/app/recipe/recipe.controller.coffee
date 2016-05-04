@@ -83,8 +83,11 @@ RecipeCtrl = (
       #  list-item-container[on-select]
       select: ($item, $index, silent)->
         # update history url
+        id = $item?._id || $item.id
+        if id && !$index
+          $index = _.findIndex mcRecipes.find().fetch(), {_id: id}
         $state.transitionTo($state.current.name
-        , {id: $item && $item.id || $index || null}
+        , {id: id || $index || null}
         , {notify:false}
         )
         return if silent
@@ -310,5 +313,4 @@ RecipeSearchCtrl.$inject = [
 angular.module 'starter.recipe'
   # .factory 'RecipeHelpers', RecipeHelpers
   .controller 'RecipeCtrl', RecipeCtrl
-  .controller 'RecipeDetailCtrl', RecipeDetailCtrl
   .controller 'RecipeSearchCtrl', RecipeSearchCtrl
