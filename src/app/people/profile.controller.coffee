@@ -3,7 +3,7 @@
 ProfileCtrl = (
   $scope, $rootScope, $q, $location, $state, $stateParams, $timeout
   $ionicScrollDelegate
-  AAAHelpers, $reactive
+  AAAHelpers, $reactive, $auth
   locationHelpers
   $log, toastr
   utils, devConfig, exportDebug
@@ -77,43 +77,45 @@ ProfileCtrl = (
       return
 
     activate = ()->
-      vm.me = Meteor.user()
-      AAAHelpers._backwardCompatibleMeteorUser(vm.me)
-      if $state.is('app.me')
-        # console.log vm.me
-        vm.person = angular.copy(vm.me)
-        if _.isEmpty vm.person
-          vm.person = ANON_USER
-          vm.settings.view.show = 'signin'
-        else
-          vm.settings.view.show = 'profile'
-        vm.settings.editing = false
-        vm.settings.changePassword = false
-        return
-
-      if $state.is('app.profile')
-        route = _.pick $stateParams, ['id', 'username']
-        if _.filter(route).length == 0
-          toastr.warning "Sorry, that profile was not found."
-          $rootScope.goBack()
+      return $auth.waitForUser()
+      .then ()->
+        vm.me = Meteor.user()
+        AAAHelpers._backwardCompatibleMeteorUser(vm.me)
+        if $state.is('app.me')
+          # console.log vm.me
+          vm.person = angular.copy(vm.me)
+          if _.isEmpty vm.person
+            vm.person = ANON_USER
+            vm.settings.view.show = 'signin'
+          else
+            vm.settings.view.show = 'profile'
+          vm.settings.editing = false
+          vm.settings.changePassword = false
           return
-        else if (vm.me && (route.username == vm.me.username || route.id == vm.me._id))
-          # looking at my own profile
-          return vm.person = vm.me
-        else
-          # viewing someone else's profile
-          return $q.when()
-          .then ()->
-            options = route.id || {username: route.username}
-            return Meteor.users.findOne(options)
 
-          .then (found)->
-            if !found
-              toastr.info "Sorry, that profile was not found"
-              $state.go('app.me')
-            vm.person = found
-            AAAHelpers._backwardCompatibleMeteorUser(vm.person)
-            return vm.person
+        if $state.is('app.profile')
+          route = _.pick $stateParams, ['id', 'username']
+          if _.filter(route).length == 0
+            toastr.warning "Sorry, that profile was not found."
+            $rootScope.goBack()
+            return
+          else if (vm.me && (route.username == vm.me.username || route.id == vm.me._id))
+            # looking at my own profile
+            return vm.person = vm.me
+          else
+            # viewing someone else's profile
+            return $q.when()
+            .then ()->
+              options = route.id || {username: route.username}
+              return Meteor.users.findOne(options)
+
+            .then (found)->
+              if !found
+                toastr.info "Sorry, that profile was not found"
+                $state.go('app.me')
+              vm.person = found
+              AAAHelpers._backwardCompatibleMeteorUser(vm.person)
+              return vm.person
 
       return
 
@@ -131,7 +133,7 @@ ProfileCtrl = (
 ProfileCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$state', '$stateParams', '$timeout'
   '$ionicScrollDelegate'
-  'AAAHelpers', '$reactive'
+  'AAAHelpers', '$reactive', '$auth'
   'locationHelpers'
   '$log', 'toastr'
   'utils', 'devConfig', 'exportDebug'

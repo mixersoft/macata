@@ -129,6 +129,28 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
         return $q.reject(err)
 
+    signInFacebook: ()->
+      dfd = $q.defer()
+      fbOptions = {
+        loginStyle: 'popup'  # ['popup', 'redirect']
+        requestPermissions: ['public_profile','email','user_friends']
+      }
+      # HACK: meteor-client-side does not pass options correctly to Meteor.absoluteUrl()
+      Meteor.absoluteUrl.defaultOptions.rootUrl = window.location.href.split('#').shift()
+      Meteor.loginWithFacebook fbOptions
+      , (err)->
+        return dfd.reject(err) if err
+        return dfd.resolve( 'SUCCESS' )
+      return dfd.promise
+      .then ()->
+        console.info ['signInFacebook SUCCESS']
+        user = Meteor.user()
+        vm.closeModal(user)
+        return user
+      , (err)->
+        console.warn ['ERROR: signInFacebook', err.message]
+        return $q.reject(err)
+
     register: (data={}, fnComplete)->
       vm['error'] = {}
       return $q.when()

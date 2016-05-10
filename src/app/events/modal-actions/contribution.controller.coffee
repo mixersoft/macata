@@ -21,7 +21,7 @@ EventContributionCtrl = (
       # params from appModalSvc.show( template , controllerAs , params, options) available
       # add to mm
       angular.extend mm, angular.copy($scope.copyToModalViewModal), {
-        isAnonymous: $scope.vm.acl.isAnonymous
+        isAnonymous: AAAHelpers.isAnonymous
         confirmEventId: $scope.vm.event.id
         confirmCurrentUserId: $scope.vm.me.id
       }

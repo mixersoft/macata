@@ -34,14 +34,18 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
       div#profile.content.row.responsive-sm(ng-switch-when="profile")
         div.col.col-offset-25.col-50
             div.list
-              ion-input.item-input {{ fullname=[person.firstname, person.lastname].join(' ') + ' (' + person.username + ')';'' }}
+              div.scope-locals.hide
+                {{ fullname = [person.firstname, person.lastname].join(' ');''}} 
+                {{ fullname = fullname + (person.username ? + ' (' + person.username + ')' : '') ;'' }}
+                {{ email = person.email || person.emails[0].address }}
+              ion-input.item-input 
                 ion-label.text-right
                   i.icon.ion-person.padding-horizontal
                 input.capitalize(type="text" ng-model="fullname" readonly)
               ion-input.item-input
                 ion-label.text-right
                   i.icon.ion-email.padding-horizontal
-                input(type="text" ng-model="person.email" readonly)  
+                input(type="text" ng-model="email" readonly)  
               ion-input.item-input
                 ion-label.text-right
                   i.icon.ion-quote.padding-horizontal

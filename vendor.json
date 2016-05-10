@@ -19,6 +19,7 @@
     "manual/ion-fab.js",
     "manual/publish-counts.js",
     "manual/pull-to-reveal.js",
+    "manual/fb-sdk.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [
@@ -26,8 +27,9 @@
     "ngCordova/dist/ng-cordova.js",
     "manual/meteor-runtime-config.js",
     "meteor-client-side/dist/meteor-client-side.bundle.js",
-    "accounts-base-client-side/dist/accounts-base-client-side.bundle.js",
-    "accounts-password-client-side/dist/accounts-password-client-side.bundle.js",
+    "manual/dist/accounts-base-client-side.bundle.js",
+    "manual/dist/accounts-password-client-side.bundle.js",
+    "manual/dist/accounts-facebook-client-side.bundle.js",
     "moment/min/moment.min.js"
   ]
 }

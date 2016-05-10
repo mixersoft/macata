@@ -1,6 +1,10 @@
 {
   "public":{
   },
+  "facebook": {
+    "appId": "224167074626723",
+    "secret": "28c28074dab0767eef6913ec4051c092"
+  },
   "TWILIO": {
     "FROM": "meteor-whatsapp",
     "SID": "__do-NOT-leave-blank__",

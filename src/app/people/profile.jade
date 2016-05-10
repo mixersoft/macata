@@ -17,9 +17,13 @@ ion-view(view-title="{{vm.title}}")
         )
 
     div.content.row.responsive-sm
-      div.col.col-offset-25.col-50      
+      div.col.col-offset-25.col-50
+        div.scope-locals.hide
+          {{ fullname = [person.firstname, person.lastname].join(' ');''}} 
+          {{ fullname = fullname + (person.username ? + ' (' + person.username + ')' : '') ;'' }}
+          {{ email = person.email || person.emails[0].address }}      
         div.text-center
-          h2.capitalize {{person.firstname}} {{person.lastname}}
+          h2.capitalize {{fullname}}
           div(ng-show="person && person != vm.me")
             button.button.button-positive.icon.ion-chatbox.button-flat.ink
               span  Contact Me
