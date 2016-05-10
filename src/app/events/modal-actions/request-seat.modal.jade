@@ -14,10 +14,10 @@ ion-modal-view#request-seat-modal
         div.item.item-divider.item-positive
           div.light.larger {{item.title}}
         div.item.item-avatar
-          img(ng-src="{{host.profile.face}}" ui-sref="app.profile({id:'{{host._id}}'})")
-          span.face-overlay(ng-if="!host.profile.face" ng-bind="host.profile.displayName[0]")
+          img(ng-src="{{host.face}}" ui-sref="app.profile({id:'{{host._id}}'})")
+          span.face-overlay(ng-if="!host.face" ng-bind="host.displayName[0]")
           h2 Hosted by 
-            b {{ host.profile.displayName }}
+            b {{ host.displayName }}
           p {{ item.startTime | amCalendar }} 
             span.dark(
               am-time-ago="item.startTime"
@@ -35,9 +35,9 @@ ion-modal-view#request-seat-modal
 
       div.list
         div.item.item-avatar(ng-if="mm.isAnonymous()==false")
-          img(ng-src="{{me.profile.face}}")
-          span.face-overlay(ng-if="!me.profile.face" ng-bind="me.profile.displayName[0]")
-          b {{me.profile.displayName }}
+          img(ng-src="{{me.face}}")
+          span.face-overlay(ng-if="!me.face" ng-bind="me.displayName[0]")
+          b {{me.displayName }}
           p You are requesting a seat(s) for this Table
 
         ion-input.item-input.text-and-range

@@ -8,8 +8,8 @@ OauthProxy = (
   $http
   )->
     config = {
-      rootUrl: 'http://localhost:3333'
-      path: location.pathname
+      rootUrl: __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL
+      path: location.pathname.slice(location.pathname.indexOf('_oauth'))
     }
     self = {
       get: (options = {})->

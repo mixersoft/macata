@@ -13,7 +13,6 @@ EventDetailCtrl = (
   )->
     # coffeelint: disable=max_line_length
     # coffeelint: enable=max_line_length
-    $reactive(this).attach($scope)
     vm = this
     vm.title = "Event Detail"
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
@@ -126,7 +125,7 @@ EventDetailCtrl = (
         .finally ()->
           toastr.info [
             "You are now "
-            vm.me.profile.displayName
+            vm.me.displayName
             ", role="
             $rootScope.demoRole.toUpperCase()
           ].join('')
@@ -256,7 +255,7 @@ EventDetailCtrl = (
           else 'http://app.snaphappi.com/foodie.App/'
         vm.event.invitations.push {
           id: now
-          owner: $rootScope.currentUser.profile.displayName
+          owner: $rootScope.currentUser.displayName
           ownerId: $rootScope.currentUser._id
           link: [
             baseurl
@@ -360,6 +359,9 @@ EventDetailCtrl = (
       return collection.findOne(id)
 
     initialize = ()->
+      $reactive(vm).attach($scope)
+      vm.subscribe 'myProfile'
+      vm.subscribe 'userProfiles'
       # $ionicView.loaded: called once for EACH cached $ionicView,
       #   i.e. each instance of vm
       vm.subscribe 'myVisibleEvents'

@@ -45,6 +45,18 @@ ProfileCtrl = (
       click: (ev)->
         toastr.info("something was clicked")
 
+      getFullNameLabel: (user)->
+        label = _.filter([user.firstname, user.lastname])
+        label = [user.name] if user.name && label.length == 0
+        if label.length
+          label.push ['(',user.displayName,')'].join('') if user.displayName
+        else
+          label = [user.displayName]
+        return label.join(' ')
+
+
+
+
       showSignInRegister: (action)->
         return AAAHelpers.showSignInRegister.call(vm, action)
         .then (user)->
@@ -73,11 +85,14 @@ ProfileCtrl = (
 
     initialize = ()->
       $reactive(vm).attach($scope)
+      vm.subscribe 'myProfile'
       vm.subscribe 'userProfiles'
       return
 
     activate = ()->
-      return $auth.waitForUser()
+      return $q.when()
+      .then ()->
+        return $auth.waitForUser() if Meteor.loggingIn()
       .then ()->
         vm.me = Meteor.user()
         AAAHelpers._backwardCompatibleMeteorUser(vm.me)

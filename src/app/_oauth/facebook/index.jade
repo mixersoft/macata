@@ -1,7 +1,8 @@
 doctype html
 html
     head
-      script(src='/lib/ionic/js/ionic.bundle.js')  // load angular first
+      script(src='../../lib/ionic/js/ionic.bundle.js')  // load angular first
+      script(src='../../lib/manual/meteor-runtime-config.js')
       script(src='./proxy.js')
     body(ng-app="oauth")
       p#completedText(style="display:none;")

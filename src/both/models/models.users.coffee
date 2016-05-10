@@ -37,6 +37,44 @@ ProfileModel::saveLocation = (location, isLatLon=false, userId)->
 
 
 methods = {
+  'Profile.normalizePwdUser': (user, face)->
+    return if user.services.facebook
+
+    modifier = {$set:{}}
+
+    if not user.displayName
+      # patch passwordLogin users only
+      displayName = []
+      displayName.push user.firstname if user.firstname
+      displayName.push user.lastname if user.lastname
+      displayName = [user.username] if !displayName.length
+      modifier['$set']['displayName'] = displayName.join(' ')
+    if not user.face
+      modifier['$set']['face'] = face
+    Meteor.users.update(user._id, modifier)
+
+    return if !user.email
+
+    if Meteor.isServer
+      Accounts.addEmail(user._id, user.email, true)
+      modifier = {
+        '$unset':
+          email: ''
+      }
+      Meteor.users.update(user._id, modifier)
+    else
+      modifier = {
+        '$unset':
+          email: ''
+        '$addToSet':
+          emails:
+            address: user.email
+            verified: true
+      }
+      Meteor.users.update(user._id, modifier)
+    return
+
+
   'Profile.normalizeFbUser': ()->
     return  # deprecate, using Accounts.onCreateUser() instead
     # example: {
@@ -85,9 +123,9 @@ methods = {
     geojson = asGeoJsonPoint(loc, isLatLon)
     modifier = {
       $set:
-        "profile.location": geojson
+        "location": geojson
       $push:
-        'profile.pastLocations':
+        'pastLocations':
           $each: [geojson]
           $slice: -10
     }

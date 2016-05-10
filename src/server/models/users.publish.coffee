@@ -15,7 +15,27 @@ Meteor.publish 'userProfiles', ()->
       gender: 1
       emails: 1
       profile: 1
-      # TODO: publish separately
+      'services.facebook.id': 1
+      'services.facebook.username': 1
+      'services.facebook.gender': 1
+    }
+  )
+
+Meteor.publish 'myProfile', ()->
+  console.log ['publish myself']
+  return Meteor.users.find({}, {
+    fields:
+      username: 1
+      firstname: 1
+      lastname: 1
+      displayName: 1
+      face: 1
+      gender: 1
+      emails: 1
+      profile: 1
+      favorites: 1
+      location: 1
+      pastLocations: 1
       'services.facebook': 1
     }
   )

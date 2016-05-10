@@ -19,7 +19,7 @@ list-item-summary.animate-fade-slide-in-right(
       
       div.item-avatar-right.ink
         img.ink(
-          ng-src="{{$owner.profile.face}}"
+          ng-src="{{$owner.face}}"
           ng-click="$event.stopImmediatePropagation()"
           ui-sref="app.profile({'username':$owner.username})"
         )

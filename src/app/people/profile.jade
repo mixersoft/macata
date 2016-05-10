@@ -19,8 +19,7 @@ ion-view(view-title="{{vm.title}}")
     div.content.row.responsive-sm
       div.col.col-offset-25.col-50
         div.scope-locals.hide
-          {{ fullname = [person.firstname, person.lastname].join(' ');''}} 
-          {{ fullname = fullname + (person.username ? + ' (' + person.username + ')' : '') ;'' }}
+          {{ fullname = vm.on.getFullNameLabel(person) ;'' }}
           {{ email = person.email || person.emails[0].address }}      
         div.text-center
           h2.capitalize {{fullname}}

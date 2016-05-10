@@ -225,6 +225,8 @@ EventCtrl = (
 
     initialize = ()->
       $reactive(vm).attach($scope)
+      vm.subscribe 'myProfile'
+      vm.subscribe 'userProfiles'
       # vm.subscribe 'userProfiles'
       vm.subscribe 'myVisibleEvents'
         ,()->
@@ -274,7 +276,7 @@ EventCtrl = (
         # vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
         eventFilter = $stateParams.filter || 'all'
         if me = Meteor.user()
-          location = locationHelpers.asLonLat me.profile.location
+          location = locationHelpers.asLonLat me.location
         else
           location = locationHelpers.lastKnownLonLat()
         switch eventFilter

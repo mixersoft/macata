@@ -2,7 +2,7 @@
 
 HomeCtrl = (
   $scope, $rootScope, $q, $location, $timeout
-  $state
+  $state, $reactive
   $ionicScrollDelegate, $ionicHistory, $listItemDelegate
   $log, toastr
   HomeResource, EventsResource, IdeasResource
@@ -90,6 +90,9 @@ HomeCtrl = (
 
 
     initialize = ()->
+      $reactive(vm).attach($scope)
+      vm.subscribe 'myProfile'
+      vm.subscribe 'userProfiles'
       vm.listItemDelegate = $listItemDelegate.getByHandle('home-list-scroll', $scope)
       return $q.when()
       .then ()->
@@ -166,7 +169,7 @@ HomeCtrl = (
 
 HomeCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$timeout'
-  '$state'
+  '$state', '$reactive'
   '$ionicScrollDelegate', '$ionicHistory', '$listItemDelegate'
   '$log', 'toastr'
   'HomeResource', 'EventsResource','IdeasResource'

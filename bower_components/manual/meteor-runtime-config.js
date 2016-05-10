@@ -9,7 +9,7 @@
 
 
 setMeteorRuntime = function(){
-  var runConfig, hostname, port, connect;
+  var runConfig, hostname, port, connect, oauthProxy;
   switch (window.location.hostname) {
     case 'localhost':
       runConfig = "DEV";
@@ -25,13 +25,16 @@ setMeteorRuntime = function(){
       runConfig = "DEVICE";
       hostname = 'app.snaphappi.com';
       port = '3333';
+      oauthProxy = "http://10.0.2.2/"
       break;
   }
-  connect = ['http://', hostname, ':', port].join('')
+  connect = ['http://', hostname, ':', port, '/'].join('');
 
-  __meteor_runtime_config__ = {};
-  __meteor_runtime_config__.LABEL = runConfig;
-  __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL = connect;
+  window.__meteor_runtime_config__ = angular.extend( {}, window.__meteor_runtime_config__, {
+    LABEL: runConfig,
+    DDP_DEFAULT_CONNECTION_URL: connect,
+    OAUTH_PROXY: oauthProxy || connect
+  });
 
   return
 }

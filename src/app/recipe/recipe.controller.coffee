@@ -162,7 +162,8 @@ RecipeCtrl = (
       ]
 
     initialize = ()->
-
+      vm.subscribe 'myProfile'
+      vm.subscribe 'userProfiles'
       vm.subscribe 'myVisibleRecipes'
       ,()->
         return getAsPublishSpec( vm.getReactively('filterSort', true) )

@@ -44,7 +44,7 @@ MARKUP = {
 OpenGraph = ($q, $http )->
   OG_API_ENDPOINT ={
     active: null
-    local: __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL + '/methods/' + 'get-open-graph'
+    local: __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL + 'methods/' + 'get-open-graph'
     remote: 'http://app.snaphappi.com:3333/methods/' + 'get-open-graph'
   }
 

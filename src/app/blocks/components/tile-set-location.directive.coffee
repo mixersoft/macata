@@ -22,7 +22,7 @@ TileSetLocation = ( locationHelpers, FeedHelpers, PostHelpers)->
         sl.lastLocationString = ()->
           sl.location = locationHelpers.lastKnownLocation()
           if !sl.location.lonlat && me = Meteor.user()
-            sl.location.lonlat = locationHelpers.asLonLat me.profile.location
+            sl.location.lonlat = locationHelpers.asLonLat me.location
           return sl.location.address || sl.location.lonlat?.join(', ') || null
 
         sl.tileWidth = ()->

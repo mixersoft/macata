@@ -118,9 +118,8 @@ methods = {
     modifier = {}
     modifier[action] = {"favorites": meId}  # e.g.  { $addToSet: {"likes": meId} }
     mcEvents.update(model._id, modifier )
-    #TODO: update Model.user().profile.favorites
-    profileFavorite = {"profile.favorites": { _id: model._id, className: 'Event' }}
-    modifier[action] = profileFavorite
+    #TODO: update Model.user().favorites
+    modifier[action] = {"favorites": { _id: model._id, className: 'Event' }}
     Meteor.users.update({_id: meId}, modifier )
     return
 

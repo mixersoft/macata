@@ -15,7 +15,7 @@ FeedDbTriggers = ( notificationTemplates )->
       options = {
         log: true
         message: [
-          me.profile.displayName
+          me.displayName
           'has', invitation.body.response
         ]
       }
@@ -70,7 +70,7 @@ FeedDbTriggers = ( notificationTemplates )->
       options = {
         log: true
         message: [
-          me.profile.displayName
+          me.displayName
           'has', invitation.body.response
         ]
       }

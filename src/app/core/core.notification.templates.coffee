@@ -9,67 +9,67 @@ ACTION = {
   'invitation': # invitations sent by moderator to one or more people
     accepted: # done
       ownerId: """
-        <b>%post.$chatWith.profile.displayName%</b> has accepted your <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">invitation</a>,
+        <b>%post.$chatWith.displayName%</b> has accepted your <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">invitation</a>,
         and requested %post.body.seats% seats at the table.
         """
       participantIds: """
-        <b>%post.$chatWith.profile.displayName%</b> has accepted an <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">invitation</a>,
+        <b>%post.$chatWith.displayName%</b> has accepted an <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">invitation</a>,
         and requested %post.body.seats% seats at the table.
         """
       recipientIds: """
-        Welcome. <b>%post.$owner.profile.displayName%</b> has been notified of your request %post.body.seats% seats
+        Welcome. <b>%post.$owner.displayName%</b> has been notified of your request %post.body.seats% seats
         and will respond shortly.
         If you haven't already done so, please tell your table-mates what you bring to the table.
         """
     message:
       subscribers:  # omit message sender, vm.me.id, either $$owner or $$chatWith
         """
-        <b>%vm.me.profile.displayName%</b> commented on a post you are following. <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">more...</a>
+        <b>%vm.me.displayName%</b> commented on a post you are following. <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">more...</a>
         """
     declined:  # done
       # rejections should be visible only by the invitation owner
-      ownerId: '<b>%post.$chatWith.profile.displayName%</b> has declined your <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">invitation</a>.'
+      ownerId: '<b>%post.$chatWith.displayName%</b> has declined your <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">invitation</a>.'
       # participantIds: no message
   'booking':
     accepted: # done
       ownerId: """
-        Welcome <b>%post.$owner.profile.displayName%</b>. Your request was accepted, and you have booked %post.body.seats% seats at the table.
+        Welcome <b>%post.$owner.displayName%</b>. Your request was accepted, and you have booked %post.body.seats% seats at the table.
         """
       participantIds:"""
-        <b>%post.$owner.profile.displayName%</b> has booked %post.body.seats% seats at this table.
+        <b>%post.$owner.displayName%</b> has booked %post.body.seats% seats at this table.
         """
 
     message:
       subscribers:  # omit message sender, vm.me.id, either $$owner or $$chatWith
         """
-        <b>%vm.me.profile.displayName%</b> commented on a post you are following. <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">more...</a>
+        <b>%vm.me.displayName%</b> commented on a post you are following. <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">more...</a>
         """
     declined: # done
       # rejections should not be public
       ownerId: """
-        Sorry <b>%post.$owner.profile.displayName%</b>, your booking was declined. <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">more...</a>
+        Sorry <b>%post.$owner.displayName%</b>, your booking was declined. <a href="/#/app/feed/%post.head.eventId%?id=%post._id%">more...</a>
         """
   'event':
     booking: # done
       sendInvites: """
-        <b>%post.$owner.profile.displayName%</b>&mdash;Congratulations, you are now in control of the invites.
+        <b>%post.$owner.displayName%</b>&mdash;Congratulations, you are now in control of the invites.
         There are <b>%post.seatsOpen%</b> seats remaining and the event begins <b>%post.toNow%</b>. Remember, with great power comes great responsibility.
         <br /><br />Now go send some invitations.
         """
       shareEvent: """
-        <b>%post.$owner.profile.displayName%</b>&mdash;Congratulations, you are now in control of the guest list.
+        <b>%post.$owner.displayName%</b>&mdash;Congratulations, you are now in control of the guest list.
         There are <b>%post.seatsOpen%</b> seats remaining and the event begins <b>%post.toNow%</b>. Remember, with great power comes great responsibility.
         <br /><br />Now go share this Table with your friends.
         """
       fullyBooked: """
-        All right! This event is now fully booked&mdash;take a moment to see who's coming! <b>&mdash;%post.$host.profile.displayName%</b>
+        All right! This event is now fully booked&mdash;take a moment to see who's coming! <b>&mdash;%post.$host.displayName%</b>
         """
     contributions:
       reminder: """
         Remember bring something to the table. If you are stuck, our <a href="/#/app/recipe">Ideas</a> page is a great place to start.
         """
       notify: """
-        <b>%post.$owner.profile.displayName%</b> brings <a href="/#/app/recipe?id=%post.body.attachment._id%">%post.body.attachment.title%</a> to the table.
+        <b>%post.$owner.displayName%</b> brings <a href="/#/app/recipe?id=%post.body.attachment._id%">%post.body.attachment.title%</a> to the table.
         """
 
 

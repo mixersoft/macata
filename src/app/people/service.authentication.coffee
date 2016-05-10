@@ -12,7 +12,6 @@ AAAHelpers = ($rootScope, $q, $timeout
       _backwardCompatibleMeteorUser: (user)->
         return if !user
         # backward compatibility for Meteor.user
-        angular.extend user, _.pick user.profile, ['displayName', 'face']
         user.id = user._id
 
       requireUser: (initialSlide)->
@@ -77,26 +76,9 @@ AAAHelpers = ($rootScope, $q, $timeout
           # return devConfig.loginUser( person.id , true)
           $log.info "Sign-in for username=" + user.username
 
-          # _setProfileDefaults = (user)->
-          #   # deprecate: do NOT use user.profile
-          #   # sign-in-register cleanup
-          #   profileDefaults = {}
-          #   if not user.profile.displayName
-          #     displayName = []
-          #     displayName.push user.profile.firstname if user.profile.firstname
-          #     displayName.push user.profile.lastname if user.profile.lastname
-          #     displayName.push user.profile.name if !displayName.length
-          #     displayName = [user.username] if !displayName.length
-          #     profileDefaults['profile.displayName'] = displayName.join(' ')
-          #   if not user.profile.face
-          #     face = unsplashItSvc.getImgSrc(Meteor.userId(), 'people-1', {face:true} )
-          #     profileDefaults['profile.face'] = face
-          #   if not _.isEmpty profileDefaults
-          #     # TODO: move to Meteor.methods
-          #     Meteor.users.update user._id, {$set: profileDefaults}
-          #   return
-          #
-          # _setProfileDefaults(user)
+          # patch user data
+          face = unsplashItSvc.getImgSrc(Meteor.userId(), 'people-1', {face:true} )
+          Meteor.call('Profile.normalizePwdUser', Meteor.user(), face)
 
           # @TODO: deprecate: use $rootScope.currentUser
           $rootScope['user'] = user

@@ -35,7 +35,7 @@ RecipeModel::isFavorite = (model, me)->
   return false if !model
   me ?= Meteor.user()
   return false if !me
-  return true if _.find me.profile.favorites, {_id: model._id}
+  return true if _.find me.favorites, {_id: model._id}
   return false
 
 
@@ -110,9 +110,8 @@ methods = {
     modifier = {}
     modifier[action] = {"favorites": meId}  # e.g.  { $addToSet: {"likes": meId} }
     mcRecipes.update(model._id, modifier )
-    #TODO: update Model.user().profile.favorites
-    profileFavorite = {"profile.favorites": { _id: model._id, className: 'Recipe' }}
-    modifier[action] = profileFavorite
+    #TODO: update Model.user().favorites
+    modifier[action] = {"favorites": { _id: model._id, className: 'Recipe' }}
     Meteor.users.update({_id: meId}, modifier )
     return
 

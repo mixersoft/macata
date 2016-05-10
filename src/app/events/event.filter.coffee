@@ -25,7 +25,7 @@ EventParticipantsFilter = ()->
       _.each [0...p.seats], (i)->
         face = _.chain vm.$$participants
           .find {_id:p.ownerId}
-          .pick ['_id', 'username', 'profile']
+          .pick ['_id', 'username', 'displayName', 'face']
           .value()
         face['trackBy'] = now + padded.length
         padded.push face

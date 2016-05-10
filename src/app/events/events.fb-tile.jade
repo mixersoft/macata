@@ -19,7 +19,7 @@ list-item-summary.animate-fade-slide-in-right(
       {{ $$host=$item.fetchHost();'' }}
       div.item-avatar-right.ink
         img.ink(
-          ng-src="{{$$host.profile.face}}"
+          ng-src="{{$$host.face}}"
           ng-click="$event.stopImmediatePropagation()"
           ui-sref="app.profile({'username':$$host.username})"
         )

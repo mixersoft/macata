@@ -51,7 +51,7 @@ ion-view.event-detail(
                       ng-click=""
                     ) {{$$itemOwner = $item.fetchOwner();''}}
                       img.ink(
-                        ng-src="{{$$itemOwner.profile.face}}"
+                        ng-src="{{$$itemOwner.face}}"
                         ng-click="$event.stopImmediatePropagation()"
                         ui-sref="app.profile({'id':$item.ownerId})"
                       )
@@ -97,11 +97,11 @@ ion-view.event-detail(
             )
             ion-item.item-avatar 
               img.item-image.ink(
-                ng-src="{{host.profile.face}}"
+                ng-src="{{host.face}}"
                 ng-click="$event.stopImmediatePropagation()"
                 ui-sref="app.profile({username: host.username })"
               )
-              span Hosted by #[b {{ [host.profile.displayName].join(' ')  || event.ownerId }}]
+              span Hosted by #[b {{ [host.displayName].join(' ')  || event.ownerId }}]
             ion-item.item-icon-left
               i.icon.ion-ios-calendar-outline
               {{ event.startTime | amDateFormat:'ddd, MMM Do' }}
@@ -161,11 +161,11 @@ ion-view.event-detail(
             )
             div.avatar-wrap(ng-repeat="person in vm.$$paddedParticipants track by person.trackBy")
               img.item-image.ink(
-                ng-if="person.profile.face"
-                ng-src="{{person.profile.face}}"
+                ng-if="person.face"
+                ng-src="{{person.face}}"
                 ng-click="$event.stopImmediatePropagation()"
                 ui-sref="app.profile({username: person.username })"
-                alt="{{person.profile.displayName}}"
+                alt="{{person.displayName}}"
                 width="40"
               )
               button.item-image.icon.ion-person-add(
