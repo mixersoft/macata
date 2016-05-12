@@ -41,7 +41,16 @@
     "cordova-plugin-splashscreen",
     "cordova-plugin-statusbar",
     "ionic-plugin-keyboard",
-    "cordova-plugin-geolocation"
+    "cordova-plugin-geolocation",
+    "cordova-plugin-inappbrowser",
+    {
+      "variables": {
+        "APP_ID": "224167074626723",
+        "APP_NAME": "macata"
+      },
+      "locator": "/dev.snaphappi.com/_play/cordova-plugin-facebook4",
+      "id": "cordova-plugin-facebook4"
+    }
   ],
   "cordovaPlatforms": [
     "ios"

@@ -27,7 +27,8 @@ angular-meteor-auth
 angular
 
 accounts-password
-accounts-facebook
+#accounts-facebook
+mrt:accounts-facebook-cordova
 service-configuration
 webapp
 #accounts-twitter

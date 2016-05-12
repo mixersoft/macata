@@ -22,7 +22,7 @@ bootstrap = ()->
     }
   })
   fbConfig = ServiceConfiguration.configurations.findOne({service:'facebook'})
-  console.log ['facebook.clientId=', fbConfig.appId]
+  # console.log ['facebook.clientId=', fbConfig.appId]
 
   # oauthProxy
   # // Listen to incoming HTTP requests, can only be used on the server
@@ -30,6 +30,10 @@ bootstrap = ()->
     res.setHeader("Access-Control-Allow-Origin", "*")
     return next()
   )
+
+  # see also: Meteor.settings.facebook.oauth_redirect_uri
+
+  console.log("Settings=" + JSON.stringify(Meteor.settings))
 
   return
 

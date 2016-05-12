@@ -132,19 +132,26 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
     signInFacebook: ()->
       dfd = $q.defer()
       fbOptions = {
-        loginStyle: 'popup'  # ['popup', 'redirect']
+        loginStyle: if ionic.Platform.isWebView() then 'redirect' else 'popup'
+        # loginStyle: 'redirect'
         requestPermissions: ['public_profile','email','user_friends']
       }
       # HACK: meteor-client-side does not pass options correctly to Meteor.absoluteUrl()
       Meteor.absoluteUrl.defaultOptions.rootUrl = window.location.href.split('#').shift()
       Meteor.loginWithFacebook fbOptions
       , (err)->
+        # handle these errors
+        # if err instanceof Accounts.LoginCancelledError
+        # if err instanceof ServiceConfiguration.ConfigError
         return dfd.reject(err) if err
         return dfd.resolve( 'SUCCESS' )
       return dfd.promise
       .then ()->
         console.info ['signInFacebook SUCCESS']
         user = Meteor.user()
+        # if ~user.face.indexOf('http:')
+        #   # reset user with user.face = 'https:' to fix IOS AppTransSecurity bug
+        #   Meteor.call 'Profile.normalizeFbUser'
         vm.closeModal(user)
         return user
       , (err)->

@@ -1,9 +1,11 @@
 {
   "public":{
+    "label": "localhost"
   },
   "facebook": {
-    "appId": "224167074626723",
-    "secret": "28c28074dab0767eef6913ec4051c092"
+    "appId": "227317577645006",
+    "secret": "ce0dfc073471f1533a8d001ea323c3c4",
+    "oauth_redirect_uri": "http://localhost:3000/"
   },
   "TWILIO": {
     "FROM": "meteor-whatsapp",

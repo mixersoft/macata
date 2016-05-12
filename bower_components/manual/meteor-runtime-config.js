@@ -9,31 +9,52 @@
 
 
 setMeteorRuntime = function(){
-  var runConfig, hostname, port, connect, oauthProxy;
+  var runConfig, hostname, port, connect, settings;
+
+  // copy from Meteor settings.json
+  settings = {
+    "public": {
+      "label": "staging",
+      "facebook": {
+        "permissions": [
+          "public_profile",
+          "email",
+          "user_friends"
+        ]
+      }
+    }
+  };
+
   switch (window.location.hostname) {
     case 'localhost':
       runConfig = "DEV";
       hostname = window.location.hostname;
       port = '3333';
+      connect = ['http://', hostname, ':', port, '/'].join('');
       break;
     case 'app.snaphappi.com':
       runConfig = "BROWSER";
       hostname = window.location.hostname
       port = '3333';
+      connect = ['http://', hostname, ':', port, '/'].join('');
       break;
-    case "":
+    default:
+      if (ionic.Platform.isWebView() == false) {
+        console.error("ERROR: unknown runtime configuration");
+        break;
+      }
       runConfig = "DEVICE";
       hostname = 'app.snaphappi.com';
       port = '3333';
-      oauthProxy = "http://10.0.2.2/"
+      connect = ['http://', hostname, ':', port, '/'].join('');
       break;
   }
-  connect = ['http://', hostname, ':', port, '/'].join('');
+
 
   window.__meteor_runtime_config__ = angular.extend( {}, window.__meteor_runtime_config__, {
     LABEL: runConfig,
     DDP_DEFAULT_CONNECTION_URL: connect,
-    OAUTH_PROXY: oauthProxy || connect
+    PUBLIC_SETTINGS: settings["public"]
   });
 
   return

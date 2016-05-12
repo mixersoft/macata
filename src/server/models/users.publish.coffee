@@ -47,7 +47,7 @@ Accounts.onCreateUser (options, user)->
     # for oauth errors, check: Accounts.oauth.tryLoginAfterPopupClosed()
     user.firstname = facebook.first_name
     user.lastname = facebook.last_name
-    fbPic = ['http://graph.facebook.com',facebook.id,'picture'].join('/') + '?type=large'
+    fbPic = ['https://graph.facebook.com',facebook.id,'picture'].join('/') + '?type=large'
     user.displayName = facebook.name
     user.face = fbPic
     user.gender = facebook.gender

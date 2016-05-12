@@ -76,7 +76,7 @@ methods = {
 
 
   'Profile.normalizeFbUser': ()->
-    return  # deprecate, using Accounts.onCreateUser() instead
+    # return  # deprecate, using Accounts.onCreateUser() instead
     # example: {
     #   "accessToken":"EAADL4PbafKMBALlvkdhK3wqIuZBZCFvV180wYK0d12wXOsCRgi9WIfFexJuekReT1lZBMZC9CfPAaHyaZC2CZCFSzi6z5hV7NgsEw5ai6mZCzVDZApuTM6ZBdwZCSfZBT4ZCgELDyf2vwSg4VHponL5zvoePOpSn7oQ8d9IZD",
     #   "expiresAt":1467959308973,
@@ -94,7 +94,7 @@ methods = {
     facebook = Meteor.users.findOne(meId).services.facebook
     return if !facebook
     modifier = {}
-    fbPic = ['http://graph.facebook.com',facebook.id,'picture'].join('/') + '?type=large'
+    fbPic = ['https://graph.facebook.com',facebook.id,'picture'].join('/') + '?type=large'
     modifier['$set'] = {
       displayName: facebook.name
       face: fbPic
