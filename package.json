@@ -1,11 +1,11 @@
 {
-  "name": "openmaca",
+  "name": "macata",
   "version": "0.1.0",
-  "description": "An app for elevating community meals around the world.",
+  "description": "A social-eating platform for the sharing economy.",
   "author": "Michael Lin <michael@snaphappi.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mixersoft/openmaca"
+    "url": "https://github.com/mixersoft/macata"
   },
   "dependencies": {
     "coffee-script": "^1.9.3"

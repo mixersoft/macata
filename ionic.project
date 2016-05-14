@@ -1,6 +1,6 @@
 {
-  "name": "openmaca",
-  "app_id": "",
+  "name": "macata",
+  "app_id": "64604f42",
   "gulpStartupTasks": [
     "sass",
     "watch"
