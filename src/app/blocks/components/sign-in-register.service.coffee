@@ -25,6 +25,7 @@ MODAL_VIEW = {
     PASSWORD_NO_MATCH: 'Sorry, your passwords do not match.'
     EMAIL_INVALID: "Email must be a valid e-mail address."
     USER_NOT_FOUND: 'Sorry, the username and password combination was not found.'
+    USERNAME_NOT_FOUND: 'Sorry, that username was not found.'
     EMAIL_NOT_FOUND: 'Sorry, the email you provided was not found.'
 
   DEFAULT_SLIDE: 'signin'         # ['signup', 'signin']
@@ -147,9 +148,16 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
         return $q.reject(err)
 
+    forgotPassword: (person)->
+      sir['error'] = {}
+      accountsPassword = sir['on']['AP']
+      return sir.on.AP.forgotPassword(person)
+
     'AP': # accounts-password
       # case-insensitive Meteor.find()
       findByUsername: (username)->
+        # NOTE: for some reason, this returns the user.emails,
+        # even though this is excluded by publish
         dfd = $q.defer()
         Meteor.call('User.findByUsername', username
         , (err, user)->
@@ -285,11 +293,43 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
           sir.closeModal(user)
           return user
 
-      'resetPassword': (token, newPwd, cb)->
-        return
-
       'changePassword': (oldPwd, newPwd, cb)->
         return
+
+      'forgotPassword': (options={}, cb)->
+        dfd = $q.defer()
+        if options.email
+          Accounts.forgotPassword({email: options.email}, (err)->
+            return dfd.reject(err) if err
+            return dfd.resolve( {email: options.email} )
+          )
+        else if options.username
+          Meteor.call('Accounts.resetPasswordByUsername', options.username
+          , (err, username)->
+            return dfd.reject(err) if err
+            console.info ['resetPasswordByUsername', username]
+            return dfd.resolve( {username: username} )
+          )
+        else
+          sir['error']['email'] = MODAL_VIEW.ERROR.REQURIED
+
+        return dfd.promise
+        .catch (err)->
+          if err.errorType == "Meteor.Error"
+            switch err.reason
+              when 'Email not found'
+                sir['error']['email'] = MODAL_VIEW.ERROR.EMAIL_NOT_FOUND
+              when 'User not found' # err.error==403
+                sir['error']['username'] = MODAL_VIEW.ERROR.USERNAME_NOT_FOUND
+
+          console.warn ['ERROR: forgotPassword', err.message]
+          return $q.reject(err)
+        .then (result)->
+          # handle the following link:
+          #  http://localhost:3333/#/reset-password/EHuCfPNzWJJ5-pK8qeXg6O7G4GXLovuajYSlhj-g9u9
+          field = if result.email then 'email' else 'username'
+          sir['error'][field] = "A password reset email was sent."
+
 
     register: (data={}, fnComplete)->
       sir['error'] = {}

@@ -37,9 +37,29 @@ ProfileModel::saveLocation = (location, isLatLon=false, userId)->
 
 
 methods = {
-  'User.findByUsername': (username)->
+  'Accounts.resetPasswordByUsername': (username)->
     return if Meteor.isClient
     user = Accounts.findUserByUsername(username)
+    if !user
+      throw new Meteor.Error('user-not-found'
+      , 'User not found', null
+      )
+    emails = _.filter user.emails, {verified: true}
+    if !emails.length
+      emails = user.emails if user.emails?.length
+    if !emails.length
+      throw new Meteor.Error('email-not-found'
+      , 'Email not found', null
+      )
+    Accounts.sendResetPasswordEmail(user._id)
+    return username
+
+
+  'User.findByUsername': (username)->
+    # NOTE: for some reason, this returns the user.emails,
+    # even though this is excluded by publish
+    return if Meteor.isClient
+    user = Accounts.findUserByUsername(username, )
     return user
 
   'User.findByEmail': (email)->
