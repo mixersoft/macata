@@ -25,6 +25,7 @@ MODAL_VIEW = {
     PASSWORD_NO_MATCH: 'Sorry, your passwords do not match.'
     EMAIL_INVALID: "Email must be a valid e-mail address."
     USER_NOT_FOUND: 'Sorry, the username and password combination was not found.'
+    EMAIL_NOT_FOUND: 'Sorry, the email you provided was not found.'
 
   DEFAULT_SLIDE: 'signin'         # ['signup', 'signin']
 }
@@ -53,7 +54,7 @@ SignInRegister = ($q, appModalSvc)->
       CALLBACKS.notImplemented = callbacks.notImplemented if _.isFunction callbacks.notImplemented
       return appModalSvc.show(
         MODAL_VIEW.TEMPLATE
-        'SignInRegisterCtrl as vm'
+        'SignInRegisterCtrl as sir'
         {
           initialSlide: initialSlide
           person: {}
@@ -77,35 +78,46 @@ SignInRegister.$inject = ['$q', 'appModalSvc']
 #
 ###
 SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
-  vm = this
-  vm.isBrowser = not ionic.Platform.isWebView()
-  vm.MESSAGE = MODAL_VIEW.MESSAGE
-  vm['slideCtrl'] = {
-    # index = null allows us to detect init, set initialSlide in $timeout()
-    index: null
-    slideLabels: ['signup', 'signin']
-    initialSlide: parameters.initialSlide || MODAL_VIEW.DEFAULT_SLIDE
-    setSlide: (label)->
-      if vm['slideCtrl'].index==null
-        $timeout ()->
-          # ionSlideBox not yet initialized/compiled, wrap in $timeout
-          # $log.info "timeout(0)"
-          label = vm['slideCtrl'].initialSlide if !label
-          return vm['slideCtrl'].setSlide(label)
-        return vm['slideCtrl'].index = 0
+  sir = this
+  sir.isBrowser = not ionic.Platform.isWebView()
+  sir.MESSAGE = MODAL_VIEW.MESSAGE
 
-      return vm['slideCtrl'].index if `label==null` # for active-slide watch
+  sir['ionSlidesCtrl'] = {
+    options:
+      initialSlide: 0
+      direction: 'horizontal'
+      pager: false  # not working
+      loop: false
+      # autoplay: true
+      # keyboardControl: true
+      # width: 375
+      # height: 667
 
-      label = vm['slideCtrl'].initialSlide if label == 'initial'
-      i = vm['slideCtrl'].slideLabels.indexOf(label)
-      next = if i >= 0 then i else vm['slideCtrl'].index
-      vm['error'] = {}
-      return vm['slideCtrl'].index = next
+    slider: null
+    setSlide: (name, $ev)->
+      $ev.preventDefault() if $ev
+      self = sir['ionSlidesCtrl']
+      console.log ["slideTo=",name]
+      switch name
+        when 'register', 'sign-up', 'signup'
+          index = 0
+        when 'sign-in', 'signin'
+          index = 1
+          # selector = '#' + vm.viewId + ' input'
+          # setTimeout ()->return document.querySelector(selector ).focus()
+        when 'password-reset'
+          index = 2
+        when 'default'
+          index = self.options.initialSlide
+        else
+          index = self.options.initialSlide
+      self.slider.slideTo(index)
+
   }
-  vm['error'] = {}
-  vm['on'] = {
+  sir['error'] = {}
+  sir['on'] = {
     signIn: (data={}, fnComplete)->
-      vm['error'] = {}
+      sir['error'] = {}
       return $q.when()
       .then ()->
         return $q.reject('NOT FOUND') if !data.username
@@ -120,17 +132,17 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         return person
       .then (result)->
         # success
-        vm.closeModal(result)
+        sir.closeModal(result)
         return result
       .catch (err)->
         if err.errorType == "Meteor.Error"
           switch err.reason
             when 'User not found' # err.error==403
-              vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+              sir['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
               data.password = null
 
         if err == 'NOT FOUND'
-          vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+          sir['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
           data.password = null
 
         return $q.reject(err)
@@ -170,16 +182,17 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         .catch (err)->
           if err.errorType == "Meteor.Error"
             switch err.reason
-              when 'User not found' # err.error==403
-                vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+              when 'User not found', 'Incorrect password'
+                sir['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
                 credentials.password = null
+
 
           console.warn ['ERROR: loginWithPassword', err.message]
           return $q.reject(err)
         .then ()->
           console.info ['loginWithPassword SUCCESS']
           user = Meteor.user()
-          vm.closeModal(user)
+          sir.closeModal(user)
           return user
 
 
@@ -202,7 +215,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
           # if err.errorType == "Meteor.Error"
           #   switch err.reason
           #     when 'User not found' # err.error==403
-          #       vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+          #       sir['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
           #       data.password = null
 
           console.warn ['ERROR: loginWithFacebook', err.message]
@@ -210,7 +223,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         .then ()->
           console.info ['loginWithFacebook SUCCESS']
           user = Meteor.user()
-          vm.closeModal(user)
+          sir.closeModal(user)
           return user
 
       # borrowed from accounts-ui-unstyled.js
@@ -238,7 +251,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
         errorMsgs = this.clientSideValidation(credentials)
         if not _.isEmpty errorMsgs
-          vm.error = errorMsgs
+          sir.error = errorMsgs
           return
 
         dfd = $q.defer()
@@ -254,22 +267,22 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
           if err.errorType == "Meteor.Error"
             switch err.reason
               when 'Username already exists.' # err.error==403
-                vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
+                sir['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
               when "Username failed regular expression validation"
-                vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_INVALID
+                sir['error']['username'] = MODAL_VIEW.ERROR.USERNAME_INVALID
               when 'Password may not be empty'
-                vm['error']['password'] = MODAL_VIEW.ERROR.REQUIRED
+                sir['error']['password'] = MODAL_VIEW.ERROR.REQUIRED
               when "Address must be a valid e-mail address"
-                vm['error']['email'] = MODAL_VIEW.ERROR.EMAIL_INVALID
+                sir['error']['email'] = MODAL_VIEW.ERROR.EMAIL_INVALID
               when 'REQUIRED VALUE'
-                vm['error']['username'] = MODAL_VIEW.ERROR.REQUIRED
+                sir['error']['username'] = MODAL_VIEW.ERROR.REQUIRED
             return $q.reject(err)
         .then (user)->
           if sendEnrollmentEmail
             Accounts.sendEnrollmentEmail?(user._id)
           else if credentials.email
             Accounts.sendVerificationEmail?(user._id)
-          vm.closeModal(user)
+          sir.closeModal(user)
           return user
 
       'resetPassword': (token, newPwd, cb)->
@@ -279,7 +292,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         return
 
     register: (data={}, fnComplete)->
-      vm['error'] = {}
+      sir['error'] = {}
       return $q.when()
       .then ()->
         return $q.reject('REQUIRED VALUE') if !data.username
@@ -295,18 +308,18 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
         return CALLBACKS.register(data) # from AAAHelpers
       .then (result)->
         # success
-        vm.closeModal(result)
+        sir.closeModal(result)
         return result
       .catch (err)->
         if err.errorType == "Meteor.Error"
           switch err.reason
             when 'Username already exists.' # err.error==403
-              vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
+              sir['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
 
         if err == 'REQUIRED VALUE'
-          vm['error']['username'] = MODAL_VIEW.ERROR.REQUIRED
+          sir['error']['username'] = MODAL_VIEW.ERROR.REQUIRED
         if err == 'DUPLICATE USERNAME'
-          vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
+          sir['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
         return $q.reject(err)
     notImplemented: (value)->
       return CALLBACKS.notImplemented(value)
@@ -314,7 +327,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
   init = ()->
     stop = $scope.$on 'modal.afterShow', (ev)->
-      h = setModalHeight()
+      # h = setModalHeight()
       stop?()
       return
     return
@@ -339,7 +352,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
     return modalH
 
   init()
-  return vm
+  return sir
 
 SignInRegisterCtrl.$inject = ['$scope', 'parameters', '$q', '$timeout', '$window']
 

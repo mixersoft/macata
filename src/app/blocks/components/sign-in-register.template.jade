@@ -1,53 +1,51 @@
 //- blocks/components/sign-in-register.template.html
 style#sign-in-register-style.
+  #sign-in-register-modal-view.modal {height:100%;}
   @media (min-width: 680px) {
     #sign-in-register-modal-view.modal { top: 10%; bottom: 10%; height:424px;}
   }
+  #sign-in-register-modal-view.modal .swiper-pagination { display:none;}
   #sign-in-register-modal-view.modal .item { border-color: transparent;}
   #sign-in-register-modal-view.modal .error {padding-left: 24px;}
   #sign-in-register-modal-view.modal a {cursor: pointer;}
-ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
-  ion-slide-box(
-    delegate-handle="sign-in-register"
-    active-slide="vm.slideCtrl.index"
-    auto-play="false"
-    show-pager="false"
-    slide-interval=""
-    pager-click=""
-    on-slide-changed=""
+ion-modal-view#sign-in-register-modal-view(
+  )
+  ion-slides(
+    options="sir.ionSlidesCtrl.options"
+    slider="sir.ionSlidesCtrl.slider"
     )
-    ion-slide.sign-up
+    ion-slide-page.sign-up
       ion-scroll
         div.list
           div.item
             button.button.button-block.button-positive.light.icon.ion-social-facebook(
-              ng-click="vm.on.AP.loginWithFacebook()"
+              ng-click="sir.on.AP.loginWithFacebook()"
               ) &nbsp; Sign-up with Facebook
           div.item
             div.text-center.larger &mdash; or &mdash;
           div.padding-horizontal
-            form(name="registerForm" novalidate="" ng-submit="vm.on.AP.register(person)")
+            form(name="registerForm" novalidate="" ng-submit="sir.on.AP.register(person)")
               ion-item.item-input
                 i.icon.ion-person.padding-horizontal.larger
                 input(type="text" name="Username" placeholder="Username" ng-model="person.username" required)
-              div.error(ng-show="vm['error']['username']")
-                span.assertive {{vm['error']['username']}}
+              div.error(ng-show="sir['error']['username']")
+                span.assertive {{sir['error']['username']}}
 
               ion-item.item-input
                 i.icon.ion-email.padding-horizontal.larger
                 input(type="text" name="Email" placeholder="Email" ng-model="person.email" required)
-              div.error(ng-show="vm['error']['email']")
-                  span.assertive {{vm['error']['email']}}
+              div.error(ng-show="sir['error']['email']")
+                  span.assertive {{sir['error']['email']}}
               ion-item.item-input
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="Password" placeholder="Password" ng-model="person.password" required)
-              div.error(ng-show="vm['error']['password']") 
-                span.assertive {{vm['error']['password']}}
+              div.error(ng-show="sir['error']['password']") 
+                span.assertive {{sir['error']['password']}}
               ion-item.item-input.hide
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="PasswordRepeat" placeholder="Again" ng-model="person.passwordRepeat")
-              div.error(ng-show="vm['error']['passwordRepeat']")
-                span.assertive {{vm['error']['passwordRepeat']}}  
+              div.error(ng-show="sir['error']['passwordRepeat']")
+                span.assertive {{sir['error']['passwordRepeat']}}  
               div.item
                 div.button-bar
                   button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
@@ -55,24 +53,24 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
           div.padding-horizontal
             div.item.positive
               div.text-right 
-                a(ng-click="vm.slideCtrl.setSlide('signin')"). 
+                a(ng-click="sir.ionSlidesCtrl.setSlide('signin', $event)"). 
                   Have an account? Sign in #[i.icon.ion-android-arrow-forward.padding-right]
-    ion-slide.sign-in
+    ion-slide-page.sign-in
       ion-scroll
         div.list
           div.item
             button.button.button-block.button-positive.light.icon.ion-social-facebook(
-              ng-click="vm.on.AP.loginWithFacebook()"
+              ng-click="sir.on.AP.loginWithFacebook()"
               ) &nbsp; Sign-in with Facebook
           div.item
             div.text-center.larger &mdash; or &mdash;
           div.padding-horizontal
-            form(name="signInForm" novalidate="" ng-submit="vm.on.AP.loginWithPassword(person);")
+            form(name="signInForm" novalidate="" ng-submit="sir.on.AP.loginWithPassword(person);")
               label.item.item-input
                 i.icon.ion-person.padding-horizontal.larger
                 input(type="text" name="Username" placeholder="Username" ng-model="person.username" required)
-              div.error(ng-show="vm['error']['username']")
-                span.assertive {{vm['error']['username']}}
+              div.error(ng-show="sir['error']['username']")
+                span.assertive {{sir['error']['username']}}
               label.item.item-input
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="Password" placeholder="Password" ng-model="person.password" required)
@@ -83,6 +81,42 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
           div.padding-horizontal
             div.item.positive.text-left
               div.pull-right
-                a(ng-click="vm.on.notImplemented('password recovery')") Forgot Password?
-              a(ng-click="vm.slideCtrl.setSlide('signup')").
+                a(ng-click="sir.ionSlidesCtrl.setSlide('password-reset', $event)") Forgot Password?
+              a(ng-click="sir.ionSlidesCtrl.setSlide('signup', $event)").
                 #[i.icon.ion-android-arrow-back.padding-left] Sign up
+                
+    ion-slide-page.password-reset
+      ion-scroll
+        div.list
+          div.item
+            button.button.button-block.button-positive.light.icon.ion-social-facebook(
+              ng-click="sir.on.AP.loginWithFacebook()"
+              ) &nbsp; Sign-up with Facebook
+          div.item
+            div.text-center.larger &mdash; or &mdash;
+          div.item.item-text-wrap Please enter your Username or Email to reset your password.
+          div.padding-horizontal
+            form(name="passwordResetForm" novalidate="" ng-submit="sir.on.forgotPassword(person)")
+              ion-item.item-input
+                i.icon.ion-person.padding-horizontal.larger
+                input(type="text" name="Username" placeholder="Username" ng-model="person.username" required)
+              div.error(ng-show="sir['error']['username']")
+                span.assertive {{sir['error']['username']}}
+
+              ion-item.item-input
+                i.icon.ion-email.padding-horizontal.larger
+                input(type="text" name="Email" placeholder="Email" ng-model="person.email" required)
+              div.error(ng-show="sir['error']['email']")
+                  span.assertive {{sir['error']['email']}}
+                   
+              div.item
+                div.button-bar
+                  button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
+                  button.button.button-balanced(type="submit") Reset Password
+          div.padding-horizontal
+            div.item.positive
+              div.text-left 
+                a(ng-click="sir.ionSlidesCtrl.setSlide('signin', $event)").
+                  #[i.icon.ion-android-arrow-back.padding-left] Have an account? Sign in
+                  
+    
