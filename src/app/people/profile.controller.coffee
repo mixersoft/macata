@@ -106,33 +106,39 @@ ProfileCtrl = (
             vm.settings.view.show = 'profile'
           vm.settings.editing = false
           vm.settings.changePassword = false
-          return
+          return  $q.reject('done')
 
+        return vm.me
+      .then (me)->
         if $state.is('app.profile')
-          route = _.pick $stateParams, ['id', 'username']
-          if _.filter(route).length == 0
+          # route = _.pick $stateParams,
+          $stateParams._id = $stateParams.id
+          route = _.chain($stateParams)
+            .pick(['_id', 'username'])
+            .pickBy( _.identity )
+            .value()
+
+          if _.keys(route).length == 0
             toastr.warning "Sorry, that profile was not found."
             $rootScope.goBack()
-            return
-          else if (vm.me && (route.username == vm.me.username || route.id == vm.me._id))
+            return $q.reject('redirect')
+
+          else if (me && (route.username == me.username || route._id == me._id))
             # looking at my own profile
-            return vm.person = vm.me
-          else
-            # viewing someone else's profile
-            return $q.when()
-            .then ()->
-              options = route.id || {username: route.username}
-              return Meteor.users.findOne(options)
+            $state.go('app.me')
+            return $q.reject('redirect')
 
-            .then (found)->
-              if !found
-                toastr.info "Sorry, that profile was not found"
-                $state.go('app.me')
-              vm.person = found
-              AAAHelpers._backwardCompatibleMeteorUser(vm.person)
-              return vm.person
-
-      return
+          # viewing someone else's profile
+          return Meteor.users.findOne(route)
+        return $q.reject('unknown $state')
+      .then (profile)->
+        if !profile
+          toastr.info "Sorry, that profile was not found"
+          $rootScope.goBack()
+          return $q.reject('redirect')
+        vm.person = profile
+        AAAHelpers._backwardCompatibleMeteorUser(vm.person)
+        return vm.person
 
     $scope.$on '$ionicView.loaded', (e)->
       # $log.info "viewLoaded for ProfileCtrl"

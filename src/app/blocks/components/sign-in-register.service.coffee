@@ -18,8 +18,14 @@ MODAL_VIEW = {
   ERROR:
     REQURIED: 'Please enter a value.'
     USERNAME_EXISTS: 'Sorry, that username is already taken.'
+    USERNAME_INVALID: 'Please use only letters and numbers in your username.'
+    USERNAME_LENGTH: "Username must be between 3-15 characters long."
+    PASSWORD_LENGTH: "Password must be at least 5 characters long."
+    PASSWORD_EMPTY: 'Please enter a password.'
     PASSWORD_NO_MATCH: 'Sorry, your passwords do not match.'
+    EMAIL_INVALID: "Email must be a valid e-mail address."
     USER_NOT_FOUND: 'Sorry, the username and password combination was not found.'
+
   DEFAULT_SLIDE: 'signin'         # ['signup', 'signin']
 }
 
@@ -129,34 +135,148 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
 
         return $q.reject(err)
 
-    signInFacebook: ()->
-      dfd = $q.defer()
-      fbOptions = {
-        loginStyle: if ionic.Platform.isWebView() then 'redirect' else 'popup'
-        # loginStyle: 'redirect'
-        requestPermissions: ['public_profile','email','user_friends']
-      }
-      # HACK: meteor-client-side does not pass options correctly to Meteor.absoluteUrl()
-      Meteor.absoluteUrl.defaultOptions.rootUrl = window.location.href.split('#').shift()
-      Meteor.loginWithFacebook fbOptions
-      , (err)->
-        # handle these errors
-        # if err instanceof Accounts.LoginCancelledError
-        # if err instanceof ServiceConfiguration.ConfigError
-        return dfd.reject(err) if err
-        return dfd.resolve( 'SUCCESS' )
-      return dfd.promise
-      .then ()->
-        console.info ['signInFacebook SUCCESS']
-        user = Meteor.user()
-        # if ~user.face.indexOf('http:')
-        #   # reset user with user.face = 'https:' to fix IOS AppTransSecurity bug
-        #   Meteor.call 'Profile.normalizeFbUser'
-        vm.closeModal(user)
-        return user
-      , (err)->
-        console.warn ['ERROR: signInFacebook', err.message]
-        return $q.reject(err)
+    'AP': # accounts-password
+      # case-insensitive Meteor.find()
+      findByUsername: (username)->
+        dfd = $q.defer()
+        Meteor.call('User.findByUsername', username
+        , (err, user)->
+          return dfd.reject(err) if err
+          console.info ['findByUsername', user]
+          return dfd.resolve( user )
+        )
+        return dfd.promise
+
+      # case-insensitive Meteor.find()
+      findByEmail: (username)->
+        dfd = $q.defer()
+        Meteor.call('User.findByEmail', username
+        , (err, user)->
+          return dfd.reject(err) if err
+          console.info ['findByEmail', user]
+          return dfd.resolve( user )
+        )
+        return dfd.promise
+
+      #TODO: move to AAAHelpers??
+      'loginWithPassword': (credentials)->
+        dfd = $q.defer()
+        Meteor.loginWithPassword( credentials.username, credentials.password
+        , (err)->
+          return dfd.reject(err) if err
+          return dfd.resolve( "SUCCESS" )
+        )
+        return dfd.promise
+        .catch (err)->
+          if err.errorType == "Meteor.Error"
+            switch err.reason
+              when 'User not found' # err.error==403
+                vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+                credentials.password = null
+
+          console.warn ['ERROR: loginWithPassword', err.message]
+          return $q.reject(err)
+        .then ()->
+          console.info ['loginWithPassword SUCCESS']
+          user = Meteor.user()
+          vm.closeModal(user)
+          return user
+
+
+      'loginWithFacebook': ()->
+        dfd = $q.defer()
+        fbOptions = {
+          loginStyle: 'popup'
+          requestPermissions: ['public_profile','email','user_friends']
+        }
+        # TODO: pass requestPermissions to accounts-password-cordova plugin
+        Meteor.loginWithFacebook fbOptions
+        , (err)->
+          # handle these errors
+          # if err instanceof Accounts.LoginCancelledError
+          # if err instanceof ServiceConfiguration.ConfigError
+          return dfd.reject(err) if err
+          return dfd.resolve( 'SUCCESS' )
+        return dfd.promise
+        .catch (err)->
+          # if err.errorType == "Meteor.Error"
+          #   switch err.reason
+          #     when 'User not found' # err.error==403
+          #       vm['error']['username'] = MODAL_VIEW.ERROR.USER_NOT_FOUND
+          #       data.password = null
+
+          console.warn ['ERROR: loginWithFacebook', err.message]
+          return $q.reject(err)
+        .then ()->
+          console.info ['loginWithFacebook SUCCESS']
+          user = Meteor.user()
+          vm.closeModal(user)
+          return user
+
+      # borrowed from accounts-ui-unstyled.js
+      clientSideValidation: (credentials)->
+        errorMsgs = {}
+
+        # username
+        if credentials.username.length < 3 || credentials.username.length > 15
+          errorMsgs['username'] = MODAL_VIEW.ERROR.USERNAME_LENGTH
+
+        # password
+        if credentials.password.length < 5
+          errorMsgs['password'] = MODAL_VIEW.ERROR.PASSWORD_LENGTH
+
+        #  email optional
+        if credentials.email
+          if credentials.email.indexOf('@') == -1
+            errorMsgs['email'] = MODAL_VIEW.ERROR.EMAIL_INVALID
+
+        return errorMsgs
+
+      'register': (data={}, fnComplete)->
+        credentials = _.pick data, ['username','email','password', 'profile']
+        credentials.password ?= ''  # Accounts.createUser() fails on undefined
+
+        errorMsgs = this.clientSideValidation(credentials)
+        if not _.isEmpty errorMsgs
+          vm.error = errorMsgs
+          return
+
+        dfd = $q.defer()
+        sendEnrollmentEmail = credentials.email && not credentials.password
+
+        Accounts.createUser( credentials, (err)->
+          return dfd.reject(err) if err
+          return dfd.resolve( Meteor.user() )
+        )
+        return dfd.promise
+        .catch (err)->
+          console.warn err
+          if err.errorType == "Meteor.Error"
+            switch err.reason
+              when 'Username already exists.' # err.error==403
+                vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_EXISTS
+              when "Username failed regular expression validation"
+                vm['error']['username'] = MODAL_VIEW.ERROR.USERNAME_INVALID
+              when 'Password may not be empty'
+                vm['error']['password'] = MODAL_VIEW.ERROR.REQUIRED
+              when "Address must be a valid e-mail address"
+                vm['error']['email'] = MODAL_VIEW.ERROR.EMAIL_INVALID
+              when 'REQUIRED VALUE'
+                vm['error']['username'] = MODAL_VIEW.ERROR.REQUIRED
+            return $q.reject(err)
+        .then (user)->
+          if sendEnrollmentEmail
+            Accounts.sendEnrollmentEmail?(user._id)
+          else if credentials.email
+            Accounts.sendVerificationEmail?(user._id)
+          vm.closeModal(user)
+          return user
+
+      'resetPassword': (token, newPwd, cb)->
+        return
+
+      'changePassword': (oldPwd, newPwd, cb)->
+        return
 
     register: (data={}, fnComplete)->
       vm['error'] = {}

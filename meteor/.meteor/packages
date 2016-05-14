@@ -25,6 +25,7 @@ simple:rest
 simple:json-routes
 angular-meteor-auth
 angular
+aldeed:simple-schema
 
 accounts-password
 #accounts-facebook

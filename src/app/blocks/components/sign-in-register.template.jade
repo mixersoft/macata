@@ -21,12 +21,12 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
         div.list
           div.item
             button.button.button-block.button-positive.light.icon.ion-social-facebook(
-              ng-click="vm.on.signInFacebook()"
+              ng-click="vm.on.AP.loginWithFacebook()"
               ) &nbsp; Sign-up with Facebook
           div.item
             div.text-center.larger &mdash; or &mdash;
           div.padding-horizontal
-            form(name="registerForm" novalidate="" ng-submit="vm.on.register(person)")
+            form(name="registerForm" novalidate="" ng-submit="vm.on.AP.register(person)")
               ion-item.item-input
                 i.icon.ion-person.padding-horizontal.larger
                 input(type="text" name="Username" placeholder="Username" ng-model="person.username" required)
@@ -36,9 +36,13 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
               ion-item.item-input
                 i.icon.ion-email.padding-horizontal.larger
                 input(type="text" name="Email" placeholder="Email" ng-model="person.email" required)
+              div.error(ng-show="vm['error']['email']")
+                  span.assertive {{vm['error']['email']}}
               ion-item.item-input
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="Password" placeholder="Password" ng-model="person.password" required)
+              div.error(ng-show="vm['error']['password']") 
+                span.assertive {{vm['error']['password']}}
               ion-item.item-input.hide
                 i.icon.ion-locked.padding-horizontal.larger
                 input(type="password" name="PasswordRepeat" placeholder="Again" ng-model="person.passwordRepeat")
@@ -58,12 +62,12 @@ ion-modal-view#sign-in-register-modal-view {{vm.slideCtrl.setSlide();''}}
         div.list
           div.item
             button.button.button-block.button-positive.light.icon.ion-social-facebook(
-              ng-click="vm.on.signInFacebook()"
+              ng-click="vm.on.AP.loginWithFacebook()"
               ) &nbsp; Sign-in with Facebook
           div.item
             div.text-center.larger &mdash; or &mdash;
           div.padding-horizontal
-            form(name="signInForm" novalidate="" ng-submit="vm.on.signIn(person);")
+            form(name="signInForm" novalidate="" ng-submit="vm.on.AP.loginWithPassword(person);")
               label.item.item-input
                 i.icon.ion-person.padding-horizontal.larger
                 input(type="text" name="Username" placeholder="Username" ng-model="person.username" required)

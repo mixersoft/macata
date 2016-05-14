@@ -37,6 +37,16 @@ ProfileModel::saveLocation = (location, isLatLon=false, userId)->
 
 
 methods = {
+  'User.findByUsername': (username)->
+    return if Meteor.isClient
+    user = Accounts.findUserByUsername(username)
+    return user
+
+  'User.findByEmail': (email)->
+    return if Meteor.isClient
+    user = Accounts.findUserByEmail(email)
+    return user
+
   'Profile.normalizePwdUser': (user, face)->
     return if user.services.facebook
 
@@ -51,7 +61,9 @@ methods = {
       modifier['$set']['displayName'] = displayName.join(' ')
     if not user.face
       modifier['$set']['face'] = face
-    Meteor.users.update(user._id, modifier)
+
+    if ! _.isEmpty modifier['$set']
+      Meteor.users.update(user._id, modifier)
 
     return if !user.email
 

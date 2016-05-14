@@ -49,7 +49,6 @@ AAAHelpers = ($rootScope, $q, $timeout
       register: (data)->
         dfd = $q.defer()
         meteorPerson = _.pick data, ['username','email','password']
-        meteorPerson.profile = _.omit data, ['username','email','password']
         Accounts.createUser(
           meteorPerson
           , (err)->
