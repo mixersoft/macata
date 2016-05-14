@@ -23,7 +23,14 @@
   try {
     rootUrl = Meteor.absoluteUrl.defaultOptions.rootUrl;
     if (!rootUrl) {
-      rootUrl = window.location.href.split('#').shift();
+      try {
+        rootUrl = Meteor.settings.public.facebook.oauth_rootUrl;
+      } catch (err) {
+        rootUrl = window.location.href.split('#').shift();
+        if (/^[http|https]/.test(rootUrl) === false){
+          throw new Error ("Meteor.settings.public.facebook.oauth_rootUrl is not set.");
+        }
+      }
       Meteor.absoluteUrl.defaultOptions.rootUrl = rootUrl;
     }
     if (!rootUrl) {
@@ -17328,7 +17335,7 @@ if (Meteor.isClient) {
         facebookConnectPlugin.getLoginStatus(                                                            // 24
           function (response) {                                                                          // 25
             if (response.status != "connected") {                                                        // 26
-              facebookConnectPlugin.login(options.requesermissions,                   // 27
+              facebookConnectPlugin.login(options.requestPermissions,                                    // 27
                   fbLoginSuccess,                                                                        // 28
                   function (error) { console.log("" + error) }                                           // 29
               );                                                                                         // 30
@@ -17339,7 +17346,7 @@ if (Meteor.isClient) {
                   // if accessToken was changed/cancelled, 
                   // returns "Internal server error [500]"
                   // fix: try to login from scratch
-                  facebookConnectPlugin.login(options.requesermissions,
+                  facebookConnectPlugin.login(options.requestPermissions,
                       fbLoginSuccess,
                       function (error) { console.log("" + error) }
                   );
