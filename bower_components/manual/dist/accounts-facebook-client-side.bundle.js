@@ -17,6 +17,22 @@
   // BUG: Meteor.settings.public is not loading in the client
   Meteor.settings.public = __meteor_runtime_config__.PUBLIC_SETTINGS
 
+  // BUG: meteor-client-side does not pass options to Meteor.absoluteUrl()
+  // expects ROOT_URL to be set in the client-side environment
+  var rootUrl;
+  try {
+    rootUrl = Meteor.absoluteUrl.defaultOptions.rootUrl;
+    if (!rootUrl) {
+      rootUrl = window.location.href.split('#').shift();
+      Meteor.absoluteUrl.defaultOptions.rootUrl = rootUrl;
+    }
+    if (!rootUrl) {
+      throw new Error();
+    }
+  } catch (err) {
+    throw new Error("ROOT_URL not set in the client-side environment");
+  }
+
 }).call(this);
 
 //////////////////////////////////////////////////////////////////////////
@@ -16830,8 +16846,8 @@ OAuth._redirectUri = function (serviceName, config, params, absoluteUrlOptions) 
   // Clone because we're going to mutate 'params'. The 'cordova' and                    // 13
   // 'android' parameters are only used for picking the host of the                     // 14
   // redirect URL, and not actually included in the redirect URL itself.                // 15
-  var isCordova = Meteor.isCordova;                                           // 16
-  var isAndroid = Meteor.isAndroid;                                           // 17
+  var isCordova = Meteor.isCordova;                                                     // 16
+  var isAndroid = Meteor.isAndroid;                                                     // 17
   if (params) {                                                                         // 18
     params = _.clone(params);                                                           // 19
     isCordova = params.cordova;                                                         // 20
@@ -16845,8 +16861,6 @@ OAuth._redirectUri = function (serviceName, config, params, absoluteUrlOptions) 
                                                                                         // 28
   //if (Meteor.isServer && isCordova) {                                                 // 29
   if (isCordova) {     
-    var rootUrl =                                                                       // 30
-          __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL;                         // 31
                                                                                         // 32
     if (isAndroid) {                                                                    // 33
       // Match the replace that we do in cordova boilerplate                            // 34
@@ -17314,7 +17328,7 @@ if (Meteor.isClient) {
         facebookConnectPlugin.getLoginStatus(                                                            // 24
           function (response) {                                                                          // 25
             if (response.status != "connected") {                                                        // 26
-              facebookConnectPlugin.login(Meteor.settings.public.facebook.permissions,                   // 27
+              facebookConnectPlugin.login(options.requesermissions,                   // 27
                   fbLoginSuccess,                                                                        // 28
                   function (error) { console.log("" + error) }                                           // 29
               );                                                                                         // 30
@@ -17325,7 +17339,7 @@ if (Meteor.isClient) {
                   // if accessToken was changed/cancelled, 
                   // returns "Internal server error [500]"
                   // fix: try to login from scratch
-                  facebookConnectPlugin.login(Meteor.settings.public.facebook.permissions,
+                  facebookConnectPlugin.login(options.requesermissions,
                       fbLoginSuccess,
                       function (error) { console.log("" + error) }
                   );
