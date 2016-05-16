@@ -6,6 +6,12 @@ appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
 
   devConfig.loadData()
 
+  Meteor.call('settings.public', (err,result)->
+    return if err
+    Meteor.settings.public = _.extend {}, Meteor.settings.public, result
+    console.info ['Meteor.settings.public', Meteor.settings.public]
+    )
+
   $rootScope['loadOnce'] = []
 
   $rootScope.user = Meteor.user()

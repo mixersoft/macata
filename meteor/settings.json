@@ -1,11 +1,20 @@
 {
   "public":{
-    "label": "localhost"
+    "label": "DEV",
+    "facebook": {
+      "oauth_rootUrl": "http://localhost:3000/",
+      "profileFields": [
+        "name",
+        "first_name",
+        "last_name",
+        "gender",
+        "location"
+      ]
+    }
   },
   "facebook": {
     "appId": "227317577645006",
-    "secret": "ce0dfc073471f1533a8d001ea323c3c4",
-    "oauth_redirect_uri": "http://localhost:3000/"
+    "secret": "ce0dfc073471f1533a8d001ea323c3c4"
   },
   "TWILIO": {
     "FROM": "meteor-whatsapp",

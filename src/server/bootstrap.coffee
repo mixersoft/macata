@@ -8,6 +8,14 @@ bootstrap = ()->
   global._ = lodash
   console.log(['lodash.VERSION=', global._.VERSION, lodash.VERSION])
 
+  # meteor-client-side: load Meteor.settings.public
+  Meteor.methods( {
+    'settings.public': ()->
+      return if Meteor.isClient
+      return Meteor.settings.public
+    }
+  )
+
   # accounts-facebook
   ServiceConfiguration.configurations.remove({
     service: "facebook"
@@ -17,8 +25,9 @@ bootstrap = ()->
   }, {
     $set: {
       appId: Meteor.settings.facebook.appId,
-      loginStyle: "popup",
-      secret: Meteor.settings.facebook.secret
+      secret: Meteor.settings.facebook.secret,
+      loginStyle: "popup"
+      # loginStyle: "redirect"
     }
   })
   fbConfig = ServiceConfiguration.configurations.findOne({service:'facebook'})
