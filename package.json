@@ -50,7 +50,22 @@
       },
       "locator": "/dev.snaphappi.com/_play/cordova-plugin-facebook4",
       "id": "cordova-plugin-facebook4"
-    }
+    },
+    {
+      "locator": "https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin.git",
+      "id": "cordova-plugin-x-socialsharing"
+    },
+    "cordova-plugin-camera",
+    {
+      "locator": "https://github.com/whiteoctober/cordova-plugin-app-version.git",
+      "id": "cordova-plugin-app-version"
+    },
+    {
+      "locator": "https://github.com/katzer/cordova-plugin-local-notifications.git",
+      "id": "de.appplant.cordova.plugin.local-notification"
+    },
+    "cordova-plugin-file",
+    "cordova-plugin-network-information"
   ],
   "cordovaPlatforms": [
     "ios"

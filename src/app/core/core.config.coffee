@@ -1,6 +1,7 @@
 'use strict'
 
 appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
+  deviceReady
   $log, devConfig, AAAHelpers
 ) ->
 
@@ -17,7 +18,7 @@ appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
   $rootScope.user = Meteor.user()
   AAAHelpers._backwardCompatibleMeteorUser($rootScope.user)
 
-  $ionicPlatform.ready ->
+  deviceReady.waitP().then ()->
     # Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     # for form inputs)
     if window.cordova and window.cordova.plugins and window.cordova.plugins.Keyboard
@@ -72,7 +73,9 @@ ionicConfig.$inject = ['$ionicConfigProvider']
 
 
 
-appRun.$inject = ['$ionicPlatform', '$ionicHistory', '$rootScope', '$location',
+appRun.$inject = [
+  '$ionicPlatform', '$ionicHistory', '$rootScope', '$location',
+  'deviceReady'
   '$log', 'devConfig', 'AAAHelpers'
 ]
 
