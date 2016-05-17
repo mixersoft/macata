@@ -10,6 +10,8 @@ style#sign-in-register-style.
   #sign-in-register-modal-view.modal a {cursor: pointer;}
 ion-modal-view#sign-in-register-modal-view(
   )
+  div.scope-locals.hide
+    {{show = sir.settings.show;''}}
   ion-slides(
     options="sir.ionSlidesCtrl.options"
     slider="sir.ionSlidesCtrl.slider"
@@ -18,9 +20,14 @@ ion-modal-view#sign-in-register-modal-view(
       ion-scroll
         div.list
           div.item
-            button.button.button-block.button-positive.light.icon.ion-social-facebook(
+            button.button.button-block.button-positive.light.ion-social-facebook(
               ng-click="sir.on.AP.loginWithFacebook()"
-              ) &nbsp; Sign-up with Facebook
+              ) 
+                span.spinner-wrap Sign-up with Facebook
+                  ion-spinner.spinner-light(
+                    icon-"ios-small"
+                    ng-show="show.facebookLoading"
+                  )
           div.item
             div.text-center.larger &mdash; or &mdash;
           div.padding-horizontal

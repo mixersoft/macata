@@ -12,7 +12,7 @@ OauthProxy = (
       path: location.pathname.slice(location.pathname.indexOf('_oauth'))
     }
     self = {
-      get: (options = {})->
+      getFromServer: (options = {})->
         options =  angular.copy config, options
         url = [
           options.rootUrl
@@ -21,6 +21,7 @@ OauthProxy = (
         ].join('')
         console.log('proxy=' + url)
         return $http.get(url)
+
       doOauthRedirect: (config)->
         if config.setCredentialToken
           credentialToken = config.credentialToken
@@ -54,24 +55,62 @@ OauthProxy = (
 
 OauthProxy.$inject = ['$http']
 
-appRun = (oauthProxy)->
-  console.log('href=' + window.location.href)
-  oauthProxy.get()
-  .then (result)->
-    return console.warn ['Status', result.status] if result.status != 200
-    credentials = result.data.match(/({.*})/).pop()
-    return credentials
-  , (err)->
-    console.warn err
-  .then (credentials)->
-    document.getElementById("config").innerHTML = credentials
-    config = JSON.parse credentials
-    console.log 'config=' + credentials
-    oauthProxy.doOauthRedirect(config)
+OauthResponse = (
+  oauthProxy
+  )->
+    return self = {
+      handleByLoginStyle: ()->
+        console.log('href=' + window.location.href)
+        oauthProxy.getFromServer()
+        .then (result)->
+          return console.warn ['Status', result.status] if result.status != 200
+          result = result.data.match(/({.*})/).pop()
+          return result
+        , (err)->
+          console.warn err
+        .then (result)->
+          config = JSON.parse result
+          console.log ['config=', config]
+
+          loginStyle = if config.redirectUrl? then 'redirect' else 'popup'
+          switch loginStyle
+            when 'redirect'
+              return self.handleRedirect(config)
+            when 'popup'
+              return self.handlePopup(config)
+
+      handlePopup: (config)->
+        # document.getElementById("config").innerHTML = JSON.stringify config
+        oauthProxy.doOauthRedirect(config)
+
+      handleRedirect: (config)->
+        if not config.setCredentialToken
+          return console.warn [
+            'loginWithFacebook() style=redirect'
+            'Server not returning config.credentialSecret correctly'
+            config
+          ]
+        key = config.storagePrefix + config.credentialToken
+        sessionStorage[key] = config.credentialSecret
+        # why is this getting encoded twice, proxy?
+        redirectUrl = config.redirectUrl.replace(/&#x2F;/g,'/')
+        console.log ['redirectUrl', redirectUrl]
+        window.location = redirectUrl
+
+    }
 
 
-appRun.$inject = ['oauthProxy']
+OauthResponse.$inject = ['oauthProxy']
+
+
+appRun = (oauthResponse)->
+  oauthResponse.handleByLoginStyle()
+  return
+
+
+appRun.$inject = ['oauthResponse']
 
 angular.module 'oauth'
   .factory 'oauthProxy', OauthProxy
+  .factory 'oauthResponse', OauthResponse
   .run appRun

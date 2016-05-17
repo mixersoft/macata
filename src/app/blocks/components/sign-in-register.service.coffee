@@ -115,6 +115,10 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
       self.slider.slideTo(index)
 
   }
+  sir['settings'] = {
+    show:
+      facebookLoading: false
+  }
   sir['error'] = {}
   sir['on'] = {
     signIn: (data={}, fnComplete)->
@@ -210,12 +214,17 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
           loginStyle: 'popup'
           requestPermissions: ['public_profile','email','user_friends']
         }
-        # TODO: pass requestPermissions to accounts-password-cordova plugin
+        if ionic.Platform.isWebView()
+          # for ionic view without 'accounts-facebook-cordova' plugin
+          # DOESN'T work, what is the correct redirectUrl??
+          fbOptions['loginStyle'] = 'redirect'
+        sir.settings.show.facebookLoading = true
         Meteor.loginWithFacebook fbOptions
         , (err)->
           # handle these errors
           # if err instanceof Accounts.LoginCancelledError
           # if err instanceof ServiceConfiguration.ConfigError
+          sir.settings.show.facebookLoading = false
           return dfd.reject(err) if err
           return dfd.resolve( 'SUCCESS' )
         return dfd.promise

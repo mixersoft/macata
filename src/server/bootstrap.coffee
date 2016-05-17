@@ -40,7 +40,25 @@ bootstrap = ()->
     return next()
   )
 
-  # see also: Meteor.settings.facebook.oauth_redirect_uri
+  # see also: Meteor.settings.public.facebook.oauth_rootUrl
+
+
+  # override to allow oauth redirect from local domain
+  Package.oauth.OAuth._checkRedirectUrlOrigin = (redirectUrl)->
+    appHost = Meteor.settings.public?.facebook?.oauth_rootUrl
+    appHost = Meteor.absoluteUrl() if !appHost
+    # console.log [
+    #   "Accounts.oauth._checkRedirectUrlOrigin",
+    #   "appHost=" + appHost,
+    #   "redirectUrl=" + redirectUrl
+    # ]
+    appHostReplacedLocalhost = Meteor.absoluteUrl(undefined, {
+      replaceLocalhost: true
+    })
+    return (
+      redirectUrl.substr(0, appHost.length) != appHost &&
+      redirectUrl.substr(0, appHostReplacedLocalhost.length) != appHostReplacedLocalhost
+    )
 
   console.log("Settings=" + JSON.stringify(Meteor.settings))
 
