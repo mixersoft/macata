@@ -1,0 +1,42 @@
+//- blocks/components/ionic-deploy.template.jade
+ion-modal-view#ionic-deploy-modal-view
+  ion-header-bar.bar-royal 
+    h1.title Update Available
+  ion-content
+    div#ionic-deploy-modal.list.card
+      div.item.item-divider.item-royal
+      div.item.item-complex.padding
+        p.text There is a newer version available.
+        
+        div.text-center.padding
+          div(
+            ng-show="idc.metadata"
+            ) {{idc.metadata}}
+        
+        div.text-center.padding(
+          ng-show="idc.progress!=null"
+          )
+          div.button.button-royal(
+            style="padding-top:14px;"
+            )
+            ion-spinner.spinner-light(
+              icon="ios"
+              style="line-height:24px;"
+              )
+            div.inline.padding-left.text-left(
+              style="line-height:24px;vertical-align:top;min-width:130px;"
+              ) updating...{{idc.progress}}%
+        
+        div.text-center.padding
+        
+        p.text Do you want to update?
+        div.button-bar
+          button.button.button-royal.button-outline(ng-click="closeModal('SKIP')") Skip
+          button.button.button-royal.button-outline(ng-click="closeModal('LATER')") Later
+          button.button.button-royal(
+            ng-click="idc.on.update($event, 'UPDATE')"
+          ) Update
+          
+      div.item.item-divider.item-royal
+        
+    

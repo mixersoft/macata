@@ -14,7 +14,8 @@
     "angular-meteor-auth": "~1.0.3",
     "angular-google-maps": "~2.3.2",
     "ngstorage": "~0.3.10",
-    "ngCordova": "~0.1.26-alpha"
+    "ngCordova": "~0.1.26-alpha",
+    "ionic-platform-web-client": "^0.7.1"
   },
   "dependencies": {},
   "resolutions": {

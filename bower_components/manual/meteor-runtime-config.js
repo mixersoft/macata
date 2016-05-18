@@ -28,8 +28,12 @@ setMeteorRuntime = function(){
       break;
     default:
       if (ionic.Platform.isWebView() == false) {
-        console.error("ERROR: unknown runtime configuration");
-        break;
+        if (ionic.Platform.isReady) {
+          console.error("ERROR: unknown runtime configuration");
+          break;
+        } else {
+          console.error("WARN: ionic.Platform.isReady not ready?");
+        }
       }
       runConfig = "DEVICE";
       hostname = 'app.snaphappi.com';
@@ -84,7 +88,7 @@ setMeteorRuntime = function(){
       }
     };
     window.__meteor_runtime_config__["PUBLIC_SETTINGS"] = settings["public"];
-  }  
+  }
 
   setMeteorSettingsPublic(runConfig, oauth_rootUrl);
 
