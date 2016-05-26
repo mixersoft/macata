@@ -2,7 +2,7 @@
 
 HomeCtrl = (
   $scope, $rootScope, $q, $location, $timeout
-  $state, $reactive
+  $state, $reactive, ionicDeploy
   $ionicScrollDelegate, $ionicHistory, $listItemDelegate
   $log, toastr
   HomeResource, EventsResource, IdeasResource
@@ -88,6 +88,14 @@ HomeCtrl = (
         # toastr.info JSON.stringify( cards)[0...50]
         return cards
 
+    checkForUpdates = ()->
+      # ionicDeploy.askToUpdate()  # debug only
+      ionicDeploy.check()
+      .then (update)->
+        return if not update
+        #  show popup/modal
+        ionicDeploy.askToUpdate(update)
+
 
     initialize = ()->
       $reactive(vm).attach($scope)
@@ -124,6 +132,8 @@ HomeCtrl = (
           startVelocity: 2000
         })
         return
+      .then ()->
+        checkForUpdates()
 
     resetMaterialMotion = (motion, parentId)->
       className = {
@@ -169,7 +179,7 @@ HomeCtrl = (
 
 HomeCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$timeout'
-  '$state', '$reactive'
+  '$state', '$reactive', 'ionicDeploy'
   '$ionicScrollDelegate', '$ionicHistory', '$listItemDelegate'
   '$log', 'toastr'
   'HomeResource', 'EventsResource','IdeasResource'

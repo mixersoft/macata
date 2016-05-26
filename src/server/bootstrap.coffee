@@ -13,6 +13,24 @@ bootstrap = ()->
     'settings.public': ()->
       return if Meteor.isClient
       return Meteor.settings.public
+
+    'deploy.getChannel': (deviceId)->
+      DEFAULT_CHANNEL_TAG = 'dev'
+      user = Meteor.user()
+      # keep device or user on the SAME channel?
+      # user.devices = [{deviceId:XXX, channelTag: YYY}]
+      return DEFAULT_CHANNEL_TAG if !user
+
+      found = _.find user.devices, {deviceId: deviceId}
+      channelTag = found?.channelTag || DEFAULT_CHANNEL_TAG
+      if !found
+        modifier = {'$addToSet':
+          'devices': {deviceId:deviceId, channelTag:channelTag}
+        }
+        Meteor.users.update({_id: user._id}, modifier)
+      console.info ['ionicDeploy=', deviceId, channelTag]
+      return channelTag
+
     }
   )
 

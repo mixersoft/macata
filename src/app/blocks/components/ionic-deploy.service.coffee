@@ -17,7 +17,15 @@ IonicDeploy = (
   CHECK_AGAIN_IN_MINS = 5
 
   deploy = null
-  ready = deviceReady.waitForDevice()
+  ready = deviceReady.waitForDevice().then (device)->
+    deploy = new Ionic.Deploy()
+    return $q.reject('Ionic.Deploy not found, check configuration.') if !deploy
+    exportDebug.set('deploy',{
+      info: self.info
+      versions: self.versions
+      metadata: self.metadata
+    })
+    return device
 
   self = {
     setChannel: (device)->
@@ -154,15 +162,6 @@ IonicDeploy = (
       return
 
   }
-
-  ready.then (device)->
-    deploy = new Ionic.Deploy()
-    exportDebug.set('deploy',{
-      info: self.info
-      versions: self.versions
-      metadata: self.metadata
-    })
-    return
 
   return self
 
