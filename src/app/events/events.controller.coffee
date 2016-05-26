@@ -41,8 +41,10 @@ EventCtrl = (
         initialSlide: 1
         pagination: false
       slider: null
+      activeSlide: null
       slide: (name)->
         self = vm.pullToReveal
+        self.activeSlide = name
         switch name
           when 'setLocation'
             self.slider.slideTo(0)
@@ -55,8 +57,11 @@ EventCtrl = (
             selector = '#' + vm.viewId + ' new-tile input'
             setTimeout ()->return document.querySelector(selector ).focus()
             return
+          when 'none','reset'
+            self.activeSlide = null
           when 'default'
-            self.slider.slideTo(self.options.initialSlide)
+            self.slide('searchSort') # same as self.initialSlide
+            # self.slider.slideTo(self.options.initialSlide)
     }
     vm.settings = {
       view:
@@ -69,9 +74,17 @@ EventCtrl = (
         pullToReveal: false
         overscrollTile: (value)->
           self = vm.settings.show
-          return true if self.emptyList
-          return true if self.pullToReveal
-          return false
+
+          # override
+          if self.emptyList && self.pullToReveal == false
+            vm.pullToReveal.slide('newTile') if not vm.pullToReveal.activeSlide
+            return self.pullToReveal = true
+
+          self.pullToReveal = value if typeof value != 'undefined'
+
+          vm.pullToReveal.slide('none') if self.pullToReveal == false
+          return self.pullToReveal
+
         fabIcon: 'ion-plus'
     }
 
@@ -147,7 +160,8 @@ EventCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      pulledToReveal: (value)->
+      pulledToReveal: ()->
+        vm.settings.show.overscrollTile(true)
         if !location = locationHelpers.lastKnownLonLat()
           return vm.pullToReveal.slide('setLocation')
         return vm.pullToReveal.slide('searchSort')
@@ -195,6 +209,7 @@ EventCtrl = (
         location = locationHelpers.lastKnownLonLat()
         baseFilter = _filters[ eventFilter ](location)
         return vm.filter = baseFilter if !value
+        baseFilter['searchString'] = value  # user provided searchString
         match = _.map value.split(' '), (word)->
           return "(?=.*" + word + ")"
         match = match.join('')
@@ -260,11 +275,12 @@ EventCtrl = (
 
       vm.autorun ()->
         vm.filter = vm.getReactively('filter', true)
+        return if _.isEmpty vm.filter
         console.log ['(autorun) events.filterBy=', vm.filter.filterBy]
         vm.title = vm.filter.label
         vm.pg.sort = vm.filter.sortBy
         return
-      # exportDebug.set 'vm', vm
+      exportDebug.set 'vm', vm
       return
 
 

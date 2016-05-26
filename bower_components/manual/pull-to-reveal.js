@@ -434,7 +434,7 @@
         if (newV === oldV) {
           return;
         }
-        if ($scope.isRevealed) {
+        if (false && $scope.isRevealed) {
           // WARN: there is a bug on toggle if $scope.reveal is a function
           return $scope.$emit('pullToReveal.reveal', false);
         }

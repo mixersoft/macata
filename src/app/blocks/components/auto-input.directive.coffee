@@ -48,9 +48,10 @@ InputDirective = ($compile, $timeout)->
         element.bind 'focus', (e)->
           scope.enabled = !ngModel.$isEmpty element.val()
           scope.$apply()
-          if scope.onFocus
+          check = attrs
+          if attrs['onFocus']
             $timeout ()-> scope.onFocus()
-          if scope.onKeydown
+          if attrs['onKeydown']
             $timeout ()-> scope.onKeydown({$event:e, value: element.val()})
           return
 
@@ -60,7 +61,7 @@ InputDirective = ($compile, $timeout)->
             # wrap in $timeout(200) because blur event occurs
             # before clear event, give time to clear
             return if ngModel.$isEmpty element.val()
-            if scope.onBlur
+            if attrs['onBlur']
               # console.log ['autoInput blur', element.val()]
               scope.onBlur({$event: e, value: element.val()})
             return
@@ -69,12 +70,12 @@ InputDirective = ($compile, $timeout)->
           if e.which == 13
             if scope.returnClose
               element[0].blur()
-            if scope.onReturn
+            if attrs['onReturn']
               $timeout ()-> scope.onReturn()
             return
           scope.enabled = !ngModel.$isEmpty element.val()
           scope.$apply()
-          if scope.onKeydown
+          if attrs['onKeydown']
             $timeout ()-> scope.onKeydown({$event:e, value: element.val()})
           return
 

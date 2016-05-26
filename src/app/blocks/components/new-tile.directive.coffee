@@ -215,7 +215,6 @@ TileEditorCtrl = (
     "Direction":
       "BACK": 0,
       "FRONT": 1
-    }
   }
 
 

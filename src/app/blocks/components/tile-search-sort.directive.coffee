@@ -30,8 +30,10 @@ TileSearchSort = ( FeedHelpers, PostHelpers)->
 
 
         ss.on = {
-          'hide': ($ev)->
-            $scope.$emit('pullToReveal.reveal', false)
+          'search': ($ev)->
+            ss.onFilterBy({$event:$ev, value:ss.filter})
+            if !ss.filter && $ev.type == 'click'
+              $scope.$emit('pullToReveal.reveal', false)
             return
 
         }
