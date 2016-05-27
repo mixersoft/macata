@@ -6,7 +6,7 @@ EventCtrl = (
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc, eventUtils
   AAAHelpers, locationHelpers
-  $reactive, UsersResource, EventsResource
+  $reactive, $auth, UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
 
@@ -45,15 +45,16 @@ EventCtrl = (
       slide: (name)->
         self = vm.pullToReveal
         self.activeSlide = name
+        speed = 0 # no animation
         switch name
           when 'setLocation'
-            self.slider.slideTo(0)
+            self.slider.slideTo(0,speed)
           when 'searchSort'
-            self.slider.slideTo(1)
+            self.slider.slideTo(1,speed)
             selector = '#' + vm.viewId + ' input'
             setTimeout ()->return document.querySelector(selector ).focus()
           when 'newTile'
-            self.slider.slideTo(2)
+            self.slider.slideTo(2,speed)
             selector = '#' + vm.viewId + ' new-tile input'
             setTimeout ()->return document.querySelector(selector ).focus()
             return
@@ -288,16 +289,23 @@ EventCtrl = (
       vm.settings.show.map = false
       return $q.when()
       .then ()->
+        return $auth.waitForUser() if Meteor.loggingIn()
+      .then ()->
+        location = locationHelpers.lastKnownLonLat()
+        me = Meteor.user()
+        if !location && me?.location
+          location = locationHelpers.asLonLat me.location
+          locationHelpers.lastKnownLonLat location
+      .then (location)->
         # vm.settings.viewId = ["events-view",$scope.$id].join('-')
         # vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
         eventFilter = $stateParams.filter || 'all'
-        if me = Meteor.user()
-          location = locationHelpers.asLonLat me.location
-        else
-          location = locationHelpers.lastKnownLonLat()
+
         switch eventFilter
           when 'nearby'
-            return {eventFilter: eventFilter, location: location} if location
+            if location = locationHelpers.lastKnownLonLat()
+              return {eventFilter: eventFilter, location: location}
+
             return locationHelpers.getCurrentPosition('loading')
             .then (result)->
               lonlat = angular.copy(result.latlon).reverse()
@@ -352,7 +360,7 @@ EventCtrl.$inject = [
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils'
   'AAAHelpers', 'locationHelpers'
-  '$reactive', 'UsersResource', 'EventsResource'
+  '$reactive', '$auth', 'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 
