@@ -34,8 +34,11 @@
 
 MARKUP = {
   INPUT: """
-    <input ng-model="dm.field" style="width:100%;" type="text" placeholder="Enter Title or Url"/>
-    """
+  <input auto-input ng-model="dm.field" style="width:100%;" type="text" placeholder="Enter Title or Url"/>
+  """
+  WRAP: """
+  <div class="auto-input-wrapper" style="width:100%;"></div>
+  """
   MODAL:
     newTileUrl: "blocks/components/new-tile.template.html"
 }
@@ -342,9 +345,9 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
           .then (result)->
             # format like messageComposer
             result.location = _.omit result.location, 'latlon'
-            scope.onComplete?({result: result})
+            scope.onComplete({result: result}) if attrs['onComplete']
           , (err)->
-            scope.onComplete?({result: null})
+            scope.onComplete({result: null}) if attrs['onComplete']
           .finally _reset
 
         _getValidatedTile = (data)->
@@ -357,85 +360,72 @@ NewTileDirective = ($q, $compile, $timeout, openGraphSvc, tileHelpers)->
           .then (data)->
             return _showTileEditorAsModal(data)
 
+
+
         return if element.children().scope()
         # already compiled/linked
 
         # initialize directive model (dm)
         scope.dm = dm = {
-          enabled : false
           field : null
           data :
             url: null
             title: null
         }
 
-        # input element, can be either url or title
-        $field = $compile( MARKUP.INPUT )(scope)
-        if scope.placeholderText
-          $field.attr('placeholder', scope.placeholderText)
-        element.append($field)
+        dm.onBlur = (ev, value)->
+          $timeout(0)
+          .then ()->
+            return if !value
+            return if scope.cancelBlur # why???
 
-        scope.clear = (ev)->
-          ev.stopImmediatePropagation()
-          dm.field = null
-          dm.enabled = false
-          $timeout ()->
-            return $field[0].focus()
-          ,150
+            # console.info ['new-tile.blur', dm.field]
+            if attrs['onBlur']
+              return scope.onBlur({$event:ev, value:value})
 
-        $field.bind 'focus', (e)->
-          dm.enabled = !dm.field
-          scope.$apply()
-          if attrs.onFocus
-            $timeout ()-> scope.onFocus()
-          return
-
-        $field.bind 'blur', (e)->
-          return if !dm.field
-          return if scope.cancelBlur
-          matched = openGraphSvc.matchUrl(dm.field)
-          if matched
-            if dm.data.url != matched
-              dm.data.url = matched
-              console.log "blur: "+dm.data.url
-              _getValidatedTile( dm.data )
-          else
-            dm.data.title = dm.field
-            return _showTileEditorAsModal(dm.data, 'force')
-          if attrs.onBlur
-            $timeout ()->
-              scope.onBlur()
-              return
-          return
-
-        $field.bind 'keydown', (e)->
-          if e.which == 13  # return
-            if attrs.returnClose
-              $field[0].blur()
-            if attrs.onReturn
-              $timeout ()-> scope.onReturn()
-            return
-          if e.which == 32 # space
             matched = openGraphSvc.matchUrl(dm.field)
             if matched
-              dm.data.url = matched
-              console.log "keydown: "+dm.data.url
-              _getValidatedTile( dm.data )
+              if dm.data.url != matched
+                dm.data.url = matched
+                console.log "blur: "+dm.data.url
+                return _getValidatedTile( dm.data )
             else
-              console.log "keydown: end in space but no match"
-          if attrs.onKeyDown
-            $timeout ()->
-              scope.onKeyDown({
-                value: dm.field
-                set: (value)->
-                  # hack: how can we let autocomplete set value properly?
-                  dm.field = value
-              })
-              return
-          dm.enabled = !dm.field
-          scope.$apply()
-          return
+              dm.data.title = dm.field
+              return _showTileEditorAsModal(dm.data, 'force')
 
+        # $field.bind 'keydown', (e)->
+        dm.onKeydown = (ev, value)->
+          $timeout(0)
+          .then ()->
+            if attrs['onKeydown']
+              return scope.onKeydown({$event:ev, value:value})
+
+            if ev.which == 32 # space
+              matched = openGraphSvc.matchUrl(dm.field)
+              if matched
+                dm.data.url = matched
+                # console.log "keydown: "+dm.data.url
+                _getValidatedTile( dm.data )
+
+            # console.info ['new-tile.keydown', dm.field]
+
+            return
+
+        # input element, can be either url or title
+        $field = angular.element(MARKUP.INPUT)
+        $field.attr('on-keydown', "dm.onKeydown($event, value)")
+        $field.attr('on-blur', "dm.onBlur($event, value)")
+        if scope.returnClose
+          $field.attr('return-close', "true")
+        if scope.placeholderText
+          $field.attr('placeholder', scope.placeholderText)
+
+        $wrap = angular.element(MARKUP.WRAP)
+        $wrap.prepend($field)
+        $wrap = $compile( $wrap )(scope)
+
+        element.append($wrap)
+        return
 
 
   }

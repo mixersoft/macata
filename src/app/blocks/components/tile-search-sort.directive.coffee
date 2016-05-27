@@ -24,13 +24,11 @@ TileSearchSort = ( FeedHelpers, PostHelpers)->
           return Math.min($window.innerWidth, 960)
 
 
-        ss.tile = {
-          filter: null
-        }
+        ss.filter = null
 
 
         ss.on = {
-          'search': ($ev)->
+          'search': ($ev, value)->
             ss.onFilterBy({$event:$ev, value:ss.filter})
             if !ss.filter && $ev.type == 'click'
               $scope.$emit('pullToReveal.reveal', false)
