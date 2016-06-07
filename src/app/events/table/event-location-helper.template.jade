@@ -1,0 +1,96 @@
+//- events/table/event-location-helper.template.jade
+//- WHERE:
+div.item.item-complex.event-location-helper
+  div.item-input
+    span.input-label.icon-label
+      i.icon.ion-location
+    input(
+      type="text" 
+      name="Address" 
+      placeholder="Where" 
+      ng-model="$ctrl.data.address"
+      ng-focus="$ctrl.on.focus($event)"
+      ng-change="$ctrl.addressChanged=true"
+    )
+  
+  div.card.location-input-helper(
+    ng-show="$ctrl.showHelper"
+    )
+    div.item.item-divider.item-balanced Location Helper
+    
+    div.item.item-input.item-help
+      span.input-label Public Location
+      div.item-toggle
+        label.toggle.toggle-balanced
+          input(
+            type="checkbox"
+            ng-model="$ctrl.data.isPublic")
+          div.track
+            div.handle
+      div.message.item-text-wrap.
+        The Table is in a restaurant, bar, or other public place.
+    
+    
+      div(ng-hide="$ctrl.data.isPublic")
+        //- Neighborhood text
+        label.item.item-input.not-first-child
+          span.input-label Neighborhood
+          input(
+            type="text" 
+            name="Neighborhood" 
+            placeholder="The neighborhood" 
+            ng-model="$ctrl.data.neighborhood")
+        label.item.item-input.item-help
+          span.input-label Address
+          input(
+            type="text" 
+            name="Address" 
+            placeholder="The address" 
+            ng-model="$ctrl.data.address"
+            ng-change="$ctrl.addressChanged=true"
+          )
+          div.message.item-text-wrap.
+            The exact address will be revealed only after booking.
+                  
+    div(ng-show="$ctrl.data.isPublic")
+      div.item.item-input.not-first-child
+        span.input-label Name
+        input(
+          type="text" 
+          name="name" 
+          placeholder="The name of the restaurant/bar" 
+          ng-model="$ctrl.data.name"
+          ng-change="$ctrl.addressChanged=true"
+        )
+      //- TODO: should be able to search by name or address
+      div.item-input
+        span.input-label Address
+        input(
+          type="text" 
+          name="Address" 
+          placeholder="The complete address" 
+          ng-model="$ctrl.data.address"
+          ng-change="$ctrl.addressChanged=true"
+        )
+      
+
+          
+
+    div.item.padding-vertical
+      button.button.button-block.button-balanced(
+          type="button"
+          ng-click="$ctrl.on.click($event)"
+          ng-focus="$ctrl.on.focus($event)"
+        )
+          i.icon.ion-map  
+          span See on Map
+    div.item.item-divider.item-balanced
+    
+div.item.item-complex.map-location(
+  ng-show="$ctrl.data.geojson"
+  ) 
+  div.item.item-balanced(
+    ng-click="$ctrl.on.click($event, 'force')"
+    )
+    span Show {{$ctrl.data.geojson.coordinates}} on Map
+  

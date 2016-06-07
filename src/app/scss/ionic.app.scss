@@ -784,51 +784,52 @@ ion-side-menu > ion-content {
     transform: scale(0, 0); }
 }
 
-tile-set-location, tile-search-sort, tile-create-new {
+tile-set-location, tile-search-sort, tile-create-new, .tile {
   .row .col.list-item-wrap {
     margin-bottom: -10px;
   }
-  .tile.overscroll-tile {
-    .hero {
-      height: 100px;
+}
+
+.overscroll-tile, .wizard-tile {
+  .hero {
+    height: 100px;
+  }
+  .has-mask-wrap {
+    @extend .text-center;
+    position: absolute;
+    top: 15%;
+    left: 0;
+    right: 0;
+    p {
+      text-overflow: ellipsis;
     }
-    .has-mask-wrap {
-      @extend .text-center;
-      position: absolute;
-      top: 15%;
-      left: 0;
-      right: 0;
-      p {
-        text-overflow: ellipsis;
-      }
 
-      h1, h2, h3, h4, h5, h6 {
-        color: #fff;
-        font-weight: bold;
-        position: relative;
-        text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
-        z-index: 1;
-      }
+    h1, h2, h3, h4, h5, h6 {
+      color: #fff;
+      font-weight: bold;
+      position: relative;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+      z-index: 1;
+    }
+    h2 {
+      font-size: 24px;
+    }
+
+    @media(max-width: $grid-responsive-sm-break) {
       h2 {
-        font-size: 24px;
+        font-size: 20px;
       }
+    }
 
-      @media(max-width: $grid-responsive-sm-break) {
-        h2 {
-          font-size: 20px;
-        }
-      }
+    .search-wrap > * {
+      height: 34px;
+    }
 
-      .search-wrap > * {
-        height: 34px;
-      }
-
-      .item-input-wrapper {
-        display:inline-flex;
-        width: 75%;
-        ~ .button {
-          margin-left: 0;
-        }
+    .item-input-wrapper {
+      display:inline-flex;
+      width: 75%;
+      ~ .button {
+        margin-left: 0;
       }
     }
   }
@@ -1121,3 +1122,43 @@ eventDetail View
     }
   }
 }
+
+
+
+
+#wizard-body {
+  .list {
+    .item-avatar > div.text-middle {
+      // valign label with .item-avatar, line-clamp-1
+      line-height: 40px;
+    }
+    .input-label.icon-label {
+      width: 24px;
+    }
+    .item-complex > .card {
+      // cancel .list-item-container.condensed .card
+      margin: 10px 10px 20px 10px;
+      margin-top: 0;
+    }
+  }
+  // ???: should be global?
+  .card .item.not-first-child {
+      border-top: 1px solid #ddd;
+  }
+  .item-input.item-help {
+    flex-wrap: wrap;
+    position: relative;
+    .message {
+      font-size: smaller;
+      color: #aaa;
+      width: 100%;
+    }
+    .warn {
+      color: $energized;
+    }
+    .error {
+      color: $assertive;
+    }
+  }
+}
+

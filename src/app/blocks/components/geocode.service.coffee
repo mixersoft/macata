@@ -694,7 +694,7 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
     asLonLat: (geojsonPoint, isLatLon=false)->
       check = geojsonPoint?.type == 'Point'
       return if not check
-      lonlat = geojsonPoint['coordinates']
+      lonlat = angular.copy geojsonPoint['coordinates']
       lonlat.reverse() if isLatLon
       return lonlat
 
@@ -803,6 +803,9 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       reject: err, err.humanize is the humanized error message
     ###
     geocodeAddress: (options, force)->
+      if options.geojson
+        options.latlon = self.asLonLat(options.geojson, 'latlon')
+        location = options.latlon.join(',') if force
       if options.latlon && options.isCurrentLocation && force
         location = options.latlon.join(',')
       if options.latlon && !force
@@ -813,10 +816,12 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       #  this launches modal
       return geocodeSvc.getLatLon( location )
       .then (result)->
+        throw new Error('geocodeAddress(): no result') if !result
         console.log ['locationClick()', result]
         retval = {
           geojson: result.geojson
           lonlat: result.lonlat
+          geoCodeResult: result.geoCodeResult
         }
         retval.latlon = result?.location # deprecate
         retval.address = result?.address

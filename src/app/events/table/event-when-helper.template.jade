@@ -1,0 +1,42 @@
+//- events/table/event-when-helper.template.jade
+div.item.item-complex.event-when-helper
+  //- use div to allow ng-click
+  div.item-input(
+    ng-click=""
+    )
+    span.input-label.icon-label
+      i.icon.ion-calendar
+    input(type="text" read-only
+      placeholder="When"
+      ng-model="$ctrl.data.asString"
+      ng-focus="$ctrl.on.showHelper($event)"
+      )
+      
+  div.card.time-input-helper(
+    ng-show="$ctrl.showHelper"
+    )
+    div.item.item-divider.item-royal Date & Time Helper
+    label.item-input
+      span.input-label.text-right.padding-right
+        i.icon.ion-calendar
+      input(type="date" name="startDate" placeholder="Start Date" 
+        ng-model="$ctrl.data.startDate"
+        ng-blur="$ctrl.updateWhen($event)"
+        )
+    label.item-input
+      span.input-label.text-right.padding-right
+        i.icon.ion-clock 
+        i.icon.ion-arrow-right-c
+      input(type="time" name="startTime" placeholder="Start Time" 
+        ng-model="$ctrl.data.startTime"
+        ng-blur="$ctrl.updateWhen($event)")
+        
+    label.item-input
+      span.input-label.text-right.padding-right
+        i.icon.ion-arrow-right-c 
+        i.icon.ion-clock 
+      input(type="time" name="endTime" placeholder="End Time" 
+        ng-model="$ctrl.data.endTime"
+        ng-focus="$ctrl.data.endTime = $ctrl.data.endTime || $ctrl.data.startTime"
+        ng-blur="$ctrl.updateWhen($event)")
+    div.item.item-divider.item-royal

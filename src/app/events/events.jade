@@ -44,7 +44,7 @@ ion-view.events(
             on-filter-by="vm.on.filterBy($event, value)"
             )
         ion-slide-page
-          tile-create-new(
+          tile-create-new.tile(
             on-new-tile="vm.on.submitNewTile(result)"
             )
         
@@ -60,7 +60,9 @@ ion-view.events(
       selected-id="vm.selectedItemId"
       detail-by-reference="true"
     )
-
+      table-create-wizard.tile(
+        on-new-tile="vm.on.submitNewTile(result)"
+        )
       ng-include(src="'events/events.fb-tile.html'" )
     
   ion-fab(
