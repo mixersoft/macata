@@ -1,0 +1,37 @@
+//- blocks/components/image-attach-helper.template.jade
+div.item.item-input.image-attach-helper
+  span.input-label.icon-label
+    i.icon.ion-image
+  input.hero-pic-file(
+    type="file"
+    name="image-select"
+    nv-file-select
+    uploader="$ctrl.fileUploader"
+    )
+  div.auto-input-wrapper
+    input.hero-pic-url(
+      type="text" 
+      name="image-url" 
+      placeholder="{{$ctrl.data.placeholder}}" 
+      ng-model="$ctrl.data.src"
+      auto-input
+      ng-blur="$ctrl.on.blurImageUrl($event)"
+      )
+  div.progress-wrap(
+    ng-show="$ctrl.fileUploader.progress"
+    )
+    span.label {{$ctrl.data.status}}
+    div.progress(
+      ng-class="$ctrl.data.progressBarClassName"
+      )
+      div.progress-bar(
+        ng-style="{ 'width': $ctrl.fileUploader.progress + '%' }"
+        )
+        
+div.item.content.image-preview(
+  ng-show="$ctrl.previewSrc()"
+  style="height:160px;"
+  )
+  div(
+    bg-image="{{$ctrl.previewSrc()}}"
+    )     

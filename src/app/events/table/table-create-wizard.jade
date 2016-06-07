@@ -54,13 +54,10 @@ div#wizard-body.content.row.responsive-sm
             ng-model="myEvent.description"
             rows="3" maxlength='255')
 
-        //- link text
-        label.item.item-input
-          span.input-label.icon-label
-            i.icon.ion-image
-          input(type="text" name="Link" placeholder="image url" 
-            ng-model="myEvent.heroPic")  
-            
+        image-attach-helper(
+          src="tcw.data.heroPic"
+          on-update="tcw.on.updateImage(data)"
+          )
             
         //- SeatTotal number / range
         div.item.item-complex

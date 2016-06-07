@@ -29,4 +29,5 @@ angular
     'starter.map'
     'starter.events'
     'starter.feed'
+    'angularFileUpload'
   ]

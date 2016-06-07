@@ -21,6 +21,7 @@
     "manual/pull-to-reveal.js",
     "manual/fb-sdk.js",
     "ionic-platform-web-client/dist/ionic.io.bundle.js",
+    "angular-file-upload/dist/angular-file-upload.js",
     "angular-moment/angular-moment.js"
   ],
   "copy": [

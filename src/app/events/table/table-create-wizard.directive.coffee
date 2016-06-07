@@ -25,8 +25,8 @@ TableCreateWizard = ()->
     require: ['TableCreateNew']
     controllerAs: 'tcw'
     controller: [
-      '$scope', 'appModalSvc'
-      ($scope, appModalSvc)->
+      '$scope', '$timeout', 'appModalSvc', 'FileUploader'
+      ($scope, $timeout, appModalSvc, FileUploader )->
         tcw = this
 
         tcw.me = Meteor.user()
@@ -95,6 +95,10 @@ TableCreateWizard = ()->
             tcw.data['geojson'] = data['geojson']
             return
 
+          updateImage: (data)->
+            tcw.data['heroPic'] = data.src
+            return
+
           beginTableWizard: (type)->
             type ?= 'table'
             tcw.data.type = type
@@ -128,6 +132,11 @@ TableCreateWizard = ()->
           submitTable: (result)->
               tcw.onNewTile({result:result})
         }
+
+        tcw['on']['uploadFile'] = (ev)=>
+          target = ev.target
+          console.info ['uploadFile', target.value]
+          return
 
         return tcw
       ]

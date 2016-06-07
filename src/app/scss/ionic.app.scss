@@ -1162,3 +1162,53 @@ eventDetail View
   }
 }
 
+.item-input.file-upload-wrap {
+  flex-wrap: wrap;
+  position: relative;
+  input[type=file] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 37px;
+    height: 47px;
+    z-index: 2;
+    opacity: 0;
+  }
+  .progress-wrap {
+    position: relative;
+    font-size: smaller;
+    width: 100%;
+    display:flex;
+    .progress {
+      border:1px solid $positive;
+      border-radius: 4px;
+      vertical-align: bottom;
+      height: 16px;
+      margin: 0 10px;
+      width: 100%;
+      .progress-bar {
+        height: 14px;
+        // width: 33%;
+      }
+      &.positive {
+        border:1px solid $positive;
+        .progress-bar {
+          background-color: $positive;
+        }
+      }
+      &.energized {
+        border:1px solid $energized;
+        .progress-bar {
+          background-color: $energized;
+        }
+      }
+      &.assertive {
+        border:1px solid $assertive;
+        .progress-bar {
+          background-color: $assertive;
+        }
+      }
+    }
+
+  }
+}
