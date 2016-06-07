@@ -999,6 +999,11 @@ $hero-wrap-bg-height: 170px;
         border-top-style: solid;
       }
     }
+    .image-attach-helper {
+      .input-label {
+        @extend .positive;
+      }
+    }
   }
 }
 
@@ -1162,9 +1167,12 @@ eventDetail View
   }
 }
 
-.item-input.file-upload-wrap {
+.image-attach-helper.item-input {
   flex-wrap: wrap;
   position: relative;
+  .input-label {
+    width: 24px;
+  }
   input[type=file] {
     position: absolute;
     top: 0;

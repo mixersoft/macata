@@ -277,6 +277,9 @@ TileEditorCtrl = (
 
       return
 
+    updateImage: (data)->
+      mm.data.image = data.src
+
     done: (ev)->
       # post to $meteor from scope.onComplete
       delete mm.data['displayLatLon']

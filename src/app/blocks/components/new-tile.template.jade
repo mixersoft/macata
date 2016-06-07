@@ -59,6 +59,11 @@ ion-modal-view#new-tile-modal-view
               auto-input 
               placeholder="Enter Url for Photo" 
               )
+              
+        image-attach-helper(
+          src="mm.data.image"
+          on-update="mm.on.updateImage(data)"
+          )
           
         ion-input.item-input.item.flex-item-wrap(ng-show="mm.geo.setting.show.location")
           div.item-input-inset.flex-icon-bar.location
