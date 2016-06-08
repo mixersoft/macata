@@ -129,11 +129,16 @@ TileHelpers.$inject = ['appModalSvc', '$q']
 # @description TileEditorCtrl used by TileHelpers.modal_showTileEditor modal
 ###
 TileEditorCtrl = (
-  scope, $q, locationHelpers, $timeout
+  scope, $q, locationHelpers, $timeout, $ionicScrollDelegate
   deviceReady, $cordovaGeolocation, $cordovaCamera
 )->
   this.id = 'TileEditorCtrl'
   mm = this
+
+  mm.settings = {
+    show:
+      imageAttach: false
+  }
 
   mm.geo = {
     setting:
@@ -222,22 +227,33 @@ TileEditorCtrl = (
 
 
   mm.on = {
-    cameraClick: (ev)->
-      return deviceReady.waitForDevice()
-      .then (device)->
-        # console.log ['cameraClick, Camera=', Camera]
-        options = {
-          destinationType: Camera.DestinationType.DATA_URL
-          sourceType: Camera.PictureSourceType.PHOTOLIBRARY
-          quality: 50
-          encodingType: Camera.EncodingType.JPEG
-          # targetWidth:
-          targetHeight: 160
-          correctOrientation: true
-        }
-        return $cordovaCamera.getPicture(options)
-      .then (imageData)->
-        mm.data.image = "data:image/jpeg;base64," + imageData
+    'toggleShow': (show, key, selector)->
+      show[key] = !show[key]
+      if show[key] && selector
+        # scroll into by pixels
+        scroll = document.querySelector('#new-tile-modal-view ion-content')
+        el = scroll.querySelector(selector)
+        scrollHandle = scroll?.getAttribute('delegate-handle')
+        $timeout().then ()->
+          el.focus()
+          return $timeout(50)
+        .then ()->
+          _ionScroll = $ionicScrollDelegate.$getByHandle(scrollHandle)
+          _ionScroll.scrollBy(0, el.clientHeight, true)
+
+      return show[key]
+
+    'imageAttachClick': (ev)->
+      activate = mm.on.toggleShow(mm.settings.show
+      , 'imageAttach'
+      , 'image-attach-helper input.hero-pic-url')
+      # then click
+      if activate
+        $timeout(100).then ()->
+          selector = '#new-tile-modal-view image-attach-helper input[name=image-select]'
+          el = document.querySelector selector
+          angular.element(el).triggerHandler('click')
+
 
 
 
@@ -292,7 +308,7 @@ TileEditorCtrl = (
 
   return
 TileEditorCtrl.$inject = [
-  '$scope', '$q', 'locationHelpers', '$timeout'
+  '$scope', '$q', 'locationHelpers', '$timeout', '$ionicScrollDelegate'
   'deviceReady', '$cordovaGeolocation', '$cordovaCamera'
 ]
 

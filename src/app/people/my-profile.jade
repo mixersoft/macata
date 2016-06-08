@@ -1,5 +1,9 @@
 //- people/my-profile.html
-ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}}
+ion-view(view-title="{{vm.title}}") 
+  div.scope-locals.hide
+    {{person=vm.person; ''}}
+    {{view=vm.settings.view;''}}
+    {{show=vm.settings.show;''}}
   ion-content#profile.has-header.light-bg(
     scroll-sista
   )
@@ -17,9 +21,15 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
         div.hero-bg.blur(bg-image="{{person.face}}")
       div.text-center.padding.content
         h2.light.text-center {{person.displayName}}
-        img.face(
-          bg-image="{{person.face}}"
-        )
+        div.content
+          img.face(
+            bg-image="{{person.face}}"
+          )
+          button.button.button-clear.image-attach(
+            ng-click="vm.on.imageAttachToggle($event, true)"
+            )
+            i.icon.ion-camera
+          
 
     div(ng-switch="view.show" ng-show="view.show")
       div#description.content.row.responsive-sm(ng-switch-when="signin")
@@ -37,6 +47,25 @@ ion-view(view-title="{{vm.title}}") {{person=vm.person;view=vm.settings.view;''}
               div.scope-locals.hide
                 {{ fullname = vm.on.getFullNameLabel(person) ;'' }}
                 {{ email = person.email || person.emails[0].address }}
+              div.image-attach-helper-wrap(
+                ng-show="show.imageAttach"
+                )
+                image-attach-helper(
+                  placeholder="Enter image url or click icon"
+                  preview="false"
+                  src="vm.person.newFace"
+                  on-update="vm.on.updateImage(data)"
+                  )
+                button.button.button-flat(
+                  ng-click="vm.on.imageAttachToggle($event, false)"
+                  )
+                  i.icon.ion-close-circled.assertive
+                button.button.button-flat(
+                  ng-click="vm.on.imageAttachSave($event)"
+                  )
+                  i.icon.ion-checkmark-circled.balanced
+                
+                
               ion-input.item-input 
                 ion-label.text-right
                   i.icon.ion-person.padding-horizontal

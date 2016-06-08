@@ -145,6 +145,15 @@ methods = {
       }
       Meteor.users.update(meId, modifier)
     return
+  'Profile.save': (data, fields)->
+    meId = Meteor.userId()
+    modifier = {}
+    fields = _.intersection fields, [
+      'displayName', 'face', 'gender','firstname', 'lastname'
+    ]
+    modifier['$set'] = _.pick data, fields
+    Meteor.users.update(meId, modifier)
+    return
 
   'Profile.saveLocation': (loc, isLatLon=false )->
     meId = Meteor.userId()

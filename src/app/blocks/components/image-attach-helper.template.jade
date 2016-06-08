@@ -1,7 +1,9 @@
 //- blocks/components/image-attach-helper.template.jade
 div.item.item-input.image-attach-helper
   span.input-label.icon-label
-    i.icon.ion-image
+    i.icon(
+      ng-class="Meteor.isCordova ? 'ion-camera' : 'ion-image' "
+      )
   input.hero-pic-file(
     type="file"
     name="image-select"

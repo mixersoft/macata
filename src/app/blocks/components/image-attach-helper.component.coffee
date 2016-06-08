@@ -161,7 +161,8 @@ ImageServer.$inject = ['$timeout', 'FileUploader']
 ImageAttachHelper = {
   bindings:
     src:     "<"
-    placeholder: "<"
+    placeholder: "@"
+    preview: "<"  # default = true
     onUpdate: "&"
   templateUrl: "blocks/components/image-attach-helper.template.html"
   # require:
@@ -175,7 +176,9 @@ ImageAttachHelper = {
         preview: null
       }
       this.previewSrc = (src)=>
+        return false if this.preview == false
         return $ctrl.data.preview if !src
+
 
         return $ctrl.data.preview = null if !src
         if /^http.*snaphappi.com\/svc\/storage.*\.jpg$/i.test(src)
@@ -189,7 +192,7 @@ ImageAttachHelper = {
 
       this.$onInit = ()=>
         this.data.src = this.src
-        this.data.placeholder ?= "Image Url"
+        this.data.placeholder = this.placeholder || "Image Url"
         this.fileUploader = imageServer.$init({
             onAfterAddingFile: (fileItem)->
               $timeout().then ()->
@@ -246,12 +249,6 @@ ImageAttachHelper = {
         return
       this.on['pauseUpload'] = (ev)=>
         return
-      this.on['showHelper'] = (ev)=>
-          this.showHelper = true
-          parent = ionic.DomUtil.getParentWithClass ev.currentTarget, 'event-when-helper'
-          $timeout().then ()->
-            nextEl = parent.querySelector('.time-input-helper input')
-            nextEl.focus()
 
       return this
 

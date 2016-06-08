@@ -21,11 +21,14 @@ ProfileCtrl = (
     vm = this
     vm.title = "Profile"
     vm.me = null      # current user, set in initialize()
+    vm.person = null  # active profile, or copy of vm.me
     vm.imgAsBg = utils.imgAsBg
 
     vm.settings = {
       view:
         show: null    # [signin|profile|account]
+      show:
+        imageAttach: false
       editing: false
       changePassword: false
     }
@@ -54,8 +57,29 @@ ProfileCtrl = (
           label = [user.displayName]
         return label.join(' ')
 
+      'updateImage': (data)->
+        vm.person.face = if data.src then data.src else vm.me.face
+        return
 
+      'imageAttachToggle': (ev, show)->
+        vm.person.newFace = null
+        if typeof show != 'undefined'
+          vm.settings.show.imageAttach = show
+        else
+          vm.settings.show.imageAttach = !vm.settings.show.imageAttach
+        return if !vm.settings.show.imageAttach
+        parent = ionic.DomUtil.getParentOrSelfWithClass(ev.target, 'ionic-scroll')
+        $timeout().then ()->
+          el = parent.querySelector('image-attach-helper input[name=image-url]')
+          el.focus()
 
+      'imageAttachSave': (ev)->
+        vm.me.face = vm.person.face
+        # save to Meteor
+        vm.call 'Profile.save', vm.me, ['face'], (err, retval)->
+          return console.err ['Profile.save', err] if err
+          vm.on.imageAttachToggle(null, false)
+          return
 
       showSignInRegister: (action)->
         return AAAHelpers.showSignInRegister.call(vm, action)

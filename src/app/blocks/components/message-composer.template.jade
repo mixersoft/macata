@@ -30,7 +30,11 @@ ion-input.item-input.item-stacked-label.message-composer(
         div.title.line-clamp-1 {{$mc.scope.attachment['title']}}
         p.description.line-clamp.line-clamp-2 {{$mc.scope.attachment['description']}}
         p. {{fattachment['site_name']}}
-        
+  image-attach-helper(
+    ng-show="show.imageAttach"
+    src="$mc.data.image"
+    on-update="$mc.on.updateImage(data)"
+    )    
   div.button-bar.condensed.positive(
     ng-click="$event.preventDefault();$event.stopImmediatePropagation();"
     )
@@ -42,9 +46,10 @@ ion-input.item-input.item-stacked-label.message-composer(
       ng-click="$mc.on.toggleShow(show, 'newTile', '.new-tile')"
       )
       i.icon.positive.ion-link.ink
-    button.button
-      i.icon.positive.ion-camera.ink(
+    button.button(
+      ng-click="$mc.on.toggleShow(show, 'imageAttach', 'image-attach-helper input.hero-pic-url')"
       )
+      i.icon.positive.ion-image.ink
     button.button(
       ng-click="$mc.on.toggleShow(show, 'location', '.location')"
       )

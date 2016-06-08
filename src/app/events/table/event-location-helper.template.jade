@@ -31,26 +31,26 @@ div.item.item-complex.event-location-helper
         The Table is in a restaurant, bar, or other public place.
     
     
-      div(ng-hide="$ctrl.data.isPublic")
-        //- Neighborhood text
-        label.item.item-input.not-first-child
-          span.input-label Neighborhood
-          input(
-            type="text" 
-            name="Neighborhood" 
-            placeholder="The neighborhood" 
-            ng-model="$ctrl.data.neighborhood")
-        label.item.item-input.item-help
-          span.input-label Address
-          input(
-            type="text" 
-            name="Address" 
-            placeholder="The address" 
-            ng-model="$ctrl.data.address"
-            ng-change="$ctrl.addressChanged=true"
-          )
-          div.message.item-text-wrap.
-            The exact address will be revealed only after booking.
+    div(ng-hide="$ctrl.data.isPublic")
+      //- Neighborhood text
+      label.item.item-input.not-first-child
+        span.input-label Neighborhood
+        input(
+          type="text" 
+          name="Neighborhood" 
+          placeholder="The neighborhood" 
+          ng-model="$ctrl.data.neighborhood")
+      label.item.item-input.item-help
+        span.input-label Address
+        input(
+          type="text" 
+          name="Address" 
+          placeholder="The address" 
+          ng-model="$ctrl.data.address"
+          ng-change="$ctrl.addressChanged=true"
+        )
+        div.message.item-text-wrap.
+          The exact address will be revealed only after booking.
                   
     div(ng-show="$ctrl.data.isPublic")
       div.item.item-input.not-first-child

@@ -28,6 +28,7 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
         $mc.settings = {
           show:
             newTile: false
+            imageAttach: false
             location: false
             spinner:
               newTile: false
@@ -61,11 +62,14 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
                 el.getElementsByTagName('INPUT')?[0].focus()
                 # $mc.$container[0].querySelector(selector).scrollIntoView()
             return show[key]
+          'imageAttachClick': ($event)->
+            return
           'locationClick': ($event, value )->
             $mc.LOCATION.getLocation(value)
             .then (result)->
               $scope.location = result || {}
-
+          'updateImage': (data)->
+            $scope.attachment.imageUrl = data.src
           'post': ($event)->
             # check if there is a link that needs to be fetched
             return if $mc.settings.show.newTile
