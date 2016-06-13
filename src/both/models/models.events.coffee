@@ -123,6 +123,31 @@ methods = {
     Meteor.users.update({_id: meId}, modifier )
     return
 
+  'Event.upsert': (data, fields)->
+    meId = Meteor.userId()
+    allowedFields = [
+      'type', 'ownerId'
+      'title', 'description', 'image'
+      'participations'
+      # 'participantIds'  ???
+      'seatsTotal', 'seatsOpen'
+      'startTime','duration'
+      'isPublic', 'locationName', 'address', 'neighborhood'
+      'geojson'
+      'settings'
+    ]
+
+    fields =
+      if fields
+      then _.intersection fields, allowedFields
+      else allowedFields
+
+    if data._id
+      modifier = {}
+      modifier['$set'] = _.pick data, fields
+      return mcEvents.update(data._id, modifier)
+    return mcEvents.insert _.pick(data, fields)
+
   'Event.updateBooking': (event, booking)->
     # save participations directly in Event
     now = new Date()

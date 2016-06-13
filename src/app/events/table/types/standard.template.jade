@@ -1,0 +1,71 @@
+ion-modal-view
+  ion-header-bar.bar-balanced
+    h1.title Host a Table
+  ion-content
+    div#wizard-body.content.row.responsive-sm.table-type-standard
+      div.col.col-offset-25.col-50
+        div.scope-locals.hide
+          //- ng-include
+          {{$ctrl = $parent.$ctrl;}}  
+        form(name="createEventForm" novalidate="" ng-submit="")
+          div.list
+            div.item.item-avatar
+              img(ng-src="{{me.face}}")
+              div.text-middle #[b{{me.displayName }}]: You are about to create a Table
+
+            //- Title text
+            label.item.item-input.item-stacked-label
+              span.input-label Title
+              input(type="text" name="Title" placeholder="Title"
+                ng-model="$ctrl.data.title")
+
+            //- Description textarea
+            label.item.item-input.item-stacked-label
+              span.input-label Description
+              textarea(placeholder="Description"
+                ng-model="$ctrl.data.description"
+                rows="3" maxlength='255')
+
+            image-attach-helper(
+              src="$ctrl.data.image"
+              on-update="$ctrl.on.updateImage(data)"
+              )
+
+            //- SeatTotal number / range
+            div.item.item-complex
+              label.item-input
+                span.input-label Seats
+                input(type="text" name="portions" min="1" max="12" ng-model="$ctrl.data.seatsTotal")
+              div.item-floating-label.range.range-positive
+                i.icon.ion-ios-person.positive
+                input(type="range" name="portions" min="0" max="12" ng-model="$ctrl.data.seatsTotal")
+                i.icon.ion-ios-people.positive
+
+            event-when-helper(
+              when="$ctrl.data"
+              on-update="$ctrl.on.updateWhen(data)"
+              )
+
+            event-location-helper(
+              location="$ctrl.data"
+              validate-on-blur="true"
+              on-update="$ctrl.on.updateLocation(data)"
+              )
+
+            //- pl-event-settings(
+            //-   event="mm.event"
+            //-   on-change=""
+            //-   type="{{mm.eventType}}"
+            //-   )
+
+
+          div.item
+            div.button-bar
+              button.button.button-outline.button-stable.button-flat.ink-dark(
+              ng-click="closeModal('CANCELED')"
+              )
+                span.dark Cancel
+              button.button.button-positive.button-flat.ink(
+              type="submit"
+              ng-click="$ctrl.on.validateModalClose($ctrl.data).then(closeModal)"
+              )   Submit

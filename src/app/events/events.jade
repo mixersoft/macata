@@ -61,7 +61,7 @@ ion-view.events(
       detail-by-reference="true"
     )
       table-create-wizard.tile(
-        on-new-tile="vm.on.submitNewTile(result)"
+        on-submit="vm.on.submitNewTile(data)"
         )
       ng-include(src="'events/events.fb-tile.html'" )
     

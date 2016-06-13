@@ -5,7 +5,7 @@ EventCtrl = (
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc, eventUtils
-  AAAHelpers, locationHelpers
+  AAAHelpers, locationHelpers, TableEditSvc
   $reactive, $auth, UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
@@ -167,14 +167,24 @@ EventCtrl = (
           return vm.pullToReveal.slide('setLocation')
         return vm.pullToReveal.slide('searchSort')
 
+      'edit': (ev, $item)->
+        data = $item
+        TableEditSvc.beginTableWizard(data.type, data)
+        .then (result)->
+          return if result == 'CANCELED'
+          return vm.on.submitNewTile({data: result})
 
       createNewTile: (parentEl)->
+        # return AAAHelpers.requireUser('sign-in')
+        # .then (me)->
         vm.settings.show.pullToReveal = !vm.settings.show.pullToReveal
         if vm.settings.show.pullToReveal
           vm.pullToReveal.slide('newTile')
         else
           $timeout(250).then ()->vm.pullToReveal.slide('default')
 
+      submitNewTile: (result)->
+        console.log ["submit New Event",result]
 
       fabClick: ($ev)->
         return AAAHelpers.requireUser('sign-in')
@@ -186,13 +196,12 @@ EventCtrl = (
         toastr.info "Sorry, " + value + " is not available yet"
         return false
 
-      'favorite': ()->
-        eventUtils['favorite']( arguments )
-
+      'favorite': eventUtils['favorite']
 
       showOnMap: ($ev, limit=5)->
         return vm.settings.show.map = false if vm.settings.show.map
         vm.mapRows = vm.rows.slice(0,limit)
+        return vm.settings.show.map = false if vm.mapRows.length == 0
         vm.settings.show.map = true
 
 
@@ -359,7 +368,7 @@ EventCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils'
-  'AAAHelpers', 'locationHelpers'
+  'AAAHelpers', 'locationHelpers', 'TableEditSvc'
   '$reactive', '$auth', 'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
