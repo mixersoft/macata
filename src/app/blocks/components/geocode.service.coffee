@@ -816,7 +816,7 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       #  this launches modal
       return geocodeSvc.getLatLon( location )
       .then (result)->
-        throw new Error('geocodeAddress(): no result') if !result
+        return 'CANCELED' if !result
         console.log ['locationClick()', result]
         retval = {
           geojson: result.geojson

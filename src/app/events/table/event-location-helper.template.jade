@@ -11,6 +11,7 @@ div.item.item-complex.event-location-helper
       ng-model="$ctrl.data.address"
       ng-focus="$ctrl.on.focus($event)"
       ng-change="$ctrl.addressChanged=true"
+      ng-blur="$ctrl.on.blur($event)"
     )
   
   div.card.location-input-helper(
@@ -24,7 +25,9 @@ div.item.item-complex.event-location-helper
         label.toggle.toggle-balanced
           input(
             type="checkbox"
-            ng-model="$ctrl.data.isPublic")
+            ng-model="$ctrl.data.isPublic"
+            ng-blur="$ctrl.on.blur($event)"
+            )
           div.track
             div.handle
       div.message.item-text-wrap.
@@ -39,7 +42,9 @@ div.item.item-complex.event-location-helper
           type="text" 
           name="Neighborhood" 
           placeholder="The neighborhood" 
-          ng-model="$ctrl.data.neighborhood")
+          ng-model="$ctrl.data.neighborhood"
+          ng-blur="$ctrl.on.blur($event)"
+          )
       label.item.item-input.item-help
         span.input-label Address
         input(
@@ -48,6 +53,7 @@ div.item.item-complex.event-location-helper
           placeholder="The address" 
           ng-model="$ctrl.data.address"
           ng-change="$ctrl.addressChanged=true"
+          ng-blur="$ctrl.on.blur($event)"
         )
         div.message.item-text-wrap.
           The exact address will be revealed only after booking.
@@ -56,11 +62,12 @@ div.item.item-complex.event-location-helper
       div.item.item-input.not-first-child
         span.input-label Name
         input(
-          type="text" 
+          type="text"
           name="name" 
           placeholder="The name of the restaurant/bar" 
           ng-model="$ctrl.data.name"
           ng-change="$ctrl.addressChanged=true"
+          ng-blur="$ctrl.on.blur($event)"
         )
       //- TODO: should be able to search by name or address
       div.item-input
@@ -71,13 +78,14 @@ div.item.item-complex.event-location-helper
           placeholder="The complete address" 
           ng-model="$ctrl.data.address"
           ng-change="$ctrl.addressChanged=true"
+          ng-blur="$ctrl.on.blur($event)"
         )
       
 
           
 
     div.item.padding-vertical
-      button.button.button-block.button-balanced(
+      button.button.button-block.button-balanced.show-on-map(
           type="button"
           ng-click="$ctrl.on.click($event)"
           ng-focus="$ctrl.on.focus($event)"

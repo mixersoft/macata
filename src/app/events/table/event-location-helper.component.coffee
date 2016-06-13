@@ -8,6 +8,7 @@ moments2Dates = (o)->
 EventLocationHelper = {
   bindings:
     location: "<" # {isPublic:, name:, address:, neighborhood:, geojson:}
+    validateOnBlur: "<"
     onUpdate: "&"
   templateUrl: "events/table/event-location-helper.template.html"
   # require:
@@ -48,6 +49,7 @@ EventLocationHelper = {
               console.info ["searchPOI", result]
               return result
         .then (result)->
+          return 'CANCELED' if result == 'CANCELED'
           self.data.address = result.address
           self.data.address ?= [result.lonlat[1],result.lonlat[0] ].join(', ')
           self.data.geojson = result.geojson
@@ -56,6 +58,12 @@ EventLocationHelper = {
           self.showHelper = false
         , (err)->
           console.warn ['geocodeAddress', err]
+        .finally (result)->
+          self.addressChanged = false
+          done = !!self.data.geojson
+          if done
+            self.data.address = null
+
 
       this.updateLocation = (data)=>
         data ?= this.data
@@ -73,10 +81,15 @@ EventLocationHelper = {
         this.geocodeAddress()
       this.on['focus'] = (ev)=>
         # focusEvent for button.Show on Map
-        this.geocodeAddress() if this.addressChanged
+        if this.addressChanged && ev.target.classList.contains('show-on-map')
+          this.geocodeAddress()
         # focusEvent for input[name=address]
         this.on.showHelper(ev) if _.isEmpty this.data.geojson
-
+      this.on['blur'] = (ev)=>
+        return if !ev.relatedTarget
+        stillHasFocus = ionic.DomUtil.getParentWithClass( ev.relatedTarget, 'event-location-helper')
+        if !stillHasFocus && this.validateOnBlur
+            this.geocodeAddress() if !this.data.geojson
       return this
 
   ]
