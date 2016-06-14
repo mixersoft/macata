@@ -14,7 +14,10 @@ EventLocationHelper = {
   # require:
   controller: [
     '$scope', '$q', '$timeout', 'locationHelpers'
-    ($scope, $q, $timeout, locationHelpers)->
+    'uiGmapGoogleMapApi', 'geocodeSvc'
+    ($scope, $q, $timeout, locationHelpers
+    uiGmapGoogleMapApi, geocodeSvc
+    )->
       # $ctrl = this
       this.data = {
       }
@@ -61,14 +64,59 @@ EventLocationHelper = {
         .finally (result)->
           self.addressChanged = false
           done = !!self.data.geojson
-          if done
-            self.data.address = null
+          # if not done
+          #   self.data.address = null
 
 
       this.updateLocation = (data)=>
         data ?= this.data
         this.onUpdate({data:data})
+        this.renderMap(data)
         return
+
+      this.renderMap = (data)=>
+        self = this
+        this.prepareMap(data)
+        .then (mapConfig)->
+          self['map'] = self['gMap'] = null
+          geocodeSvc.loadAngularGoogleMap(mapConfig, self)
+        .then (mapConfig)->
+          return $q.reject("LOCATION_EMPTY") if _.isEmpty mapConfig
+
+
+      this.prepareMap = (data, options)=>
+        data ?= this.data
+        #  see: eventUtils.setVisibleLocation()
+        options = {
+          type: 'oneMarker'
+          control: {}
+        }
+
+        return $q.when() if !data.geojson
+        return uiGmapGoogleMapApi
+        .then ()->
+          keymap = {
+            id: '_id'
+            location: 'geojson'
+            label: 'title'
+          }
+          # markerCount==1
+          mapOptions = {
+            type: options.type
+            marker: geocodeSvc.mapLocations(data, keymap)
+            # draggableMap: true  # set in activate()
+            draggableMarker: false
+            dragendMarker: (marker, eventName, args)->
+              return
+          }
+          mapOptions = _.extend mapOptions, {
+            # 'control' : {}
+            'mapReady' : (map, eventName)->
+              $scope.$broadcast 'map-ready', map
+          }, options
+          mapConfig = geocodeSvc.getMapConfig mapOptions
+          # mapConfig.zoom = 11
+          return mapConfig
 
       this.on = {}
       this.on['showHelper'] = (ev)=>

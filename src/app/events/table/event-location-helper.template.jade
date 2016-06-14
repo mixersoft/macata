@@ -97,8 +97,38 @@ div.item.item-complex.event-location-helper
 div.item.item-complex.map-location(
   ng-show="$ctrl.data.geojson"
   ) 
-  div.item.item-balanced(
+  div.item.item-balanced.hide(
     ng-click="$ctrl.on.click($event, 'force')"
     )
     span Show {{$ctrl.data.geojson.coordinates}} on Map
+    
+  div.map-marker(
+    ng-click="$ctrl.on.click($event, 'force')"
+    )
+    div.scope-locals.hide
+      {{map=$ctrl.map;''}}
+      {{opt=map.options;''}}
+    div.wrap(
+      ng-if="$ctrl.map"
+    )
+      ui-gmap-google-map( 
+        center='map.center'
+        zoom='map.zoom'
+        options='opt.map.options'
+        control='map.control'
+        events='map.events'
+      )
+        ui-gmap-circle(
+          ng-if="map.type=='circle'"
+          center="opt.circle.center"
+          radius="opt.circle.radius"
+          stroke="opt.circle.stroke"
+          )
+        ui-gmap-marker(
+          idKey="opt.oneMarker.idKey"
+          coords="opt.oneMarker.coords"
+          options="opt.oneMarker.options"
+          events="opt.oneMarker.events"
+          )
+    
   

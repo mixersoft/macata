@@ -54,7 +54,7 @@ geocodeSvcConfig.$inject = ['uiGmapGoogleMapApiProvider', 'API_KEY']
 # see https://developers.google.com/maps/documentation/geocoding/intro
 ###
 
-Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
+Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)->
 
   ## private methods & attributes
   init = (maps)->
@@ -76,7 +76,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
 
 
   ## factory object
-  self = {
+  geocoder = {
 
     ###
     @description an Entry Point for this service, returns an object with a geocode location
@@ -86,7 +86,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
     @reject ['ERROR', err]
     ###
     getLatLon: (address)->
-      self.displayGeocode(address)
+      geocoder.displayGeocode(address)
       .then (result)->
         return null if !result || result == 'CANCELED'
         return result if _.isString result  # NOT FOUND, ERROR?
@@ -125,13 +125,13 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
     @return object, one geocode result or CANCELED, ZERO_RESULTS
     ###
     displayGeocode: (address)->
-      return self.geocode(address)
+      return geocoder.geocode(address)
       .then (results)->
         # console.log ["Geocode results, count=", results.length] if _.isArray results
         if results == GEOCODER.STATUS.ZERO_RESULTS
           results = [GEOCODER.getPlaceholderDefault()]
 
-        return self.showResultsAsMap(address, results)
+        return geocoder.showResultsAsMap(address, results)
         .then (result)->
           console.log ["displayGeocode", result]
           # convert location to  geojsonPoint
@@ -141,7 +141,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
         console.warn err
         return
 
-    # called by self.displayGeocode() and VerifyLookupCtrl.updateGeocode()
+    # called by geocoder.displayGeocode() and VerifyLookupCtrl.updateGeocode()
     geocode: (address)->
       return $q.reject("Geocoder JS lib not ready") if !GEOCODER.instance?
 
@@ -304,6 +304,64 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
     mathRound6: mathRound6
 
     ###
+    # @description laod a new <angular-google-map> from mapConfig
+    #   initializes promises to wait for uiGmapIsReady & map controls
+    # @param mapConfig Object, result from geocodeSvc.getMapConfig()
+    # @param mapHandle Object, sets mapHandle.map and mapHandle.gMap with
+    #     appropriate values
+    # example:
+      ui-gmap-google-map(
+        center='mapHandle.map.center'
+        zoom='mapHandle.map.zoom'
+        options='mapHandle.map.options.map.options'
+        control='mapHandle.map.control'
+        events='mapHandle.map.events'
+      )
+        ui-gmap-circle(
+          ng-if="map.type=='circle'"
+          center="mapHandle.map.options.circle.center"
+          radius="mapHandle.map.options.circle.radius"
+          stroke="mapHandle.map.options.circle.stroke"
+          )
+        ui-gmap-marker(
+          idKey="mapHandle.map.options.oneMarker.idKey"
+          coords="mapHandle.map.options.oneMarker.coords"
+          options="mapHandle.map.options.oneMarker.options"
+          events="mapHandle.map.options.oneMarker.events"
+          )
+    ###
+    loadAngularGoogleMap: (mapConfig, mapHandle)->
+      return {} if _.isEmpty mapConfig
+      if _.chain(mapHandle).pick(['map','gMap']).keys().value().length != 2
+        throw new Error("Expecting attributes ['map','gMap'] on mapHandle")
+
+      # TODO: do we need to release old map resources?
+      toDestroy = _.pick mapHandle, ['map','gMap']
+
+      self = mapHandle
+      uiGmapIsReady.reset()
+      mapInstanceCount = 1
+      retries = 50
+      mapHandle['map'] = mapConfig
+      return uiGmapIsReady.promise(mapInstanceCount, retries)
+      .then (instances)->
+        console.log ['uiGmapIsReady', instances]
+        mapHandle.gMap = gMap = instances[0].map
+        # mapConfig.gMap = gMap = mapConfig.control.getGMap()
+        google.maps.event.trigger(gMap, 'resize')
+        return if !mapConfig.center
+        center = {
+          lat: mapConfig.center.latitude
+          lng: mapConfig.center.longitude
+        }
+        # console.log 'setCenter', center
+        gMap.setCenter(center)
+        return mapConfig
+
+
+
+
+    ###
     @description: get google Map object for angular-google-maps,
       configured map places marker or circle at location
     @params: options
@@ -406,9 +464,9 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi)->
 
   }
 
-  return self
+  return geocoder
 
-Geocoder.$inject = ['$q', '$ionicPlatform', 'appModalSvc', 'uiGmapGoogleMapApi']
+Geocoder.$inject = ['$q', '$ionicPlatform', 'appModalSvc', 'uiGmapGoogleMapApi', 'uiGmapIsReady']
 
 
 
@@ -432,7 +490,9 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
 
   init = (parameters)->
     vm['geoCodeResults'] = parameters.geoCodeResults[0...MODAL_VIEW.DISPLAY_LIMIT]
-    vm['map'] = setupMap(parameters.address, vm['geoCodeResults'])
+    mapConfig = setupMap(parameters.address, vm['geoCodeResults'])
+    vm['map'] = vm['gMap'] = null
+    geocodeSvc.loadAngularGoogleMap(mapConfig, vm)
     stop = $scope.$on 'modal.afterShow', (ev)->
       h = setMapHeight()
       stop?()
@@ -534,6 +594,7 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
         newMapConfig = setupMap(model.formatted_address, null, model)
         vm['address-changed'] = true
         vm['marker-moved'] = true
+        geocodeSvc.loadAngularGoogleMap(newMapConfig, vm)
         vm['map'] = newMapConfig
         # console.log newMapConfig
         # console.log ['click location', vm['location']]
@@ -545,7 +606,21 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
     }
     return geocodeSvc.getMapConfig mapOptions
 
+  vm.centerMap = (mapHandle)->
+    # mv.gMap.isReady = true
+    gMap = mapHandle['gMap']
+    mapConfig = mapHandle['map']
+    google.maps.event.trigger(gMap, 'resize')
 
+    # console.log 'getCenter', mapConfig.gMap.getCenter().toString()
+    return if _.isEmpty mapConfig.center
+    center = {
+      lat: mapConfig.center.latitude
+      lng: mapConfig.center.longitude
+    }
+    # console.log 'setCenter', center
+    gMap.setCenter(center)
+    return
 
   # vm.geocode = geocodeSvc.geocode
   vm.updateGeocode = (address)->
@@ -561,8 +636,11 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
       newMapConfig = setupMap(address, vm['geoCodeResults'])
 
       vm['address-changed'] = false  # check again on save event if true
-      vm['map'] = newMapConfig
-      return
+      if !vm['gMap']
+        return geocodeSvc.loadAngularGoogleMap(newMapConfig, vm)
+      return vm['map'] = newMapConfig
+    .then (mapConfig)->
+      vm.centerMap(vm)
     , (err)->
       return $q.reject err
     .finally ()->
