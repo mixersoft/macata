@@ -13,9 +13,8 @@ ion-view.events(
     )
 
   map-view(
-    mapId="vm.viewId"
     rows="vm.mapRows"
-    keymap="{{vm.markerKeymap}}"
+    keymap="vm.markerKeymap"
     selected-id="vm.selectedItemId"
     show="show.map"
     marker-type="vm.settings.view.mapMarker"
@@ -44,8 +43,8 @@ ion-view.events(
             on-filter-by="vm.on.filterBy($event, value)"
             )
         ion-slide-page
-          tile-create-new.tile(
-            on-new-tile="vm.on.submitNewTile(result)"
+          table-create-wizard.tile(
+            on-submit="vm.on.submitNewTile(data)"
             )
         
  
@@ -60,9 +59,6 @@ ion-view.events(
       selected-id="vm.selectedItemId"
       detail-by-reference="true"
     )
-      table-create-wizard.tile(
-        on-submit="vm.on.submitNewTile(data)"
-        )
       ng-include(src="'events/events.fb-tile.html'" )
     
   ion-fab(

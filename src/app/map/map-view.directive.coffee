@@ -11,24 +11,49 @@ MAP_VIEW = {
   GRID_RESPONSIVE_SM_BREAK: 680   # sass: $grid-responsive-sm-break
   MARGIN_TOP_BOTTOM: 0.1 + 0.1    # ion-modal-view.modal(style="margin: 10% auto")
   MAP_MIN_HEIGHT: 200
+  MARKER_KEYMAP:
+    id: '_id'
+    location: 'location'
+    label: 'title'
+  MAP_HANDLE_DEFAULT:  # default struct for managing angular-google-maps
+    mapReady: 'promise'
+    map: null   # angular-google-maps
+    gMap: null  # google.maps
+    controls:   # gMap controls
+      map: {}
+      markers: {}
+  CSS_STYLE_TEMPLATE: """
+    #%id% .map-view-map .angular-google-map-container {height: %height%px;}
+    #%rootId% .map-view-list.has-map {top: %bottom%px;}
+    """
 }
 
 
-CSS_STYLE_TEMPLATE = """
-  #%id% .map-view-map .wrap {height: %height%px;}
-  #%id% .map-view-map .angular-google-map-container {height: %height%px;}
-  #%id% .map-view-list.has-map {top: %bottom%px;}
-"""
 
+
+#
+# directive: <map-view>
+# @description render a collection as markers on a google map
+#   works together with the list view
+#   lifecycle:
+#     - set mv.rows, i.e. <map-view rows="{{}}">
+#     - setupMap(), resolve( mapConfig )
+#     - $watch mv.show to toggle map visibility
+#     - on _showMap(true), loadMap(mapConfig)
+#     - <ui-gmap-google-map ng-show="{{mapConfig}}"> from angular-google-maps
+#     - wait for geocodeSvc.loadAngularGoogleMap(), resolve(gMap)
+#     - set map-view.id, scoped CSS styles for map+list, see <style-scoped>
+#     - 'resize' gMap and set bounds, _setMapBounds()
+#
+#
 
 MapView = ( )->
   return {
     restrict: 'E'
     scope: {}
     bindToController: {
-      # 'mapId': '='
       'rows': '='
-      'keymap': '@'
+      'keymap': '<'
       'selectedId': '='
       'show': '='
       'markerType': '='
@@ -37,32 +62,30 @@ MapView = ( )->
       return 'map/map-view.html'
     controllerAs: 'mv'
     controller: [
-      '$scope', '$q', '$state', '$timeout', '$window'
+      '$scope', '$element', '$q', '$state', '$timeout', '$window'
       'uiGmapGoogleMapApi', 'geocodeSvc'
-      'uiGmapIsReady' # doesn't seem to resolve
+      'uiGmapIsReady'
       # http://angular-ui.github.io/angular-google-maps/#!/api/IsReady
 
       # 'FEED_DB_TRIGGERS', 'EventActionHelpers'
       'utils', 'toastr'
-      ($scope, $q, $state, $timeout, $window
+      ($scope, $element, $q, $state, $timeout, $window
       uiGmapGoogleMapApi, geocodeSvc
       uiGmapIsReady
       # FEED_DB_TRIGGERS, EventActionHelpers
       utils, toastr)->
-
         mv = this
-        # mv.mapId ?= 'map-view-' + $scope.$id
-        keymap = $scope.$eval(mv.keymap)
-        keymap = _.defaults keymap, {
-          id: '_id'
-          location: 'location'
-          label: 'title'
-        }
-        mv.minHeight = 200
 
-        mv.cssStyle = CSS_STYLE_TEMPLATE
-          .replace(/%id%/g, mv.mapId)
-          .replace(/%height%/g, mv.minHeight)
+        # scope
+        mv.mapViewId = null
+
+        # manage mapConfig + gMap object
+        # set in $watchCollection 'mv.rows'
+
+        mv.mapHandle = _.cloneDeep MAP_VIEW.MAP_HANDLE_DEFAULT
+
+        mv.$onInit = ()->
+          return
 
         _setMapHeight = ()->
           # calculate mapHeight
@@ -79,56 +102,39 @@ MapView = ( )->
           # .has-header offset
           mapBot = mapH + 44
 
-          mv.cssStyle = CSS_STYLE_TEMPLATE
-            .replace(/%id%/g, mv.mapId)
+          # update <style-scoped> css
+          mv.cssStyle = MAP_VIEW.CSS_STYLE_TEMPLATE
+            .replace(/%id%/g, mv.mapViewId)
             .replace(/%height%/g, mapH)
             .replace(/%bottom%/g, mapBot)
           return mapH
 
-        _selectMarker = (id)->
-          mv.gMap.renderSelectedMarker(id)
-          return
-          $timeout(0).then ()->
-            # select marker by $index
-            # markers = mv.gMap.MarkersControl.getGMarkers()
-            # marker = _.find markers, (o)-> return `o.model.id==id`
-            mv.gMap.renderSelectedMarker(id)
-
-        $scope.$watch 'mv.show', (newV, oldV)->
-          return if newV == oldV
-          selector = '#%id% .map-view-list'.replace(/%id%/g, mv.mapId)
-          nextChild = document.querySelector(selector)
-          action = if newV then 'add' else 'remove'
-          nextChild.classList[action]('has-map')
-          if newV
-            initializeMap()
-            $timeout(0).then ()->
-              mv.gMap.Control.refresh?()
-              mv.gMap.setMapBounds()
-              return
-          return
-
-        # NOTE: this watch is not catching all changes to mv.mapId
-        $scope.$watch 'mv.mapId', (newV, oldV)->
-          return if !newV || newV == oldV
-          # console.log ["mapId changed, =", mv.mapId]
-          _setMapHeight()
-
-        $scope.$watch 'mv.selectedId', (newV, oldV)->
-          return if !newV || newV == oldV
-          id = newV
-          _selectMarker id
-          return
-
         $scope.$watchCollection 'mv.rows', (newV, oldV)->
           return if !newV
           rows = newV
-          # TODO: debounce
-          # console.warn ["=", mv.mapId, mv.settings.viewId]
-          # mv.mapId = mv.settings.viewId if mv.settings.viewId?
           debounced_setupMap(rows)
 
+        $scope.$watch 'mv.show', (newV, oldV)->
+          return if newV == oldV
+          _showMap(newV)
+
+        # update <style-scoped> when mapId changes
+        $scope.$watch 'mv.mapViewId', (newV, oldV)->
+          return if !newV || newV == oldV
+          # console.log ["mapId changed, =", mv.mapViewId]
+          _setMapHeight()
+          return
+
+        # select marker when listItem clicked
+        $scope.$watch 'mv.selectedId', (newV, oldV)->
+          return if !newV || newV == oldV
+          _renderSelectedMarker mv.selectedId
+          return
+
+
+
         setupMap = (rows)->
+          mv.keymap = _.defaults mv.keymap, MAP_VIEW.MARKER_KEYMAP
           rows ?= mv.rows
           markerCount = rows.length
           return uiGmapGoogleMapApi
@@ -138,7 +144,7 @@ MapView = ( )->
               return
 
             if markerCount == 1
-              marker = geocodeSvc.mapLocations(rows[0], keymap)
+              marker = geocodeSvc.mapLocations(rows[0], mv.keymap)
               mapOptions = {
                 type: mv.markerType || 'oneMarker'
                 # type: 'oneMarker'
@@ -152,8 +158,8 @@ MapView = ( )->
             if markerCount > 1
               mapOptions = {
                 type: 'manyMarkers'
-                draggableMarker: true     # BUG? click event doesn't work unless true
-                markers: geocodeSvc.mapLocations(rows, keymap)
+                draggableMarker: false     # BUG? click event doesn't work unless true
+                markers: geocodeSvc.mapLocations(rows, mv.keymap)
                 options:
                   icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
                   labelClass: 'map-marker-label-class'
@@ -167,16 +173,25 @@ MapView = ( )->
                   mv.selectedId = marker.model[ 'id' ]
                   return
               }
-            mapOptions['markerKeymap'] = keymap
+            mapOptions['markerKeymap'] = mv.keymap
             mapConfig = geocodeSvc.getMapConfig mapOptions
             # mapConfig.zoom = 11
             return mapConfig
+          .then (mapConfig)->
+            # add support for map Controls
+            mapConfig['controls'] = {
+              map: {}
+              markers: {}
+            }
+            return mapConfig
 
         debounced_setupMap = _.debounce (rows)->
-          setupMap(rows).then (config)->
-            return mv.map = config
+          setupMap(rows)
+          .then (mapConfig)->
+            mv.mapHandle = _.cloneDeep MAP_VIEW.MAP_HANDLE_DEFAULT
+            mv.mapHandle['map'] = mapConfig
+            return _showMap(mv.show)
           return
-
         , 100
         , {
           leading: false
@@ -184,104 +199,92 @@ MapView = ( )->
           trailing: true
         }
 
-        # just in case. using uiGmapIsReady.reset() seems to fix init bug
-        gMapIsReadyHACK = ()->
-          controlsReadyHACK = $q.defer()
-          mv.gMap['ControlsReady'] = controlsReadyHACK.promise
+        loadMap = (mapHandle)->
+          return $q.when() if !mapHandle.map
+          return $q.when()
+          .then ()->
+            return mapHandle.map if mapHandle.gMap
+            mv.map = mapHandle.map    # this begins the load!!!
+            mv.mapHandle.mapReady = geocodeSvc.loadAngularGoogleMap( mapHandle.map, mv.mapHandle)
+            return mv.mapHandle.mapReady
+          .then (mapConfig)->
+            mv.mapViewId = 'gMap-' + mv.mapHandle.gMap.uiGmap_id
+            # $window.gMap = mv.gMap
+            return mv.mapHandle.gMap
 
-          # wait for map controls ready by watching MarkersControl.getGMarkers
-          # because uiGmapIsReady.promise(1) didn't seem to work
-          unwatch = $scope.$watch 'mv.gMap.MarkersControl.getGMarkers', (newV)->
-            if newV && mv.gMap['Control'].getGMap
-              unwatch?()
-              console.warn "WARNING: had to use gMap.Dfd to resolve gMap && gMap Markers ready"
-              controlsReadyHACK.resolve('gMapIsReadyHACK')
-          # NOTE: 'map-ready' fired once for each $ionicView.loaded ONLY
-          # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
-          return controlsReadyHACK.promise
+        _showMap = (show)->
+          mapListEl = $element.parent()[0].querySelector('.map-view-list')
+          loadMap(mv.mapHandle)
+          .then ()->
+            if show && mv.mapHandle.gMap
+              # refresh, recenter map
+              $timeout().then ()->
+                gMap = mv.mapHandle.gMap
+                google.maps.event.trigger(gMap, 'resize')
+                _setMapBounds()
+                # mv.mapHandle.controls.map.refresh()
+            return show
+          .then (show)->
+            mapListEl = $element.parent()[0].querySelector('.map-view-list')
+            # toggle show .map-view-list if found
+            action = if show then 'add' else 'remove'
+            mapListEl.classList[action]('has-map')
+            return
 
+        _renderSelectedMarker = (marker, markers)->
+          gMap = null
+          markersCtrl = null
+          return mv.mapHandle.mapReady
+          .then ()->
+            gMap = mv.mapHandle.gMap
+            markersCtrl = mv.mapHandle.controls.markers
+          .then ()->
+            markers ?= markersCtrl.getGMarkers()
+            if _.isString marker
+              marker = _.find markers, (o)-> return o.model.id == marker
 
-        initializeMap = ()->
-          return if mv.gMap.isReady
-          # reset count to ignore cached Maps
-          uiGmapIsReady.reset()
-          mapInstanceCount = 1
-          retries = 50
-          mv.gMap['ControlsReady'] = uiGmapIsReady.promise(mapInstanceCount, retries)
-          .then (result)->
-            mv.gMap.isReady = true
-            return 'gMapIsReadyHACK' if result == 'gMapIsReadyHACK'
-            instances = result
-            instances.forEach (inst)->
-              map = inst.map
-              console.info ['uiGmapIsReady', inst.instance, inst.map.uiGmap_id]
-            return 'uiGmapIsReady'
-          ,(err)->
-            console.warn ["uiGmapIsReady", err]
-            $window.gMap = mv.gMap
-            return gMapIsReadyHACK()
-
-
-
-        # gMap initialization & methods
-        # mv.gMap.Control, mv.gMap.MarkersControl:
-        #   set on each controller load
-        #   see: map-view.jade, angular-google-maps
-        # map-ready on each $ionicView.load, but NOT $ionicView.enter
-        mv.gMap = {
-          Control : {}
-          MarkersControl : {}
-          ControlsReady : 'promise'
-          renderSelectedMarker: (marker, markers)->
-            return mv.gMap.ControlsReady
-            .then ()->
-              markers ?= mv.gMap.MarkersControl.getGMarkers()
-              if _.isString marker
-                marker = _.find markers, (o)-> return o.model.id == marker
-
-              _.each markers, (m)->
-                if m.resetIcon?
-                  m.setIcon(m.resetIcon)
-                  # m.set('labelContent', ' ' )
-                  m.set('labelVisible', false)
-                  delete m.resetIcon
-                return
-
-              # set selected marker
-              label = marker.model['label'][0...20]
-              label += '...' if marker.model['label'].length>20
-              marker.set('labelContent', label )
-              marker.set('labelVisible', true)
-              # marker.set('labelStyle', {color: 'white'})
-              marker.resetIcon = marker.getIcon()
-              marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
-              return marker
-            .then (marker)->
-              map = mv.gMap.Control.getGMap()
-              markerPosition = marker.getPosition()
-              if not map.getBounds().contains markerPosition
-                # scrollIntoView if out of bounds
-                mv.gMap.setMapBounds(map, markers)
-              # else
-              #   map.panTo(markerPosition)
-              return marker
-
-          setMapBounds: (map, markers)->
-            return mv.gMap.ControlsReady
-            .then ()->
-              map ?= mv.gMap.Control.getGMap?()
-              return console.warn "WARN: map controls not ready" if !map
-              markers ?= mv.gMap.MarkersControl.getGMarkers()
-              # console.info ["setMapBounds for ", markers]
-              latlngbounds = new google.maps.LatLngBounds()
-              markers.forEach (m)->
-                latlngbounds.extend(m.getPosition())
-                return
-              map.fitBounds(latlngbounds)
+            _.each markers, (m)->
+              if m.resetIcon?
+                m.setIcon(m.resetIcon)
+                # m.set('labelContent', ' ' )
+                m.set('labelVisible', false)
+                delete m.resetIcon
               return
-        }
 
-        # initializeMap()
+            # set selected marker
+            label = marker.model['label'][0...20]
+            label += '...' if marker.model['label'].length>20
+            marker.set('labelContent', label )
+            marker.set('labelVisible', true)
+            # marker.set('labelStyle', {color: 'white'})
+            marker.resetIcon = marker.getIcon()
+            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png')
+            return marker
+          .then (marker)->
+            markerPosition = marker.getPosition()
+            if not gMap.getBounds().contains markerPosition
+              # scrollIntoView if out of bounds
+              _setMapBounds(gMap, markers)
+            # else
+            #   map.panTo(markerPosition)
+            return marker
+
+        _setMapBounds = (map, markers)->
+          return mv.mapHandle.mapReady
+          .then ()->
+            map ?= mv.mapHandle.gMap
+            markersCtrl = mv.mapHandle.controls.markers
+            return if !markersCtrl
+            markers ?= markersCtrl.getGMarkers()
+            # console.info ["_setMapBounds for ", markers]
+            latlngbounds = new google.maps.LatLngBounds()
+            markers.forEach (m)->
+              latlngbounds.extend(m.getPosition())
+              return
+            map.fitBounds(latlngbounds)
+            return
+
+        mv.$onInit()
         return mv
       ]
 

@@ -40,11 +40,15 @@ EventLocationHelper = {
         self = this
         return $q.when()
         .then ()->
-          if self.data.geojson && self.addressChanged == false
+          if self.addressChanged == true
+            #  geocode address string or latlon
+            options = _.pick self.data, ['address']
+
+            return locationHelpers.geocodeAddress(options)
+          else
             # just show on map
-            return locationHelpers.geocodeAddress({geojson: self.data.geojson}, 'force')
-          if self.data.address
-            return locationHelpers.geocodeAddress({address: self.data.address})
+            options = _.pick self.data, ['geojson', 'address']
+            return locationHelpers.geocodeAddress(options)
           if self.data.name
             options = _.pick( self.data, ['name', 'address'])
             return locationHelpers.searchPOI( options )

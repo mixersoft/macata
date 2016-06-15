@@ -22,7 +22,7 @@ GEOCODER = {
 }
 
 MODAL_VIEW = {
-  TEMPLATE: 'blocks/components/address-map.template.html'
+  TEMPLATE: 'blocks/components/geocode.template.html'
   DISPLAY_LIMIT: 5                # limit multiple results
   OFFSET_HEIGHT: 420              # offsetH = ion-modal-view.modal.height - mapH
   GRID_RESPONSIVE_SM_BREAK: 680   # sass: $grid-responsive-sm-break
@@ -67,6 +67,43 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
     return Math.round( v * 1000000 )/1000000 if _.isNumber v
     return v
 
+  normalizeGeocodeOptions = (options)->
+    # normalized example: options = {
+    #   address: String
+    #   location: [lat,lon] as Array or String
+    #   latlng: google.maps.LatLng class
+    # }
+    isLatLon = /^(\d+\.*\d*),(\d*\.*\d*)$/
+    # check if address is a latlon
+    if latlon = options.address?.match(isLatLon)
+      #  use address as latlon instead, legacy, deprecate
+      options.location = option.address
+      delete options.address
+
+    # geocode a location
+    if options.location?.type == 'Point'
+      #  geojson
+      options.latlng = {
+        lat: options.location.coordinates[1]
+        lng: options.location.coordinates[0]
+      }
+    else if latlon = options.location?.match?(isLatLon)
+      # [lat,lon] as Array or String
+      options.latlng = {
+        lat: parseFloat(latlon[1])
+        lng: parseFloat(latlon[2])
+      }
+    else if options.location?.length == 2
+      latlon = options.location
+      # [lat,lon] as Array
+      options.latlng = {
+        lat: parseFloat(latlon[0])
+        lng: parseFloat(latlon[1])
+      }
+    return options
+
+
+
 
   # wait for google JS libs to load
   uiGmapGoogleMapApi.then (maps)->
@@ -80,13 +117,33 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
 
     ###
     @description an Entry Point for this service, returns an object with a geocode location
-    @param address, accepts an address string, or
-          [lat,lon] as a string of 2 comma-separated floats
+    @param options Object,
+      {
+        location: [lat,lon] as a string of 2 comma-separated floats
+            or geojson point
+        address: String, preserve existing address string if location also given
+      }
     @resolve object { address: location: place_id:(optional) } or null if canceled
     @reject ['ERROR', err]
     ###
-    getLatLon: (address)->
-      geocoder.displayGeocode(address)
+    getLatLon: (options)->
+      options = normalizeGeocodeOptions(options)
+      return geocoder.geocode(options)
+      .then (results)->
+        # console.log ["Geocode results, count=", results.length] if _.isArray results
+        if results == GEOCODER.STATUS.ZERO_RESULTS
+          results = [GEOCODER.getPlaceholderDefault()]
+        if options.latlng && options.address
+          options.useOriginalAddress = true
+        return results
+      , (err)->
+        console.warn ["geocoder.geocode()", err]
+        throw err
+      .then (results)->
+        return geocoder.showResultsAsMap(options, results)
+        # @resolve result, one geocode result or CANCELED, ZERO_RESULTS
+
+        # same as: geocoder.displayGeocode(options)
       .then (result)->
         return null if !result || result == 'CANCELED'
         return result if _.isString result  # NOT FOUND, ERROR?
@@ -119,48 +176,32 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
         return ['ERROR: geocodeSvc.getLatLon()', err]
 
 
+
     ###
-    @description launches addressMap modal to allow user to verifiy location of address
-    @param address String
-    @return object, one geocode result or CANCELED, ZERO_RESULTS
+    # called by geocoder.displayGeocode() and GeocodeModalCtrl.updateGeocode()
+    @param options Object,
+      {
+        address: String, preserve existing address string if location also given
+        latlng: google.maps.LatLng class
+        location: [lat,lon] as a string of 2 comma-separated floats
+            or geojson point
+      }
     ###
-    displayGeocode: (address)->
-      return geocoder.geocode(address)
-      .then (results)->
-        # console.log ["Geocode results, count=", results.length] if _.isArray results
-        if results == GEOCODER.STATUS.ZERO_RESULTS
-          results = [GEOCODER.getPlaceholderDefault()]
-
-        return geocoder.showResultsAsMap(address, results)
-        .then (result)->
-          console.log ["displayGeocode", result]
-          # convert location to  geojsonPoint
-          return result
-
-      .catch (err)->
-        console.warn err
-        return
-
-    # called by geocoder.displayGeocode() and VerifyLookupCtrl.updateGeocode()
-    geocode: (address)->
+    geocode: (options)->
       return $q.reject("Geocoder JS lib not ready") if !GEOCODER.instance?
 
-      # check if address is a latlon
-      isLatLon = /^(\d+\.*\d*),(\d*\.*\d*)$/
-      if latlon = address.match(isLatLon)
-        # geocode a location
-        option = location:
-          lat: parseFloat(latlon[1])
-          lng: parseFloat(latlon[2])
+      find = {}  # {address: location: placeId:}
+      if options.latlng
+        find['location'] = options.latlng
       else
-        # geocode an address
-        option = { "address": address }
+        find['address'] = options.address
 
       dfd = $q.defer()
-      GEOCODER.instance.geocode( option, (result, status)->
+      GEOCODER.instance.geocode( find, (result, status)->
+        # result['geocodeOptions'] = options
         switch status
           when 'OK'
-            if option.location
+            if find.location
               # filter out approximate results
               result = _.filter result, (o)->
                 return true if o.geometry.location_type != 'APPROXIMATE'
@@ -168,7 +209,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
           when GEOCODER.STATUS.ZERO_RESULTS
             return dfd.resolve GEOCODER.STATUS.ZERO_RESULTS
           else
-            console.err ['geocodeSvc.geocode()', status]
+            console.error ['geocodeSvc.geocode()', status]
             return dfd.reject {
               status: status
               result: result
@@ -184,33 +225,35 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
 
     ###
     # @description show geocodeResults as marker(s) on a map in a modal
-    # @param address String, the geocode search string
-    # @param geoCodeResults array of results, e.g. geocode().then (results)->
+    # @param options Object, {address: latlng:}
+        address String, the geocode search string
+    # @param geocodeResults array of results, e.g. geocode().then (results)->
     ###
-    showResultsAsMap: (address, geoCodeResults)->
+    showResultsAsMap: (options, geocodeResults)->
       return appModalSvc.show(
         MODAL_VIEW.TEMPLATE
-        'VerifyLookupCtrl as vm'
+        'GeocodeModalCtrl as gmc'
         {
-          address: address
-          geoCodeResults: geoCodeResults
+          geocodeOptions: options
+          geocodeResults: geocodeResults
         })
       .then (modalResult)->
         # console.log ["showResultsAsMap:", geoCodeResult]
         return modalResult if _.isString modalResult || !modalResult
 
         mm = modalResult
-        # TODO: need to choose 1 result from geoCodeResults, move to head
-        geoCodeResult = mm['geoCodeResults'][0]
+        # TODO: need to choose 1 result from geocodeResults, move to head
+        geoCodeResult = modalResult['geocodeResults'][0]
         geoCodeResult.override = {}
-        if mm['marker-moved']
-          geoCodeResult.override['location'] = mm.location
-        if mm['address-changed']
-          geoCodeResult.override['address']= mm.addressDisplay
+        if modalResult['marker-moved']
+          geoCodeResult.override['location'] = modalResult['location']
+        if modalResult['address-changed']
+          geoCodeResult.override['address'] = modalResult['addressDisplay']
 
         return geoCodeResult
       .catch (err)->
         return $q.reject(err)
+
 
     ###
     # @description get a location array from an array of objects
@@ -304,7 +347,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
     mathRound6: mathRound6
 
     ###
-    # @description laod a new <angular-google-map> from mapConfig
+    # @description load a new <angular-google-map> from mapConfig
     #   initializes promises to wait for uiGmapIsReady & map controls
     # @param mapConfig Object, result from geocodeSvc.getMapConfig()
     # @param mapHandle Object, sets mapHandle.map and mapHandle.gMap with
@@ -346,8 +389,7 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
       return uiGmapIsReady.promise(mapInstanceCount, retries)
       .then (instances)->
         console.log ['uiGmapIsReady', instances]
-        mapHandle.gMap = gMap = instances[0].map
-        # mapConfig.gMap = gMap = mapConfig.control.getGMap()
+        mapHandle['gMap'] = gMap = instances[0].map
         google.maps.event.trigger(gMap, 'resize')
         return if !mapConfig.center
         center = {
@@ -357,6 +399,8 @@ Geocoder = ($q, $ionicPlatform, appModalSvc, uiGmapGoogleMapApi, uiGmapIsReady)-
         # console.log 'setCenter', center
         gMap.setCenter(center)
         return mapConfig
+      .catch (err)->
+        console.warn ['loadAngularGoogleMap', err]
 
 
 
@@ -479,134 +523,161 @@ Geocoder.$inject = ['$q', '$ionicPlatform', 'appModalSvc', 'uiGmapGoogleMapApi',
 @param parameters.geoCodeResult Array of geocode results
        parameters.address String, the original search string
 ###
-VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
-  vm = this
-  vm.isBrowser = not ionic.Platform.isWebView()
-  vm.MESSAGE = MODAL_VIEW.MESSAGE
-  vm.isValidMarker = ()->
-    return false if vm['error-address0']
-    return true if vm.map.type == 'oneMarker'
+GeocodeModalCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
+  gmc = this
+  gmc.isBrowser = not ionic.Platform.isWebView()
+  gmc.MESSAGE = MODAL_VIEW.MESSAGE
+  gmc.map = null    # angular-google-maps
+  gmc.gMap = null   # google.maps
+  gmc.mapId = null
+  gmc.fields = {
+    'geocodeResults': null  # [geocodeResult,] array
+    'location': null        # [lat,lon] array
+    'latlon': null
+    'address0': null
+    'addressFormatted': null
+    'addressDisplay': null
+    'error-address0': null
+  }
+  gmc.state = {
+    'marker-moved': false
+    'address-changed': false
+  }
+  gmc.exportResults = ()->
+    results = _.extend {}, gmc.fields, _.pick gmc, [
+      'marker-moved', 'address-changed'
+    ]
+    return results
+  gmc.isValidMarker = ()->
+    return false if gmc['error-address0']
+    return true if gmc.map.type == 'oneMarker'
     return false
 
-  init = (parameters)->
-    vm['geoCodeResults'] = parameters.geoCodeResults[0...MODAL_VIEW.DISPLAY_LIMIT]
-    mapConfig = setupMap(parameters.address, vm['geoCodeResults'])
-    vm['map'] = vm['gMap'] = null
-    geocodeSvc.loadAngularGoogleMap(mapConfig, vm)
-    stop = $scope.$on 'modal.afterShow', (ev)->
-      h = setMapHeight()
-      stop?()
-      return
-    return
-
-
-  setMapHeight = ()->
-    # calculate mapHeight
-
+  init = (params)->
+    # calculate mapHeight based on window.innerWidth
     contentH =
       if $window.innerWidth <= MODAL_VIEW.GRID_RESPONSIVE_SM_BREAK  # same as @media(max-width: 680)
       then $window.innerHeight
       else $window.innerHeight * (1 - MODAL_VIEW.MARGIN_TOP_BOTTOM) # margin: 10% auto
-
     mapH = contentH - MODAL_VIEW.OFFSET_HEIGHT
     mapH = Math.max( MODAL_VIEW.MAP_MIN_HEIGHT , mapH)
     # console.log ["height=",$window.innerHeight , contentH,mapH]
+    stop = $scope.$on 'modal.afterShow', (ev)->
+      h = setMapHeight(mapH)
+      stop?()
 
-    # TODO: use directive:style-scoped
+    # {geocodeResults:, geoCodeOptions:} = params
+    gmc.fields['geocodeResults'] = params.geocodeResults[0...MODAL_VIEW.DISPLAY_LIMIT]
+    options = params['geocodeOptions']
+    options.useOriginalAddress = !!options.latlng
+    return prepareMap(options, gmc.fields['geocodeResults'],null)
+    .then (mapConfig)->
+      gmc['map'] = gmc['gMap'] = null
+      return geocodeSvc.loadAngularGoogleMap(mapConfig, gmc)
+    .then (mapConfig)->
+      gmc.mapId = 'gMap-' + gmc['gMap'].uiGmap_id
+      # $window.gMap = mv.gMap
+      gmc.centerMap(gmc)
+
+
+
+  setMapHeight = (mapH)->
     styleH = """
       #address-lookup-map .wrap {height: %height%px;}
       #address-lookup-map .angular-google-map-container {height: %height%px;}
     """
     styleH = styleH.replace(/%height%/g, mapH)
-    angular.element(document.getElementById('address-lookup-style')).append(styleH)
+    gmc['cssStyle'] = styleH  # <style-scoped>
     return mapH
 
 
 
-  parseLocation = (geoCodeResultOrModel, target)->
-    return {} if _.isEmpty geoCodeResultOrModel
-    location0 = geocodeSvc.getLatLonFromObj( geoCodeResultOrModel )
+  prepareMap = (options, geocodeResults, markerModel)->
+    return $q.when()
+    .then ()->
+      address = options if _.isString options
+      address ?= options.address
+      gmc.fields['address0'] = address       # search address
+      gmc.fields['addressDisplay'] = address if options.useOriginalAddress
+
+      if isZeroResult = geocodeResults==GEOCODER.STATUS.ZERO_RESULTS
+        geocodeResults = [GEOCODER.getPlaceholderDefault()]
+
+      markerCount = if markerModel? then 1 else geocodeResults.length
+
+      if markerCount == 0
+        return null
+
+      # type=oneMarker
+      if markerCount == 1
+        selectedLocation = markerModel || geocodeResults[0]
+        _.extend gmc.fields, parseFieldsFromGeocodeResult( selectedLocation
+        , gmc.fields
+        , options.useOriginalAddress
+        )
+        gmc['marker-moved'] = false
+        mapOptions = {
+          type: if isZeroResult then 'none' else 'oneMarker'
+          location: gmc.fields['location']
+          marker:
+            id: '1'
+            latitude: gmc.fields['location'][0]
+            longitude: gmc.fields['location'][1]
+            label: null
+            formatted_address: gmc.fields['addressFormatted']
+          draggableMarker: true
+          dragendMarker: gmc['on']['oneMarkerDragend']
+        }
+        return mapConfig = geocodeSvc.getMapConfig mapOptions
+
+      # type=manyMarkers, markerCount > 1
+      gmc.fields['latlon'] = null
+      gmc.fields['addressFormatted'] = gmc.MESSAGE.MULTIPLE_RESULTS
+      gmc.fields['addressDisplay'] = ''
+      gmc.fields['error-address0'] = null
+      _.each geocodeResults, (o)->
+        o['location'] = o.geometry.location
+      models = geocodeSvc.mapLocations geocodeResults, {
+        id: 'place_id'
+        label: 'formatted_address'
+      }
+      mapOptions = {
+        type: 'manyMarkers'
+        draggableMarker: true     # BUG? click event doesn't work unless true
+        markers: models
+        clickMarker: gmc['on']['clickMarkerManyMarkers']
+        dragendMarker: (marker, eventName, model)->
+          # for type=oneMarker
+          mapOptions.clickMarker(marker, eventName, model)
+          return
+      }
+      return mapConfig = geocodeSvc.getMapConfig mapOptions
+
+  parseFieldsFromGeocodeResult = (geocodeResultOrModel, viewData, useOriginalAddress)->
+    return {} if _.isEmpty geocodeResultOrModel
+    location0 = geocodeSvc.getLatLonFromObj( geocodeResultOrModel )
     resp = {
       'location': location0
       'latlon': location0.join(', ')
-      'addressFormatted': geoCodeResultOrModel.formatted_address
-      'addressDisplay': angular.copy geoCodeResultOrModel.formatted_address
+      'addressFormatted': geocodeResultOrModel.formatted_address
+      'addressDisplay':
+        if useOriginalAddress
+        then viewData.address0
+        else angular.copy geocodeResultOrModel.formatted_address
       'error-address0': null
     }
     # add error message, as necessary
-    switch geoCodeResultOrModel.status
+    switch geocodeResultOrModel.status
       when GEOCODER.STATUS.ZERO_RESULTS
-        resp['error-address0'] = vm.MESSAGE.ZERO_RESULTS_ERROR
+        resp['error-address0'] = gmc.MESSAGE.ZERO_RESULTS_ERROR
         resp['latlon'] = null
         resp['addressDisplay'] = null
 
-    _.extend target, resp     # copy attributes to view model
+    # _.extend viewData, resp     # copy attributes to view model
     return resp
 
-  setupMap = (address, geoCodeResults, model)->
 
-    if isZeroResult = geoCodeResults==GEOCODER.STATUS.ZERO_RESULTS
-      geoCodeResults = [GEOCODER.getPlaceholderDefault()]
-
-    vm['address0'] = address       # search address
-    markerCount = if model? then 1 else geoCodeResults.length
-
-    if markerCount == 0
-      return
-
-    if markerCount == 1
-      selectedLocation = model || vm['geoCodeResults'][0]
-      retval = parseLocation( selectedLocation, vm )
-      vm['marker-moved'] = false
-      mapOptions = {
-        type: if isZeroResult then 'none' else 'oneMarker'
-        location: vm['location']
-        marker:
-          id: '1'
-          latitude: vm['location'][0]
-          longitude: vm['location'][1]
-          label: null
-          formatted_address: vm['addressFormatted']
-        draggableMarker: true
-        dragendMarker: (marker, eventName, args)->
-          # for type=oneMarker
-          vm['location'] = geocodeSvc.getLatLonFromObj marker
-          vm['latlon'] = vm['location'].join(', ')
-          vm['marker-moved'] = true
-          vm['addressFormatted'] = ''
-          return
-      }
-      mapConfig = geocodeSvc.getMapConfig mapOptions
-      return mapConfig
-
-    # markerCount > 1
-    vm['latlon'] = null
-    vm['addressFormatted'] = vm.MESSAGE.MULTIPLE_RESULTS
-    vm['addressDisplay'] = ''
-    vm['error-address0'] = null
-    mapOptions = {
-      type: 'manyMarkers'
-      draggableMarker: true     # BUG? click event doesn't work unless true
-      markers: geoCodeResults
-      clickMarker: (marker, eventName, model)->
-        index = model.id
-        vm['geoCodeResults'] = [ vm['geoCodeResults'][index] ]
-        newMapConfig = setupMap(model.formatted_address, null, model)
-        vm['address-changed'] = true
-        vm['marker-moved'] = true
-        geocodeSvc.loadAngularGoogleMap(newMapConfig, vm)
-        vm['map'] = newMapConfig
-        # console.log newMapConfig
-        # console.log ['click location', vm['location']]
-        return
-      dragendMarker: (marker, eventName, model)->
-        # for type=oneMarker
-        mapOptions.clickMarker(marker, eventName, model)
-        return
-    }
-    return geocodeSvc.getMapConfig mapOptions
-
-  vm.centerMap = (mapHandle)->
+  gmc.centerMap = (mapHandle)->
     # mv.gMap.isReady = true
     gMap = mapHandle['gMap']
     mapConfig = mapHandle['map']
@@ -622,90 +693,70 @@ VerifyLookupCtrl = ($scope, parameters, $q, $timeout, $window, geocodeSvc)->
     gMap.setCenter(center)
     return
 
-  # vm.geocode = geocodeSvc.geocode
-  vm.updateGeocode = (address)->
-    vm.loading = true
-    return geocodeSvc.geocode(address)
+  gmc.on = {
+    oneMarkerDragend: (marker, eventName, args)->
+      # for type=oneMarker
+      gmc.fields['location'] = geocodeSvc.getLatLonFromObj marker
+      gmc.fields['latlon'] = gmc.fields['location'].join(', ')
+      gmc['marker-moved'] = true
+      gmc.fields['addressFormatted'] = ''
+    clickMarkerManyMarkers: (marker, eventName, model)->
+      gmc.fields['geocodeResults'] = _.filter( gmc.fields.geocodeResults
+      , {'place_id': model.id}
+      )
+      return prepareMap(model.formatted_address, null, model)
+      .then (mapConfig)->
+        console.log mapConfig
+        console.log ['click location', gmc['location']]
+
+        gmc['address-changed'] = true
+        gmc['marker-moved'] = true
+        gmc['map'] = gmc['gMap'] = null
+        return geocodeSvc.loadAngularGoogleMap(mapConfig, gmc)
+      .then (mapConfig)->
+        gmc.mapId = 'gMap-' + gmc['gMap'].uiGmap_id
+        gmc.centerMap(gmc)
+
+
+      return
+  }
+  # gmc.geocode = geocodeSvc.geocode
+  # geocode a new address
+  gmc.updateGeocode = (address)->
+    gmc.loading = true
+    return geocodeSvc.geocode({address:address})
     .then (results)->
       if results == GEOCODER.STATUS.ZERO_RESULTS
         console.log "ZERO_RESULTS FOUND"
         results = [GEOCODER.getPlaceholderDefault()]
       return results
     .then (results)->
-      vm['geoCodeResults'] = results
-      newMapConfig = setupMap(address, vm['geoCodeResults'])
-
-      vm['address-changed'] = false  # check again on save event if true
-      if !vm['gMap']
-        return geocodeSvc.loadAngularGoogleMap(newMapConfig, vm)
-      return vm['map'] = newMapConfig
+      gmc.fields['geocodeResults'] = results
+      return prepareMap(address, gmc.fields['geocodeResults'])
     .then (mapConfig)->
-      vm.centerMap(vm)
+      gmc['address-changed'] = false
+      gmc['map'] = gmc['gMap'] = null
+      return geocodeSvc.loadAngularGoogleMap(mapConfig, gmc)
+    .then (mapConfig)->
+      gmc.centerMap(gmc)
     , (err)->
       return $q.reject err
     .finally ()->
-      $timeout ()->
-        vm.loading = false
-      ,250
+      $timeout(250).then ()->
+        gmc.loading = false
 
-  $scope.$watch 'vm.addressDisplay', (newV)->
-    vm['address-changed'] = true
+
+  $scope.$watch 'gmc.fields.addressDisplay', (newV)->
+    gmc['address-changed'] = true
     return
 
   init(parameters)
-  return vm
+  return gmc
 
-VerifyLookupCtrl.$inject = ['$scope', 'parameters', '$q', '$timeout', '$window', 'geocodeSvc']
-
-
+GeocodeModalCtrl.$inject = ['$scope', 'parameters', '$q', '$timeout', '$window', 'geocodeSvc']
 
 
 
-
-# deprecate: use <auto-input>
-ClearFieldDirective = ($compile, $timeout)->
-  directive = {
-    restrict: 'A',
-    require: 'ngModel'
-    scope: {}
-    link: (scope, element, attrs, ngModel) ->
-      inputTypes = /text|search|tel|url|email|password/i
-      if element[0].nodeName != 'INPUT'
-        throw new Error "clearField is limited to input elements"
-      if not inputTypes.test(attrs.type)
-        throw new Error "Invalid input type for clearField" + attrs.type
-
-
-      btnTemplate = """
-      <i ng-show="enabled" ng-click="clear()" class="icon ion-close-circled pull-right">&nbsp;</i>
-      """
-      template = $compile( btnTemplate )(scope)
-      element.after(template)
-
-      scope.clear = ()->
-        ngModel.$setViewValue(null)
-        ngModel.$render()
-        scope.enabled = false
-        $timeout ()->
-          return element[0].focus()
-        ,150
-
-      # element.bind 'input', (e)->
-      #   scope.enabled = !ngModel.$isEmpty element.val()
-      #   return
-
-      element.bind 'focus', (e)->
-        scope.enabled = !ngModel.$isEmpty element.val()
-        scope.$apply()
-        return
-
-      return
-
-  }
-  return directive
-
-
-ClearFieldDirective.$inject = ['$compile', '$timeout']
 
 
 LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocation)->
@@ -840,9 +891,12 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
         console.log ['with location',retval]
         return retval
       .then (result)->
-        return geocodeSvc.geocode( result.latlon.join(','))
-        .then (geoCodeResults)->
-          firstResult = geoCodeResults[0]
+        return geocodeSvc.geocode( {location: result.latlon.join(',')})
+        .then (results)->
+          if results == GEOCODER.STATUS.ZERO_RESULTS
+            console.warn "ZERO_RESULTS FOUND"
+            throw new Error (MODAL_VIEW.MESSAGE.ZERO_RESULTS_ERROR)
+          firstResult = results[0]
           location = firstResult['geometry']['location']
           retval = {
             latlon: [location.lat() , location.lng()]
@@ -872,6 +926,7 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       allow user to verify location before returning result
     @params options object
       options.address, address string
+      options.geojson, geojson point
       options.latlon, array [lat,lon], usually from current location
       options.isCurrentLocation boolean, set true to update address string but
           NOT latlon
@@ -881,18 +936,31 @@ LocationHelpers = (geocodeSvc, $q, $ionicPopup, $ionicLoading, $cordovaGeolocati
       reject: err, err.humanize is the humanized error message
     ###
     geocodeAddress: (options, force)->
-      if options.geojson
-        options.latlon = self.asLonLat(options.geojson, 'latlon')
-        location = options.latlon.join(',') if force
-      if options.latlon && options.isCurrentLocation && force
-        location = options.latlon.join(',')
-      if options.latlon && !force
-        console.log ['locationClick()', _.pick( options, ['latlon','address'] ) ]
-        return $q.when options
-      location ?= options.address
-      return $q.reject("ERROR: Expecting Address or Location.") if !location
+      # if options.geojson
+      #   options.latlon = self.asLonLat(options.geojson, 'latlon')
+      #   location = options.latlon.join(',') if force
+      # if options.latlon && options.isCurrentLocation && force
+      #   location = options.latlon.join(',')
+      # if options.latlon && !force
+      #   console.log ['locationClick()', _.pick( options, ['latlon','address'] ) ]
+      #   return $q.when options
+      # location ?= options.address
+      # return $q.reject("ERROR: Expecting Address or Location.") if !location
       #  this launches modal
-      return geocodeSvc.getLatLon( location )
+      find = {
+        location: options.geojson || options.latlon?.join(',') || null
+        address: options.address || null
+      }
+      if options.latlon && !force
+        console.error [
+          'what do we do here? locationClick()'
+          _.pick( options, ['latlon','address'] )
+        ]
+        return $q.when options
+      if find.location == null && find.address == null
+        return $q.reject("ERROR: Expecting Address or Location.")
+
+      return geocodeSvc.getLatLon( find )
       .then (result)->
         return 'CANCELED' if !result
         console.log ['locationClick()', result]
@@ -952,5 +1020,4 @@ angular.module 'blocks.components'
   .config geocodeSvcConfig
   .factory 'geocodeSvc', Geocoder
   .factory 'locationHelpers', LocationHelpers
-  # .directive 'clearField', ClearFieldDirective
-  .controller 'VerifyLookupCtrl', VerifyLookupCtrl
+  .controller 'GeocodeModalCtrl', GeocodeModalCtrl

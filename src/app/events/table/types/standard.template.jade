@@ -6,7 +6,7 @@ ion-modal-view
       div.col.col-offset-25.col-50
         div.scope-locals.hide
           //- ng-include
-          {{$ctrl = $parent.$ctrl;}}  
+          {{$ctrl = $parent.$ctrl;''}}  
         form(name="createEventForm" novalidate="" ng-submit="")
           div.list
             div.item.item-avatar
