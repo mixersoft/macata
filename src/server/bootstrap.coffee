@@ -60,6 +60,80 @@ bootstrap = ()->
       redirectUrl.substr(0, appHostReplacedLocalhost.length) != appHostReplacedLocalhost
     )
 
+  # redirect to '/public/index.html'
+  # see: http://stackoverflow.com/questions/37901200/how-can-i-fs-readfile-a-file-from-the-public-folder-of-a-meteor-up-deployment
+  ## using IronRouter
+  # cd ./meteor/private; ln -s ../public/index.html .
+  defaultRouteIronRouter = ()->
+    Router.route( '/', { where: 'server' } )
+    .get ()->
+      contents = Assets.getText('index.html')
+      this.response.end contents
+
+
+  ## using WebApp.connectHandlers
+  defaultRouteConnect = ()->
+    fs = Npm.require('fs')
+    crypto = Npm.require('crypto')
+
+    search = [
+      '../../programs/web.browser/app/index.html' # mupx location
+      process.env.PWD + '/public/index.html'      # meteor project location
+    ]
+
+    _redirect = (filepath, req, res)->
+      ## serve default file, with eTag
+      # console.log 'bootstrap.js: filepath=' + filepath
+      fs.readFile(filepath, (err, buf)->
+        if err
+          res.writeHead(500, 'Error reading index.html' )
+          return res.end()
+
+        try
+          eTag = crypto.createHash('md5').update(buf).digest('hex')
+          # console.log 'bootstrap.js: eTag=' + eTag
+          if req.headers['if-none-match'] == eTag
+            res.writeHead(304, 'Not Modified' )
+            return res.end()
+        catch err
+          eTag = Date.now()
+
+        headers = {
+          'Content-Type': 'text/html'
+          'ETag': eTag
+        }
+        console.log headers
+        res.writeHead(200, headers)
+        return res.end(buf)
+      )
+
+    WebApp.connectHandlers.use("/", (req, res, next)->
+      return next() if req.originalUrl != '/'
+      return next() if req.method != 'GET'
+
+      found = _.some search, (filepath)->
+        try
+          if fs.statSync(filepath).isFile()
+            _redirect(filepath, req, res)
+            return true
+        catch err
+        return false
+
+      if found == false
+        console.log "index.html file not available, seach=", search
+        result = fs.readdirSync('.')
+        console.log result
+        res.writeHead(500, 'Default index.html Not Found' )
+        return res.end()
+
+      return
+    )
+
+  if useIronRouter = false
+    defaultRouteIronRouter()
+  else
+    defaultRouteConnect()
+
   console.log("Settings=" + JSON.stringify(Meteor.settings))
 
   return

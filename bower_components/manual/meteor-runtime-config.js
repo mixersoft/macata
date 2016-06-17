@@ -10,21 +10,29 @@
 
 setMeteorRuntime = function(){
   var runConfig, hostname, port, connect, settings, oauth_rootUrl;
-
+  // window.location.origin == "http://localhost:3333"
   switch (window.location.hostname) {
     case 'localhost':
       runConfig = "DEV";
       hostname = window.location.hostname;
-      port = '3333';
-      connect = ['http://', hostname, ':', port, '/'].join('');
-      oauth_rootUrl = ['http://', hostname, ':', '3000', '/'].join('');
+      meteorPort = '3333';
+      if (window.location.port === meteorPort){
+        oauth_rootUrl = connect = window.location.origin;
+      } else {
+        connect = ['http://', hostname, ':', meteorPort, '/'].join('');
+        oauth_rootUrl = ['http://', hostname, ':', '3000', '/'].join('');
+      }
       break;
     case 'app.snaphappi.com':
       runConfig = "BROWSER";
       hostname = window.location.hostname
-      port = '3333';
-      connect = ['http://', hostname, ':', port, '/'].join('');
-      oauth_rootUrl = ['http://', hostname, '/macata.App/'].join('');
+      meteorPort = '3333';
+      if (window.location.port === meteorPort){
+        oauth_rootUrl = connect = window.location.origin;
+      } else {
+        connect = ['http://', hostname, ':', meteorPort, '/'].join('');
+        oauth_rootUrl = ['http://', hostname, '/macata.App/'].join('');
+      }
       break;
     default:
       if (ionic.Platform.isWebView() == false) {
@@ -66,7 +74,13 @@ setMeteorRuntime = function(){
     return;
   });
 
-  OR add manually, see setMeteorSettingsPublic()
+  OR add manually, see setMeteorSettingsPublic() below
+
+
+  IMPORTANT: 
+    facebook.oauth_rootUrl sets OAuth._redirectUri(,,,{rootUrl:})
+    which MUST point to the client rootUrl requesting loginWithFacebook
+    - see: /path/to/meteor/.meteor/local/build/programs/server/packages/facebook.js
   *
   */
 

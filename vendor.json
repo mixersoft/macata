@@ -48,7 +48,7 @@
     "meteor-client-side/dist/meteor-client-side.bundle.js",
     "manual/dist/accounts-base-client-side.bundle.min.js",
     "manual/dist/accounts-password-client-side.bundle.min.js",
-    "manual/dist/accounts-facebook-client-side.bundle.min.js",
+    "manual/dist/accounts-facebook-client-side.bundle.js",
     "moment/min/moment.min.js"
   ]
 }

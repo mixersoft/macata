@@ -214,7 +214,7 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
           loginStyle: 'popup'
           requestPermissions: ['public_profile','email','user_friends']
         }
-        if ionic.Platform.isWebView()
+        if ionic.Platform.isWebView() || false
           # for ionic view without 'accounts-facebook-cordova' plugin
           # DOESN'T work, what is the correct redirectUrl??
           fbOptions['loginStyle'] = 'redirect'
@@ -392,12 +392,12 @@ SignInRegisterCtrl = ($scope, parameters, $q, $timeout, $window)->
     marginH = ($window.innerHeight - contentH)/2
     modalH = Math.max( MODAL_VIEW.MAP_MIN_HEIGHT , modalH)
     # console.log ["height=",$window.innerHeight , contentH,modalH]
-
+    # TODO: use <scoped-style>
     styleH = """
       #sign-in-register-modal-view.modal {top:%marginH%px; bottom:%marginH%px; height:%modalH%px}
     """
     styleH = styleH.replace(/%marginH%/g, marginH).replace(/%modalH%/g, modalH)
-    angular.element(document.getElementById('address-lookup-style')).append(styleH)
+    angular.element(document.getElementById('sign-in-register-style')).append(styleH)
     return modalH
 
   init()
