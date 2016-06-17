@@ -19,7 +19,10 @@ scssLint    = require 'gulp-scss-lint'
 scssStylish = require 'gulp-scss-lint-stylish'
 series      = require 'stream-series'
 uglify      = require 'gulp-uglify'
-
+concat      = require 'gulp-concat'
+rename      = require 'gulp-rename'
+filter      = require 'gulp-filter'
+templates   = require 'gulp-angular-templatecache'
 vendor      = require './vendor.json'
 
 paths =
@@ -30,7 +33,8 @@ paths =
   dest: './www/'
   vendor: './www/lib/'
   index: './www/index.html'
-  sources: [ './www/**/*.js', './www/**/*.css', '!./www/**/*.module.js', '!./www/blocks/router/*', '!./www/core/*', '!./www/layout/*', '!./www/lib/**/*.js']
+  styles: ['./www/**/*.css']
+  sources: [ './www/**/*.js', '!templates.js', '!./www/**/*.module.js', '!./www/blocks/router/*', '!./www/core/*', '!./www/layout/*', '!./www/lib/**/*.js']
   modules: ['./www/**/*.module.js', '!./www/blocks/router/*', '!./www/core/*', '!./www/layout/*']
   meteor_coffee: ['src/**/*.coffee', '!src/app/**/*.coffee']
   meteor_dest: './meteor/'
@@ -42,7 +46,7 @@ vendorPaths =
 
 gulp.task 'vendor', ->
   # just copy these files, do NOT inject
-  copyPaths = vendor.copy.map (p) -> path.resolve("./bower_components", p)
+  copyPaths = vendor.loadFirst.map (p) -> path.resolve("./bower_components", p)
   absolutePaths = vendorPaths.map (p) -> path.resolve("./bower_components", p)
   gulp.src absolutePaths.concat(copyPaths), base: './bower_components'
     .pipe gulp.dest paths.vendor
@@ -61,11 +65,27 @@ gulp.task 'sass', ->
     .pipe gulp.dest(paths.dest)
 
 gulp.task 'jade', ->
-  gulp.src paths.jade
-    .pipe cache 'jade'
-    .pipe jade if argv.production then gutil.noop() else pretty: true
-    .pipe gulp.dest(paths.dest)
+  if !argv.production
+    gutil.log('task jade/DEV')
+    gulp.src paths.jade
+      .pipe cache 'jade'
+      .pipe jade if argv.production then gutil.noop() else pretty: true
+      .pipe gulp.dest(paths.dest)
+  else
+    gutil.log('task jade/PRODUCTION')
+    gulp.src paths.jade
+      .pipe filter ['**/index.*']
+      .pipe cache 'jade'
+      .pipe jade gutil.noop()
+      .pipe gulp.dest(paths.dest)
 
+    gulp.src paths.jade
+      .pipe filter ['**/*.*','!**/index.*']
+      .pipe cache 'jade'
+      .pipe jade gutil.noop()
+      .pipe templates( 'templates/templates.js' )
+      .pipe gulp.dest(paths.dest)
+      
 gulp.task 'coffee', ->
   gulp.src paths.coffee
     .pipe cache 'coffee'
@@ -86,17 +106,45 @@ gulp.task 'meteor_coffee', ->
 
 gulp.task 'index', ->
   # Inject in the correct order to startup app
-  skipVendorPaths = vendor.copy.map (p) -> "!**/"+p
-  gutil.log(["do NOT inject:"].concat(skipVendorPaths))
-  vendor = gulp.src [paths.vendor+'**/*.js','!**/lib/ionic/**'].concat(skipVendorPaths), read: false
-  blocks = gulp.src ['./www/blocks/router/*.module.js', './www/blocks/router/*.js'], read: false
-  core = gulp.src ['./www/core/core.module.js', './www/core/core.*.js'], read: false
-  layout = gulp.src ['./www/layout/layout.module.js', './www/layout/layout.route.js'], read: false
-  modules = gulp.src paths.modules, read: false
-  sources = gulp.src paths.sources, read: false
-  target = gulp.src paths.index
+  vendor0_paths =  vendor.loadFirst.map (p) ->
+    return "!**/"+p if /ionic.bundle|ng-cordova/.test p 
+    return paths.vendor+"**/"+p
+  vendor1_paths = [paths.vendor+'**/*.js','!**/lib/ionic/**']
+    .concat vendor.loadFirst.map (p) -> "!**/"+p
+  gutil.log(["inject first:"].concat(vendor0_paths))
+  gutil.log(["inject second:"].concat(vendor1_paths))
 
-  target.pipe inject series(vendor, blocks, core, layout, modules, sources), relative: true
+  # no concat()
+  blocks = gulp.src ['./www/blocks/router/*.module.js', './www/blocks/router/*.js'], read: false
+  layout = gulp.src ['./www/layout/layout.module.js', './www/layout/layout.route.js'], read: false
+
+  if argv.production
+    # concat for production
+    vendor0 = gulp.src vendor0_paths
+      .pipe( concat('vendor.0.js') )
+      .pipe gulp.dest paths.dest 
+    vendor1 = gulp.src vendor1_paths
+      .pipe( concat('vendor.1.js') )
+      .pipe gulp.dest paths.dest
+    core = gulp.src ['./www/core/core.module.js', './www/core/core.*.js']
+      .pipe( concat('core.js') ).pipe gulp.dest paths.dest
+    modules = gulp.src paths.modules
+      .pipe( concat('modules.js') ).pipe gulp.dest paths.dest
+    sources = gulp.src( paths.sources )
+      .pipe( concat('app.js') ).pipe gulp.dest paths.dest
+    styles = gulp.src paths.styles
+      .pipe( concat('app.css') ).pipe gulp.dest( paths.dest + 'scss/')
+  else
+    # no concat() for dev
+    vendor0 = gulp.src vendor0_paths, read: false
+    vendor1 = gulp.src vendor1_paths, read: false
+    core = gulp.src ['./www/core/core.module.js', './www/core/core.*.js'], read: false
+    modules = gulp.src paths.modules, read: false
+    styles = gulp.src paths.styles, read: false
+    sources = gulp.src paths.sources, read: false
+
+  target = gulp.src paths.index
+  target.pipe inject series(vendor0, vendor1, blocks, core, layout, modules, styles, sources), relative: true
     .pipe gulp.dest paths.dest
 
 gulp.task 'clean', (done) ->

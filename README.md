@@ -43,3 +43,64 @@ Ionic tabbed view starter project implemented with Sass, Jade and CoffeeScript.
 
 The original project in JavaScript was done by [benevolentprof](https://github.com/benevolentprof "benevolentprof") @ [ionic-tabs-starter-angular-style](https://github.com/benevolentprof/ionic-tabs-starter-angular-style "ionic-tabs-starter-angular-style"),
 an Ionic tabbed view starter project refactored according to the Angular Style Guide.
+
+
+## Macata.info.plist
+```
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSExceptionDomains</key>
+    <dict>
+      <key>snaphappi.com</key>
+      <dict>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
+      </dict>
+      <key>facebook.com</key>
+      <dict>
+        <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+      </dict>
+      <key>fbcdn.net</key>
+      <dict>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+      </dict>
+      <key>akamaihd.net</key>
+      <dict>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+      </dict>
+      <key>amazonaws.com</key>
+      <dict>
+        <key>NSThirdPartyExceptionMinimumTLSVersion</key>
+        <string>TLSv1.0</string>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+      </dict>
+      <key>amazonaws.com.cn</key>
+      <dict>
+        <key>NSThirdPartyExceptionMinimumTLSVersion</key>
+        <string>TLSv1.0</string>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+      </dict>
+    </dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <false/>
+  </dict>
+  ```

@@ -54,11 +54,20 @@ appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
 
   return # appRun
 
+
+appRun.$inject = [
+  '$ionicPlatform', '$ionicHistory', '$rootScope', '$location',
+  'deviceReady'
+  '$log', 'devConfig', 'AAAHelpers'
+]
+
 toastrConfig = (toastrConfig) ->
   angular.extend toastrConfig, {
     timeOut: 4000
     positionClass: 'toast-bottom-left'
   }
+
+toastrConfig.$inject = ['toastrConfig']
 
 ionicConfig = ($ionicConfigProvider)->
   $ionicConfigProvider.backButton.text('')
@@ -73,11 +82,6 @@ ionicConfig.$inject = ['$ionicConfigProvider']
 
 
 
-appRun.$inject = [
-  '$ionicPlatform', '$ionicHistory', '$rootScope', '$location',
-  'deviceReady'
-  '$log', 'devConfig', 'AAAHelpers'
-]
 
 angular
   .module 'starter.core'

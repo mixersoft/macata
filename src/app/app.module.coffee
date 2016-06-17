@@ -30,4 +30,5 @@ angular
     'starter.events'
     'starter.feed'
     'angularFileUpload'
+    'templates'
   ]
