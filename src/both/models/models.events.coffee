@@ -6,7 +6,8 @@ options = {
   'profile':
     fields:
       username: 1
-      profile: 1
+      displayName: 1
+      face: 1
   'menuItem':
     limit: 10
 }
@@ -32,6 +33,10 @@ global['EventModel'] = class EventModel
   release: ()->
     delete @context
 
+EventModel::fetchOwner = (model={})->
+  if @context
+    model = @context
+  return Meteor.users.findOne(model.ownerId, options['profile'])
 
 EventModel::isAdmin = (event, userId)->
   if @context
@@ -88,6 +93,33 @@ EventModel::findMenuItems = (event={})->
     }
     , options['menuItem'])
 
+EventModel::recent = (days, options)->
+  after = moment().subtract(days,'d')
+  before = moment().subtract(1,'h')
+  return EventModel::between(after, before, options)
+
+EventModel::between = (after, before, options={})->
+  after = moment().add(after,'d') if _.isNumber after
+  before = moment().add(before,'d') if _.isNumber before
+  selector = {'startTime':{}}
+  selector['startTime']['$gt'] = after if after
+  selector['startTime']['$lt'] = before if before
+  method = if options.iso then 'toISOString' else 'toDate'
+  _.each selector['startTime'], (v,k,o)->
+    o[k] = v[method]()
+
+  fields = ['_id', 'startTime', 'duration']
+  fields = fields.concat(options.fields) if options.fields
+  fields = _.chain(fields)
+    .zipObject()
+    .each( (v,k,o)-> return o[k]=1 )
+    .value()
+  return {
+    selector: selector
+    projection: {fields: fields}
+  } if options.selector
+  return mcEvents.find( selector , {fields: fields}).fetch()
+
 
 
 global['mcEvents'] = mcEvents = new Mongo.Collection('events', {
@@ -103,6 +135,47 @@ allow = {
     return userId && event.ownerId == userId
 }
 
+EVENT_ATTRIBUTES = {
+  all: [
+    "_id", "className"
+    "type"
+    # see <filtered-feed.inviteActions()>
+    # <table-create-wizard.beginTableWizard()>
+    # values = [progressive-invite, kickstarter, booking, standard]
+    "ownerId", "title", "description", "image"
+    "seatsOpen", "seatsTotal"
+    "startTime", "duration"
+    "isPublic", "locationName", "address", "neighborhood", "geojson"
+    "settings"
+    # see:
+    #   eventUtils.mockData(),
+    #   EventDetailCtrl:callbacks.onChange()
+    #   BookingCtrl.createParticipation()
+    "participations"
+    # TODO: ???: get participations from event.Feed?
+    # participations = [{
+    #   id: Date.now()
+    #   ownerId: mi.ownerId
+    #   seats: _.random(3) + 1  # random seats for participation
+    #   contributions: [{
+    #     _id:
+    #     className:
+    #     ???: quantity:
+    #     comment:
+    #   }]
+    #   comment:
+    #   createdAt: moment(mi.createdAt).add(i, 'hours').toJSON()
+    # }]
+    "moderatorIds"
+    # denormalized
+    "menuItemIds", "participantIds"
+
+  ]
+  insert: ()->
+    return _.difference EVENT_ATTRIBUTES.all, ['_id', 'className']
+  update: ()->
+    return _.difference EVENT_ATTRIBUTES.all, ['className', 'type', 'createdAt']
+}
 
 methods = {
   'Event.toggleFavorite': (model)->
@@ -124,29 +197,38 @@ methods = {
     return
 
   'Event.upsert': (data, fields)->
+    if !data
+      throw new Meteor.Error('no-data'
+      , 'Expecting something to upsert', null
+      )
     meId = Meteor.userId()
-    allowedFields = [
-      'type', 'ownerId'
-      'title', 'description', 'image'
-      'participations'
-      # 'participantIds'  ???
-      'seatsTotal', 'seatsOpen'
-      'startTime','duration'
-      'isPublic', 'locationName', 'address', 'neighborhood'
-      'geojson'
-      'settings'
-    ]
+    data['className'] = 'Events'
+    if isUpdate = data._id
+      if data.ownerId != meId
+        throw new Meteor.Error('no-permission'
+        , 'You do not have permission to update', null
+        )
+      data['modifiedAt'] = new Date()
+      allowedFields = EVENT_ATTRIBUTES.update()
+    else
+      data['ownerId'] = meId
+      data['createdAt'] = new Date()
+      allowedFields = EVENT_ATTRIBUTES.insert()
 
+    RecipeModel::setAsGeoJsonPoint(data)
+    allowedFields =
+      if isUpdate then EVENT_ATTRIBUTES.update() else EVENT_ATTRIBUTES.insert()
     fields =
       if fields
       then _.intersection fields, allowedFields
       else allowedFields
 
-    if data._id
+    data = _.pick data, fields
+    if isUpdate
       modifier = {}
-      modifier['$set'] = _.pick data, fields
+      modifier['$set'] = _.omit data, '_id'
       return mcEvents.update(data._id, modifier)
-    return mcEvents.insert _.pick(data, fields)
+    return mcEvents.insert( data )
 
   'Event.updateBooking': (event, booking)->
     # save participations directly in Event
@@ -207,9 +289,10 @@ methods = {
     mcEvents.update(event._id, modifier )
     return
 
-  'Admin.moveEventDate': (days, field='startTime')->
-    where = {}
-    where[field] = {$exists:true}
+  'Admin.moveEventDate': (where, days, field='startTime')->
+    if !where
+      where = {}
+      where[field] = {$exists:true}
     events = mcEvents.find(where).fetch()
     events.forEach (event)->
       modifier = { $set: {}  }

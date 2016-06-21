@@ -77,7 +77,7 @@ EventWhenHelper = {
       this.on = {}
       this.on['showHelper'] = (ev)=>
           this.showHelper = true
-          parent = ionic.DomUtil.getParentWithClass ev.currentTarget, 'event-when-helper'
+          parent = ionic.DomUtil.getParentWithClass ev.target, 'event-when-helper'
           $timeout().then ()->
             nextEl = parent.querySelector('.time-input-helper input')
             nextEl.focus()

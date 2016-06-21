@@ -152,8 +152,6 @@ TableEditSvc = (
         return model.validateFields(data)
       .then (data)->
         return model.beforeSave(data)
-      # .then (data)->
-      #   return model.commit(data)
       .catch (err)->
         console.warn ['prepareSubmit', err]
         # TODO: do not close modal, call
@@ -197,17 +195,6 @@ TableRouter = (
       return @model['beforeInsert']?(data) || data
     this.beforeUpdate = (data)->
       return @model['beforeUpdate']?(data) || data
-
-    # TODO: ???:move outside component
-    this.commit = (data)->
-      dfd = $q.defer()
-      Meteor.call 'Event.upsert', data, null, (err, retval)->
-        if err
-          console.error ['Meteor Event.upsert', err]
-          return dfd.reject(err)
-        console.log 'Meteor Event.upsert', retval
-        return dfd.result(retval)
-      return dfd.promise
     return
 
   this.getType = (type)=>
@@ -243,9 +230,11 @@ TableStandard = ($q)->
   self = {
     type: 'standard'
     defaults: {
+      # see: EVENT_ATTRIBUTES.all
       _id: null
       type: null
       className: null
+      ownerId: null
       title: null
       description: null
       image: null
@@ -260,8 +249,9 @@ TableStandard = ($q)->
       geojson: null
       settings: {}
       participations: []
-      # moderatorIds: []
-      # menuItemIds: []
+      participantIds: []
+      moderatorIds: []
+      menuItemIds: []
       # participations: []
       # deprecate:
       #   participantIds = _.pluck(event.participations, 'ownerId')

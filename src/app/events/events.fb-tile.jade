@@ -16,7 +16,7 @@ list-item-summary.animate-fade-slide-in-right(
     ui-sref="app.event-detail({'id':$item._id})"
   )
     div.hero.content.has-mask(style="height:160px;")
-      {{ $$host=$item.fetchHost();'' }}
+      {{ $$host=vm.EventM.fetchHost($item);'' }}
       div.item-avatar-right.ink
         img.ink(
           ng-src="{{$$host.face}}"

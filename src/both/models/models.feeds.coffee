@@ -6,7 +6,8 @@ options = {
   'profile':
     fields:
       username: 1
-      profile: 1
+      displayName: 1
+      face: 1
 }
 
 

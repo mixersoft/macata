@@ -14,6 +14,7 @@ EventCtrl = (
     vm.viewId = ["events-view",$scope.$id].join('-')
     vm.title = "Events"
     vm.listItemDelegate = null
+    vm.EventM = EventModel::
     vm.RecipeM = RecipeModel::
 
     # required for directive:map-view
@@ -53,9 +54,9 @@ EventCtrl = (
             self.slider.slideTo(1,speed)
             selector = '#' + vm.viewId + ' input'
             setTimeout ()->return document.querySelector(selector ).focus()
-          when 'newTile'
+          when 'newTable'
             self.slider.slideTo(2,speed)
-            selector = '#' + vm.viewId + ' new-tile input'
+            selector = '#' + vm.viewId + ' table-create-wizard input'
             setTimeout ()->return document.querySelector(selector ).focus()
             return
           when 'none','reset'
@@ -172,25 +173,29 @@ EventCtrl = (
         TableEditSvc.beginTableWizard(data.type, data)
         .then (result)->
           return if result == 'CANCELED'
-          return vm.on.submitNewTile({data: result})
+          return vm.on.submit(result)
 
-      createNewTile: (parentEl)->
+      createNewTable: (parentEl)->
         # return AAAHelpers.requireUser('sign-in')
         # .then (me)->
         vm.settings.show.pullToReveal = !vm.settings.show.pullToReveal
         if vm.settings.show.pullToReveal
-          vm.pullToReveal.slide('newTile')
+          vm.pullToReveal.slide('newTable')
         else
           $timeout(250).then ()->vm.pullToReveal.slide('default')
 
-      submitNewTile: (result)->
-        console.log ["submit New Event",result]
+      submit: (data)->
+        console.log ["submit New Event",data]
+        vm.call 'Event.upsert', data, null, (err, retval)->
+          if err
+            console.error ['Meteor Event.upsert', err]
+          console.log 'Meteor Event.upsert', retval
 
       fabClick: ($ev)->
         return AAAHelpers.requireUser('sign-in')
         .then ()->
           parentEl = ionic.DomUtil.getParentWithClass($ev.target, 'events')
-          return vm.on['createNewTile'](parentEl)
+          return vm.on['createNewTable'](parentEl)
 
       notReady: (value)->
         toastr.info "Sorry, " + value + " is not available yet"
