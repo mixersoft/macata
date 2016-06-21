@@ -14,8 +14,6 @@ EventCtrl = (
     vm.viewId = ["events-view",$scope.$id].join('-')
     vm.title = "Events"
     vm.listItemDelegate = null
-    vm.EventM = EventModel::
-    vm.RecipeM = RecipeModel::
 
     # required for directive:map-view
     vm.rows = []

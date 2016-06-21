@@ -11,114 +11,75 @@ options = {
   'menuItem':
     limit: 10
 }
-
 ###
-# Example:
-    vm.EventM = new EventModel()
-    vm.EventM.set(event)
-    vm.EventM.isParticipant()
-    or
-    vm.EventModel = EventModel::
-    vm.EventModel.isParticipant(event)
-    or from publish:
-    EventModel::isParticipant(event, this.userId)
+# see models.0.coffee
+# usage:
+#   hEvents.get().fetchHost($item)
+#   hEvents.get().between(-20, 7, {iso:false})
 ###
+global['hEvents'] = class EventHelper extends global['hModel']
+  constructor: ->
+    [@arg] = super
 
-###
-#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
-###
-global['EventModel'] = class EventModel
-  constructor: (@context)->
-  set: (@context)->
-  release: ()->
-    delete @context
+  'fetchHost': (event, options)=>
+    return @fetchOwner event, options
 
-EventModel::fetchOwner = (model={})->
-  if @context
-    model = @context
-  return Meteor.users.findOne(model.ownerId, options['profile'])
+  'isModerator': (event, userId)->
+    return false if !event
+    userId ?= if Meteor.isServer then @userId else Meteor.userId()
+    return false if !userId
+    return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
+    return true if event.ownerId == userId
+    return false
 
-EventModel::isAdmin = (event, userId)->
-  if @context
-    event = @context
-    [userid] = arguments
-  return false if !event
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  return false if !userId
-  return true if event.ownerId == userId
-  return false
+  'isParticipant': (event, userId)->
+    return false if !event
+    userId ?= if Meteor.isServer then @userId else Meteor.userId()
+    return false if !userId
+    return true if event.participantIds && ~event.participantIds.indexOf userId
+    return true if event.ownerId == userId
+    return false
 
-EventModel::isModerator = (event, userId)->
-  if @context
-    event = @context
-    [userid] = arguments
-  return false if !event
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  return false if !userId
-  return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
-  return true if event.ownerId == userId
-  return false
+  'findParticipants': (event)->
+    return Meteor.users.find({
+      _id:
+        $in: [event.ownerId].concat(event.participantIds)
+      }
+      , options['profile'])
 
-EventModel::isParticipant = (event, userId)->
-  if @context
-    event = @context
-    [userid] = arguments
-  return false if !event
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  return false if !userId
-  return true if event.participantIds && ~event.participantIds.indexOf userId
-  return true if event.ownerId == userId
-  return false
+  'findMenuItems': (event)->
+    return global['mcRecipes'].find({
+      _id:
+        $in: event.menuItemIds || []
+      }
+      , options['menuItem'])
 
-EventModel::fetchHost = (event={})->
-  if @context
-    event = @context
-  return Meteor.users.findOne(event.ownerId, options['profile'])
+  'recent': (days, options)->
+    after = moment().subtract(days,'d')
+    before = moment().subtract(1,'h')
+    return @between(after, before, options)
 
-EventModel::findParticipants = (event={})->
-  if @context
-    event = @context
-  return Meteor.users.find({
-    _id:
-      $in: [event.ownerId].concat(event.participantIds)
-    }
-    , options['profile'])
+  'between': (after, before, options={})->
+    after = moment().add(after,'d') if _.isNumber after
+    before = moment().add(before,'d') if _.isNumber before
+    selector = {'startTime':{}}
+    selector['startTime']['$gt'] = after if after
+    selector['startTime']['$lt'] = before if before
+    method = if options.iso then 'toISOString' else 'toDate'
+    _.each selector['startTime'], (v,k,o)->
+      o[k] = v[method]()
 
-EventModel::findMenuItems = (event={})->
-  if @context
-    event = @context
-  return global['mcRecipes'].find({
-    _id:
-      $in: event.menuItemIds || []
-    }
-    , options['menuItem'])
-
-EventModel::recent = (days, options)->
-  after = moment().subtract(days,'d')
-  before = moment().subtract(1,'h')
-  return EventModel::between(after, before, options)
-
-EventModel::between = (after, before, options={})->
-  after = moment().add(after,'d') if _.isNumber after
-  before = moment().add(before,'d') if _.isNumber before
-  selector = {'startTime':{}}
-  selector['startTime']['$gt'] = after if after
-  selector['startTime']['$lt'] = before if before
-  method = if options.iso then 'toISOString' else 'toDate'
-  _.each selector['startTime'], (v,k,o)->
-    o[k] = v[method]()
-
-  fields = ['_id', 'startTime', 'duration']
-  fields = fields.concat(options.fields) if options.fields
-  fields = _.chain(fields)
-    .zipObject()
-    .each( (v,k,o)-> return o[k]=1 )
-    .value()
-  return {
-    selector: selector
-    projection: {fields: fields}
-  } if options.selector
-  return mcEvents.find( selector , {fields: fields}).fetch()
+    fields = ['_id', 'startTime', 'duration']
+    fields = fields.concat(options.fields) if options.fields
+    fields = _.chain(fields)
+      .zipObject()
+      .each( (v,k,o)-> return o[k]=1 )
+      .value()
+    return {
+      selector: selector
+      projection: {fields: fields}
+    } if options.selector
+    return mcEvents.find( selector , {fields: fields}).fetch()
 
 
 
@@ -215,7 +176,7 @@ methods = {
       data['createdAt'] = new Date()
       allowedFields = EVENT_ATTRIBUTES.insert()
 
-    RecipeModel::setAsGeoJsonPoint(data)
+    hEvents.get().setAsGeoJsonPoint(data)
     allowedFields =
       if isUpdate then EVENT_ATTRIBUTES.update() else EVENT_ATTRIBUTES.insert()
     fields =

@@ -37,7 +37,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ff.requiresAction = (post, types)->
           return false if not ~types.indexOf post.type
           meId = Meteor.userId()
-          return FeedModel::requiresAction(post, meId, ff.event)
+          return hFeeds.get().requiresAction(post, meId, ff.event)
 
         ff.on = {
           edit: ()-> console.warn "attachment.edit: See RecipeHelpers"

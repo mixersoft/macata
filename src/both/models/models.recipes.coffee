@@ -11,61 +11,13 @@ options = {
 }
 
 ###
-#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
+# see models.0.coffee
+# usage:
+#   hRecipes.get().fetchHost($item)
 ###
-global['RecipeModel'] = class RecipeModel
-  constructor: (@context)->
-  set: (@context)->
-  release: ()->
-    delete @context
-
-RecipeModel::isAdmin = (model, userId)->
-  if @context
-    model = @context
-    [userid] = arguments      # required when called from publish
-  return false if !model
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  return false if !userId
-  return true if model.ownerId == userId
-  return false
-
-RecipeModel::isFavorite = (model, me)->
-  if @context
-    model = @context
-    [me] = arguments
-  return false if !model
-  me ?= Meteor.user()
-  return false if !me
-  return true if _.find me.favorites, {_id: model._id}
-  return false
-
-
-
-RecipeModel::fetchOwner = (model={})->
-  if @context
-    model = @context
-  return Meteor.users.findOne(model.ownerId, options['profile'])
-
-RecipeModel::findProfiles = (model={})-> # use with publishComposite.children
-  if @context
-    model = @context
-  return Meteor.users.find(model.ownerId, options['profile'])
-
-RecipeModel::setAsGeoJsonPoint = (model={})->
-  if @context
-    model = @context
-  if model['latlon']
-    model['lonlat'] = angular.copy(model.latlon).reverse()
-  if model['latlon']
-    model['geojson'] = {
-      type: "Point"
-      coordinates: model['latlon']
-    }
-  model = _.omit model, ['lonlat','latlon', 'location']
-  return model
-
-
-
+global['hRecipes'] = class RecipeHelper extends global['hModel']
+  constructor: ->
+    [@arg] = super
 
 
 global['mcRecipes'] = mcRecipes = new Mongo.Collection('recipes', {
@@ -116,6 +68,7 @@ methods = {
     Meteor.users.update({_id: meId}, modifier )
     return
 
+  # TODO: use Events.upsert model
   'Recipe.insert': (model)->
     if !model
       throw new Meteor.Error('no-data'
@@ -129,7 +82,7 @@ methods = {
     data['className'] = 'Recipe'
     data['createdAt'] = new Date()
     data['ownerId'] = meId
-    RecipeModel::setAsGeoJsonPoint(data)
+    hRecipes.get().setAsGeoJsonPoint(data)
     mcRecipes.insert(data)
 
   'Recipe.update': (model)->
@@ -149,7 +102,7 @@ methods = {
       'lonlat', 'latlon'
     ]
     data['modifiedAt'] = new Date()
-    RecipeModel::setAsGeoJsonPoint(data)
+    hRecipes.get().setAsGeoJsonPoint(data)
 
     # legacy: deprecate
     data['className'] = 'Recipe'

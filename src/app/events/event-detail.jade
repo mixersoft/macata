@@ -28,7 +28,47 @@ ion-view.event-detail(
       
     
     
-    div.hide {{ event=vm.event; show=vm.settings.show;''}}
+    div.scope-locals.hide 
+      {{ event=vm.event; show=vm.settings.show;''}}
+    div.row.responsive-sm.no-padding
+      div.col
+        ion-list.event-hero-pic
+          div.tile.event.item.item-complex.content.ink(
+            ng-click="$event.stopImmediatePropagation()"
+          )
+            div.scope-locals.hide
+              {{$item = event;''}}
+              {{$$itemOwner = hEvents.get().fetchHost($item)}}
+            div.hero.content.has-mask(style="height:160px;")
+              div.item-avatar-right.ink(
+                ng-click=""
+              ) 
+                img.ink(
+                  ng-src="{{$$itemOwner.face}}"
+                  ng-click="$event.stopImmediatePropagation()"
+                  ui-sref="app.profile({'id':$item.ownerId})"
+                )
+              
+              div.icon-bar.bottom-toolbar.condensed.light(
+                ng-show="$item['title']"
+                ng-click="$event.stopImmediatePropagation()"
+                )
+                i.button.button-clear.larger.ion-heart.ink(
+                  ng-class="hRecipes.get().isFavorite($item) && 'selected'"
+                  ng-click="vm.on.favorite($event, $item)"
+                  )
+                i.button.button-clear.larger.ion-map.ink(
+                  ui-sref="app.map({'id':[$item._id,$item.className].join(':')})"
+                  )
+                i.button.button-clear.larger.ink(
+                  ng-class="{'ion-edit': $item.isAdmin(), 'ion-fork': !$item.isAdmin()}"
+                  ng-click="action = $item.isAdmin() ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+                  )         
+                i.button.button-clear.ion-ios-upload.larger.ink(
+                  )
+              div.feature.image(
+                bg-image="{{$item['image']}}"
+              )
     div.row.responsive-sm.no-padding
       div.col
         ion-list.menu-items
@@ -61,7 +101,7 @@ ion-view.event-detail(
                       ng-click="$event.stopImmediatePropagation()"
                       )
                       i.button.button-clear.larger.ion-heart.ink(
-                        ng-class="vm.RecipeM.isFavorite($item) && 'selected'"
+                        ng-class="hRecipes.get().isFavorite($item) && 'selected'"
                         ng-click="vm.on.favorite($event, $item)"
                         )
                       i.button.button-clear.larger.ion-map.ink(
@@ -174,7 +214,7 @@ ion-view.event-detail(
                 )
 
         ion-list.share-links(
-          ng-if="vm.EventM.isParticipant()"
+          ng-if="hEvents.get().isParticipant(event)"
           )
           ion-item.item-divider.item-button-right(
             ng-click="show.hideInvitations = !show.hideInvitations"

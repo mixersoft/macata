@@ -48,11 +48,11 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
     children: [
       {
         find: (event)->
-          return EventModel::findParticipants(event)
+          return hEvents.get().findParticipants(event)
       }
       {
         find: (event)->
-          return EventModel::findMenuItems(event)
+          return hEvents.get().findMenuItems(event)
       }
     ]
   }

@@ -16,7 +16,7 @@ list-item-summary.animate-fade-slide-in-right(
     ui-sref="app.event-detail({'id':$item._id})"
   )
     div.hero.content.has-mask(style="height:160px;")
-      {{ $$host=vm.EventM.fetchHost($item);'' }}
+      {{ $$host=hEvents.get().fetchHost($item);'' }}
       div.item-avatar-right.ink
         img.ink(
           ng-src="{{$$host.face}}"
@@ -29,7 +29,7 @@ list-item-summary.animate-fade-slide-in-right(
         ng-click="$event.stopImmediatePropagation()"
         )
         i.button.button-clear.larger.ion-heart.ink(
-          ng-class="vm.RecipeM.isFavorite($item) && 'selected'"
+          ng-class="hRecipes.get().isFavorite($item) && 'selected'"
           ng-click="vm.on.favorite($event, $item)"
           )
         i.button.button-clear.larger.ion-map.ink(

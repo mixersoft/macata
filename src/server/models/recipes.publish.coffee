@@ -43,7 +43,7 @@ Meteor.publishComposite 'myVisibleRecipes', (filterBy={}, options={})->
     children: [
       {
         find: (recipe)->
-          return RecipeModel::findProfiles(recipe)
+          return hRecipes.get().fetchOwner(recipe)
       }
     ]
   }

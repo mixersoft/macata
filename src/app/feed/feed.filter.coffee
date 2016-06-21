@@ -81,7 +81,7 @@ FeedFilter = ($rootScope, exportDebug)->
         when 'Participation'
           check['acl'] = post.body.response == 'declined' && post.head.ownerId == meId
           check['acl'] = check['acl'] || post.body.response == 'accepted' # [accepted, declined]
-          check['acl'] = check['acl'] || FeedModel::requiresAction(post, meId)
+          check['acl'] = check['acl'] || hFeeds.get().requiresAction(post, meId)
           check.address =  true if check.acl
         when 'ParticipationResponse'
           # from action=Participation[response='accepted']
