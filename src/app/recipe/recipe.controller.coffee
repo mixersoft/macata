@@ -17,10 +17,9 @@ RecipeCtrl = (
     vm.title = "Ideas"
     vm.viewId = ["recipe-view",$scope.$id].join('-')
 
+    vm.hRecipes = hRecipes
     vm.recipeHelpers = new RecipeHelpers(vm)
-    vm.collHelpers = new CollectionHelpers(vm)
     vm.listItemDelegate = null
-    vm.RecipeM = RecipeModel::
 
     vm.pullToReveal = {
       options:

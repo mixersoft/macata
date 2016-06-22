@@ -22,7 +22,7 @@ _omit$keys = (o)->
 # usage:
 #   hRecipes.get().fetchHost($item)
 ###
-global['hFeeds'] = class RecipeHelper extends global['hModel']
+global['hFeeds'] = class FeedsHelper extends global['hModel']
   constructor: ->
     [@arg] = super
 
@@ -239,7 +239,7 @@ methods = {
     mcFeeds.update( {_id:{$in:withCommentIds}}
     , {$set:{'body.comments':[], 'body.status':"new", 'body.response': null}}
     , {multi:true})
-    mcEvents.update("3X8pxfsEhBrpHcdfD", {$pull:
+    mcEvents.update("NCJkY7nmYeSWGqv85", {$pull:
       participations: {ownerId:"L8EdePbduQ3Aj3r3W"}
       participantId: "L8EdePbduQ3Aj3r3W"
     })

@@ -23,9 +23,28 @@ global['hModel'] = class ModelHelper   # singleton
       throw new Error('Cannot call new on a Singleton')
     return args
 
+  'fetchProfile': (userId, options)->
+    return null if !userId
+    options ?= DEFAULTS['profile']
+    return Meteor.users.findOne(userId, options)
+
   'fetchOwner': (model, options)->
+    return null if !model
     options ?= DEFAULTS['profile']
     return Meteor.users.findOne(model.ownerId, options)
+
+  'findOwner': (model, options)->
+    # returns a cursor, used by publishComposite
+    options ?= DEFAULTS['profile']
+    ownerId = model?.ownerId || null
+    return Meteor.users.find(ownerId, options)
+
+  'isOwner': (model, userId)->
+    return false if !model
+    userId ?= if Meteor.isServer then @userId else Meteor.userId()
+    return false if !userId
+    return true if model.ownerId == userId
+    return false
 
   'isAdmin': (model, userId)->
     return false if !model

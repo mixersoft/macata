@@ -21,7 +21,7 @@ global['hEvents'] = class EventHelper extends global['hModel']
   constructor: ->
     [@arg] = super
 
-  'fetchHost': (event, options)=>
+  'fetchHost': (event, options)->
     return @fetchOwner event, options
 
   'isModerator': (event, userId)->

@@ -3,6 +3,7 @@
 # @ adds to global namespace
 global = @
 mcRecipes = global['mcRecipes']
+hRecipes = global['hRecipes']
 
 ###
 # NOTE: publish functions can only use this.userid
@@ -36,14 +37,14 @@ Meteor.publishComposite 'myVisibleRecipes', (filterBy={}, options={})->
 
   # selector = {}
   console.log ['publish recipes, selector=', JSON.stringify( selector )]
-  console.log ['publish recipes, options=', JSON.stringify( options )]
+  # console.log ['publish recipes, options=', JSON.stringify( options )]
   result = {
     find: ()->
       return mcRecipes.find(selector, options)
     children: [
       {
         find: (recipe)->
-          return hRecipes.get().fetchOwner(recipe)
+          return hRecipes.get().findOwner(recipe)
       }
     ]
   }

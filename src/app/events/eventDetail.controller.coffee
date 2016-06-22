@@ -16,6 +16,7 @@ EventDetailCtrl = (
     vm = this
     vm.title = "Event Detail"
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
+    vm.hEvents = hEvents
     vm.feedHelpers = new FeedHelpers(vm)
 
     vm.recipeHelpers = new RecipeHelpers(vm)  # for on.favorite()
@@ -143,14 +144,14 @@ EventDetailCtrl = (
             role = 'visitor'
           user.role = role
           console.info "addRoleToUser(), role="+role
-          setFabIcon()
+          setFabIcon(event)
     }
 
 
 
 
     setFabIcon = (event)->
-      if hEvents.get().isParticipant()
+      if hEvents.get().isParticipant(event)
         icon = 'ion-chatbox'
       else
         icon = 'ion-plus'
@@ -172,7 +173,7 @@ EventDetailCtrl = (
         return vm.settings.view.show = value
 
       fabClick: ($event)->
-        if hEvents.get().isParticipant()
+        if hEvents.get().isParticipant(vm.event)
 
           parent = ionic.DomUtil.getParentWithClass($event.target, 'event-detail')
           el = parent.querySelector('filtered-feed')
@@ -340,7 +341,7 @@ EventDetailCtrl = (
           .then (event)->
             # render shareLinks
             if event.isPublic == false || event.setting.isExclusive
-              return event if not hEvents.get().isParticipant()
+              return event if not hEvents.get().isParticipant(event)
             EventActionHelpers.getShareLinks(event, vm)
             .then (sharelinks)->
               event.shareLinks = sharelinks

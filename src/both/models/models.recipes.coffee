@@ -2,14 +2,6 @@
 # @ adds to global namespace
 global = @
 
-options = {
-  'profile':
-    fields:
-      username: 1
-      displayName: 1
-      face: 1
-}
-
 ###
 # see models.0.coffee
 # usage:

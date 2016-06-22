@@ -369,7 +369,7 @@ demoData = {
       head:
         "createdAt":"2016-01-28T14:37:41.983Z",
         "ownerId": "CDF8Y54kkRfPQnsmR" # markymark
-        "eventId": "3X8pxfsEhBrpHcdfD"
+        "eventId": "NCJkY7nmYeSWGqv85"
         "isPublic": true
       body:
         "type":"Comment"
@@ -383,7 +383,7 @@ demoData = {
         id: Date.now()
         "createdAt": moment()
         "expiresAt": null
-        "eventId": "3X8pxfsEhBrpHcdfD"
+        "eventId": "NCJkY7nmYeSWGqv85"
         "ownerId": "xBYWvthK5qZ5zHx9T" # lulu
       body:
         message: "<b>Hello!</b> This is a notification. It might be appear as a mobile notification in the App."
@@ -395,7 +395,7 @@ demoData = {
       head:
         # "id":"1453967670694"
         "createdAt": moment().subtract(7, 'hours').toJSON()
-        "eventId": "3X8pxfsEhBrpHcdfD"
+        "eventId": "NCJkY7nmYeSWGqv85"
         "ownerId": "xBYWvthK5qZ5zHx9T" # lulu      # for .item-post .item-avatar
         "recipientIds": ["L8EdePbduQ3Aj3r3W"]  # filterBy: feed.type chuckychu
         "nextActionBy": 'recipient' # [recipient, owner]
@@ -412,7 +412,7 @@ demoData = {
       head:
         # "id":"1453967670695"
         "createdAt": moment().subtract(23, 'minutes').toJSON()
-        "eventId": "3X8pxfsEhBrpHcdfD"
+        "eventId": "NCJkY7nmYeSWGqv85"
         "ownerId": "CDF8Y54kkRfPQnsmR" # markymark
         "recipientIds": ["xBYWvthK5qZ5zHx9T"] # lulu
         "nextActionBy": 'recipient' # [owner, recipient, moderator, xxeventOwner]

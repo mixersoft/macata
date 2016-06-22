@@ -6,11 +6,11 @@
 list-item-summary.animate-fade-slide-in-right(
   opt-collection="vm.rows"
 ) 
-  div.scope-locals.hide
+  div.scope-locals.hide.
     {{ vm=$parent.$parent.vm;''}}
-    {{ $me=$parent.$root.currentUser;''}}
-    {{ $owner=vm.collHelpers.findOne('User', $item.ownerId);'' }}
-    {{ $owner.$isOwner=$item.ownerId==$me._id;'' }}
+    {{ $hRecipes = vm.hRecipes.get();''}}
+    {{ $itemOwner=$hRecipes.fetchOwner($item);}}
+    {{ $itemOwner.$isMe=$hRecipes.isOwner($item);'' }}
   div.tile.recipe.item.item-complex.content.ink(
     xxx-ng-class="[$item.color,'bg'].join('-')"
     ng-click="$listItemDelegate.select($event, $item, $index)"
@@ -19,24 +19,24 @@ list-item-summary.animate-fade-slide-in-right(
       
       div.item-avatar-right.ink
         img.ink(
-          ng-src="{{$owner.face}}"
+          ng-src="{{$itemOwner.face}}"
           ng-click="$event.stopImmediatePropagation()"
-          ui-sref="app.profile({'username':$owner.username})"
+          ui-sref="app.profile({'username':$itemOwner.username})"
         )
       div.icon-bar.bottom-toolbar.condensed.light(
         ng-show="$item['title']"
         ng-click="$event.stopImmediatePropagation()"
         )
         i.button.button-clear.larger.ion-heart.ink(
-          ng-class="hRecipes.get().isFavorite($item) && 'selected'"
+          ng-class="$hRecipes.isFavorite($item) && 'selected'"
           ng-click="vm.on.favorite($event, $item)"
           )
         i.button.button-clear.larger.ion-map.ink(
           ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"
           )
         i.button.button-clear.larger.ink(
-          ng-class="{'ion-edit': $owner.$isOwner, 'ion-fork': !$owner.$isOwner}"
-          ng-click="action = $owner.$isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+          ng-class="{'ion-edit': $itemOwner.$isMe, 'ion-fork': !$itemOwner.$isMe}"
+          ng-click="action = $itemOwner.$isMe ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
           )         
         i.button.button-clear.ion-ios-upload.larger.ink(
           )
@@ -51,11 +51,11 @@ list-item-summary.animate-fade-slide-in-right(
 list-item-detail 
   //- $item == $listItemDelegate.selected(), e.g. selected model
   div.tile.tile-detail
-    div.scope-locals.hide
+    div.scope-locals.hide.
       {{ vm=$parent.$parent.vm;''}}
-      {{ $me=$parent.$root.currentUser;''}}
-      {{ $owner=vm.collHelpers.findOne('User', $item.ownerId) }}
-      {{ $owner.$isOwner=$item.ownerId==$me._id }}
+      {{ $hRecipes = vm.hRecipes.get();''}}
+      {{ $itemOwner=$hRecipes.fetchOwner($item);''}}
+      {{ $itemOwner.$isMe=$hRecipes.isOwner($item);''}}
     ion-item.item-complex.in.done
       div.item-body.padding
         div.title {{$item['title']}}
@@ -75,7 +75,7 @@ list-item-detail
         ng-click="vm.on.favorite($event, $item)"
         )
         i.icon.positive.ink(
-        ng-class=" hRecipes.get().isFavorite($item) ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
+        ng-class=" $hRecipes.isFavorite($item) ? 'ion-ios-heart' : 'ion-ios-heart-outline'"
         )
       button.button(
         ui-sref="app.map({'id':[$item.id,$item.className].join(':')})"
@@ -83,10 +83,10 @@ list-item-detail
         i.icon.positive.ion-map.ink(
         )
       button.button(
-        ng-click="action = $owner.$isOwner ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
+        ng-click="action = $itemOwner.$isMe ? 'edit' : 'forkTile'; vm.on[action]($event, $item); "
         )
         i.icon.positive.ink(
-        ng-class="{'ion-edit': $owner.$isOwner, 'ion-fork': !$owner.$isOwner}"
+        ng-class="{'ion-edit': $itemOwner.$isMe, 'ion-fork': !$itemOwner.$isMe}"
         )
       button.button
         i.icon.positive.ion-ios-upload.larger.ink(

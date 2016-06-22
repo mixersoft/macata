@@ -1,42 +1,43 @@
 //- events/modal-actions/event-booking.modal.jade
 ion-modal-view 
-  div.scope-locals.hide
-    {{ item=mm.event;''}}
-    {{ me=mm.person;''}}
-    {{ host = mm.collHelpers.findOne('User', item.ownerId);''}}
+  div.scope-locals.hide.
+    {{ $item=mm.event;''}}
+    {{ $me=mm.person;''}}
+    {{ $hEvents = mm.hEvents.get();''}}
+    {{ $host = $hEvents.fetchHost( $item );''}}
     {{ booking = mm.booking;'' }}
   ion-header-bar.bar-balanced
-    h1.title Join {{ item.title }}
-  ion-content
+    h1.title Join {{ $item.title }}
+  ion-content 
     div.dark-bg.content.padding
       div.list.condensed
         div.item.item-divider.item-positive
-          div.light.larger {{item.title}}
+          div.light.larger {{ $item.title}}
         div.item.item-avatar
-          img(ng-src="{{host.face}}" ui-sref="app.profile({id:'{{host._id}}'})")
-          span.profile.face-overlay(ng-if="!host.face" ng-bind="host.displayName[0]")
+          img(ng-src="{{$host.face}}" ui-sref="app.profile({id:'{{$host._id}}'})")
+          span.profile.face-overlay(ng-if="!$host.face" ng-bind="$host.displayName[0]")
           h2 Hosted by 
-            b {{ host.displayName }}
-          p {{ item.startTime | amCalendar }} 
+            b {{ $host.displayName }}
+          p {{ $item.startTime | amCalendar }} 
             span.dark(
               am-time-ago="item.startTime"
               ) 
         div.item.item-text-wrap
           p 
-            b {{item.title}} 
-            {{ item.description }}
+            b {{ $item.title}} 
+            {{ $item.description }}
         div.item.item-icon-left 
           i.icon.ion-ios-people
-          {{ item.seatsTotal }} seats / {{ item.seatsOpen }} open
+          {{ $item.seatsTotal }} seats / {{ $item.seatsOpen }} open
 
 
     form(name="bookingForm" novalidate="" ng-submit="mm.on.validateBooking(mm.person, mm.event, mm.booking, closeModal)")
 
       div.list
         div.item.item-avatar(ng-if="mm.isAnonymous()==false")
-          img(ng-src="{{me.face}}")
-          span.face-overlay(ng-if="!me.face" ng-bind="me.displayName[0]")
-          b {{me.displayName }} - You are about to join this event.
+          img(ng-src="{{$me.face}}")
+          span.face-overlay(ng-if="!$me.face" ng-bind="$me.displayName[0]")
+          b {{$me.displayName }} - You are about to join this event.
 
         label.item.item-input
           span.input-label Number of People
@@ -58,9 +59,9 @@ ion-modal-view
               You must sign-in or sign-up to join this event. 
               This will allow us to manage your contribution to this event and also send notifications & messages.
             div.item.positive.text-left.sign-in-sign-up
-              a.pull-right(ng-click="mm.on.signInRegister('signin', me)"). 
+              a.pull-right(ng-click="mm.on.signInRegister('signin', $me)"). 
                 Have an account? Sign in
-              a(ng-click="mm.on.signInRegister('signup', me)").
+              a(ng-click="mm.on.signInRegister('signup', $me)").
                 Sign up
             div.last-row
 

@@ -25,6 +25,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ###
 
         ff = this
+        ff.hFeeds = hFeeds
 
         if not this.reactiveContext.getReactively
           throw new Error "ERROR: expecting reactiveContext"
@@ -32,7 +33,6 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ff.collHelpers = new CollectionHelpers(ff.reactiveContext)
         ff.feedHelpers = new FeedHelpers(ff.reactiveContext)
         ff.postHelpers = new PostHelpers(ff.reactiveContext)
-        ff.me = ff.collHelpers.findOne('User', Meteor.userId())
 
         ff.requiresAction = (post, types)->
           return false if not ~types.indexOf post.type
