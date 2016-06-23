@@ -49,6 +49,7 @@ ProfileCtrl = (
         toastr.info("something was clicked")
 
       getFullNameLabel: (user)->
+        return if !user
         label = _.filter([user.firstname, user.lastname])
         label = [user.name] if user.name && label.length == 0
         if label.length
@@ -149,8 +150,10 @@ ProfileCtrl = (
 
           else if (me && (route.username == me.username || route._id == me._id))
             # looking at my own profile
-            $state.go('app.me')
-            return $q.reject('redirect')
+            # rewrite history URL,
+            angular.noop()
+            # BUG: this does a reload
+            # $location.path('/app/me').replace()
 
           # viewing someone else's profile
           return Meteor.users.findOne(route)

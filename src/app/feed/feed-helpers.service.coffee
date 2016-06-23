@@ -77,7 +77,7 @@ FeedHelpers = (
         missingKeys = _.difference ['type','head','body'], _.keys post
         return if missingKeys.length
 
-        self.context.call 'Post.postFeedPost', self.context.feedId, post, (err, result)->
+        self.context.call 'Post.postFeedPost', self.context.eventId, post, (err, result)->
           if err
             cb['onError']?(err)
             return console.warn ['Meteor::postFeedPost WARN', err]

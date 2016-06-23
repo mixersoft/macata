@@ -89,7 +89,17 @@ OpenGraph = ($q, $http )->
       return og if _.isEmpty normalized
 
       normalized['extras'] = _.omit og, primaryFields
+      normalized['extras'] = self.sanitizeKeys normalized['extras']
       return normalized
+
+    sanitizeKeys: (o)->
+      # Mongo keys must not contain '.'
+      _.reduce o, (result, v,k)->
+        if ~k.indexOf('.')
+          k = k.replace(/\./g, '_')
+        result[k] = v
+        return result
+      ,{}
   }
   return self
 OpenGraph.$inject = ['$q', '$http']

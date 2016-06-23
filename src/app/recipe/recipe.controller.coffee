@@ -14,7 +14,7 @@ RecipeCtrl = (
     global = $window
     vm = this
 
-    vm.title = "Ideas"
+    vm.title = vm.default_title = "Ideas"
     vm.viewId = ["recipe-view",$scope.$id].join('-')
 
     vm.hRecipes = hRecipes
@@ -120,8 +120,6 @@ RecipeCtrl = (
 
       # activate <new-tile>
       createNewTile: ()->
-        # vm.filterSort.sortBy.title = -1 * vm.filterSort.sortBy.title
-        # return
         return AAAHelpers.requireUser('sign-in')
         .then (me)->
           vm.settings.show.pullToReveal = !vm.settings.show.pullToReveal
@@ -178,7 +176,7 @@ RecipeCtrl = (
       vm.autorun ()->
         filterSort = vm.getReactively('filterSort', true)
         console.log ['sortBy', JSON.stringify filterSort.sortBy]
-        vm.title = filterSort.label
+        vm.title = filterSort.label || vm.default_title
         return
 
       exportDebug.set('vm', vm)

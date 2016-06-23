@@ -69,6 +69,15 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   top: 2px;
 }
 
+.spinner-wrap {
+  .spinner svg {
+    width: 20px;
+    padding: 3px 0;
+    margin-top: -3px;
+    vertical-align: middle;
+  }
+}
+
 
  // used by <new-tile>
 .bar-inset-wrap {
@@ -190,9 +199,7 @@ ion-input {
         font-size: 24px;
       }
       .spinner svg {
-        width: 20px;
-        padding: 3px 0;
-        vertical-align: middle;
+        margin-top: 0;
       }
     }
   }
@@ -206,8 +213,10 @@ ion-input {
   background: white;
   padding-left: 0;
   padding-right: 0;
-  input {
+  width: 100% !important;
+  > input {
     padding-right: 0;
+    width: 100% !important;
   }
   .icon {
     height: 29px;
@@ -428,8 +437,8 @@ ion-item.item-post {
     display: inline;
     margin-right: 10px;
     .item-image {
-      max-width: 40px;
-      max-height: 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
     }
     .icon.item-image {
@@ -744,6 +753,9 @@ ion-side-menu > ion-content {
 
 }
 
+/*
+  app.events
+*/
 
 .event {
   &.tile.item {
@@ -1053,6 +1065,11 @@ $hero-wrap-bg-height: 170px;
   }
 }
 
+ion-view#event {
+  @media(min-width: $grid-responsive-sm-break) {
+  }
+}
+
 
 /*  legacy  */
 .has-mask {
@@ -1255,5 +1272,14 @@ image-attach-helper {
       }
 
     }
+  }
+}
+
+event-when-helper {
+}
+
+event-location-helper {
+  .map-marker .angular-google-map-container {
+    height: 160px;
   }
 }

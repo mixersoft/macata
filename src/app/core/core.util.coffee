@@ -51,7 +51,7 @@ HandyStuff = ($window, $document, amMoment) ->
     # @return location mixed, same format as location
     ###
     maskLatLon: (location, key)->
-      isGeoJsonPoint = location?.coordinates == 'Point'
+      isGeoJsonPoint = location?.type == 'Point' && location.coordinates
       if isGeoJsonPoint
         [lon,lat] = location['coordinates']
         latlon = [lat, lon]
