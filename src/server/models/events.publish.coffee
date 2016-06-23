@@ -2,6 +2,8 @@
 
 # @ adds to global namespace
 global = @
+mcEvents = global['mcEvents']
+hEvents = global['hEvents']
 
 ###
 # NOTE: publish functions can only use this.userid
@@ -40,19 +42,19 @@ Meteor.publishComposite 'myVisibleEvents', (filterBy, options)->
   # console.log ['publish events', JSON.stringify( selector ), 'userId=' + this.userId ]
   result = {
     find: ()->
-      found = global['mcEvents'].find(selector, options)
+      found = mcEvents.find(selector, options)
       global['Counts'].publish(this, 'countEvents', found, {noReady: true})
       console.log ["countEvents, server count=", found.count()]
 
-      return global['mcEvents'].find(selector, options)
+      return mcEvents.find(selector, options)
     children: [
       {
         find: (event)->
-          return EventModel::findParticipants(event)
+          return hEvents.get().findParticipants(event)
       }
       {
         find: (event)->
-          return EventModel::findMenuItems(event)
+          return hEvents.get().findMenuItems(event)
       }
     ]
   }

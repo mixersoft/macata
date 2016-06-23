@@ -21,7 +21,6 @@ ReusableModal = ($ionicModal, $rootScope, $q, $injector, $controller) ->
       modalCallback: null
     }
     options = angular.extend(defaultOptions, options, {scope : modalScope})
-
     $ionicModal.fromTemplateUrl( templateUrl, options)
     .then (modal)->
       modalScope.modal = modal
@@ -40,11 +39,11 @@ ReusableModal = ($ionicModal, $rootScope, $q, $injector, $controller) ->
             _cleanup(thisModal.currentScope)
       )
 
-      
+
       if angular.isObject(controller)
         # assume this is the ControllerAs
-        modalScope.vm = ctrlInstance = controller
-        same = modalScope.vm == modalScope.modal.scope.vm
+        modalScope.vm = ctrlInstance = controller  # deprecate vm
+        modalScope['$ctrl'] = ctrlInstance = controller
         ctrlInstance['openModal'] = modalScope.openModal
         ctrlInstance['closeModal'] = modalScope.closeModal
       else
@@ -106,5 +105,3 @@ ReusableModal.$inject = ['$ionicModal', '$rootScope', '$q', '$injector', '$contr
 
 angular.module 'blocks.components'
   .factory 'appModalSvc', ReusableModal
-
-

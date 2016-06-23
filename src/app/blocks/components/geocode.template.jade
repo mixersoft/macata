@@ -4,11 +4,14 @@ style#address-lookup-style.
     #address-lookup-modal-view.modal { top: 10%; bottom: 10%;}
   }
   #address-lookup-search { min-width:32.5px; } 
-  #address-lookup-search svg {width: 26px; height: 26px; margin: 5px 0;}
   #address-lookup-map .wrap {min-height: 200px;}
   #address-lookup-map .angular-google-map-container {min-height: 200px;}
   #address-lookup-modal input { width: 100%; }
 ion-modal-view#address-lookup-modal-view
+  style-scoped(
+    root-tag="ion-modal-view"
+    css-style="gmc.cssStyle"
+    )
   ion-header-bar.bar-balanced 
     h1.title Address Lookup
   ion-content
@@ -16,70 +19,71 @@ ion-modal-view#address-lookup-modal-view
       div.item
         div.item-input-inset.no-padding
           div.auto-input-wrapper
-            input(type="text" ng-model="vm.address0" 
+            input(type="text" ng-model="gmc.fields.address0" 
               placeholder="Enter Address" 
               auto-input
               return-close="true"
             )
 
-          button#address-lookup-search.button.button-balanced.button-small.no-padding(
-            ng-click="vm.updateGeocode(vm.address0)"
+          button#address-lookup-search.button.button-balanced.button-small.no-padding.spinner-wrap(
+            ng-click="gmc.updateGeocode(gmc.fields.address0)"
           )
-            i.icon.ion-search(ng-hide="vm.loading")
+            i.icon.ion-search(ng-hide="gmc.loading")
             ion-spinner.spinner-light(
               icon-"ios-small"
-              ng-show="vm.loading"
+              ng-show="gmc.loading"
             )
-        div.error(ng-show="vm['error-address0']")
-          span.assertive {{vm['error-address0']}}
+        div.error(ng-show="gmc.fields['error-address0']")
+          span.assertive {{gmc.fields['error-address0']}}
         
 
       label.item.item-floating-label
         span.label Location
-        input(type="text" ng-model="vm.latlon" readonly)
+        input(type="text" ng-model="gmc.fields.latlon" readonly)
 
       label.item.item-floating-label
         span.label Formatted Address
-        input(type="text" ng-model="vm.addressFormatted" readonly)
+        input(type="text" ng-model="gmc.fields.addressFormatted" readonly)
 
       div.item.item-floating-label
         span.label Display Address
         div.item-input-inset.no-padding
           div.item-input-wrapper.no-padding
-            input(type="text" ng-model="vm.addressDisplay"
-              ng-attr-clear-field="vm.isBrowser"
+            input(type="text" ng-model="gmc.fields.addressDisplay"
+              ng-attr-clear-field="gmc.isBrowser"
             )
         p.help
           span.positive(
-            ng-show="vm.isValidMarker()"
-          ) {{vm.MESSAGE.VERIFY_LABEL}}
+            ng-show="gmc.isValidMarker()"
+          ) {{gmc.MESSAGE.VERIFY_LABEL}}
       
 
       div#address-lookup-map.item.item-complex
         div.wrap(
-          ng-if="vm.map"
+          ng-if="gmc.map"
+          id="{{gmc.mapId}}"
         )
-          {{opt = vm.map.options;''}}
+          {{opt = gmc.map.options;''}}
           ui-gmap-google-map( 
-            center='vm.map.center' 
-            zoom='vm.map.zoom'
+            center='gmc.map.center' 
+            zoom='gmc.map.zoom'
             options='opt.map.options'
           )
             ui-gmap-circle(
-              ng-if="vm.map.type=='circle'"
+              ng-if="gmc.map.type=='circle'"
               center="opt.circle.center"
               radius="opt.circle.radius"
               stroke="opt.circle.stroke"
               )
             ui-gmap-marker(
-              ng-if="vm.isValidMarker()"
+              ng-if="gmc.isValidMarker()"
               idKey="opt.oneMarker.idKey"
               coords="opt.oneMarker.coords"
               options="opt.oneMarker.options"
               events="opt.oneMarker.events"
               )
             ui-gmap-markers(
-              ng-if="vm.map.type=='manyMarkers'"
+              ng-if="gmc.map.type=='manyMarkers'"
               fit="true"
               idkey="id"
               coords="'self'"
@@ -90,15 +94,15 @@ ion-modal-view#address-lookup-modal-view
               )
         p.padding-horizontal 
           span.padding-horizontal.positive(
-            ng-show="vm.isValidMarker()"
+            ng-show="gmc.isValidMarker()"
           ) Drag the marker to change location
           span.padding-horizontal.positive(
-            ng-show="vm.map.type=='manyMarkers'"
+            ng-show="gmc.map.type=='manyMarkers'"
           ) Multiple locations found, click Marker to select
   ion-footer-bar
     div.button-bar
       button.button.button-balanced.button-outline(ng-click="closeModal('CANCELED')") Cancel
       button.button.button-balanced(
-      ng-click="closeModal(vm)"
-      ng-disabled="vm.isValidMarker()==false"
+      ng-click="closeModal(gmc.exportResults())"
+      ng-disabled="gmc.isValidMarker()==false"
       ) OK

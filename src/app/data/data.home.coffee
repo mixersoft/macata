@@ -14,7 +14,7 @@ HomeResource = (Resty, amMoment) ->
       layout: "tile-left"
       color: ""
       title: "Coming Soon"
-      heroPic: "http://lghttp.34290.nexcesscdn.net/801006C/new/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/5/0/50949.jpg"
+      heroPic: ""
       target: "app.events({filter:'comingSoon'})"
     10:
       layout: "tile-left"

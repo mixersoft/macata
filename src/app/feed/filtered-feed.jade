@@ -1,9 +1,10 @@
 //- ion-list
 ion-list.feed
-  div.scope-locals.hide
+  div.scope-locals.hide.
     {{ vm=ff.reactiveContext;''}}
+    {{ $hFeeds = ff.hFeeds.get();''}}
     {{ $postDefaults=ff.feedHelpers.postDefaults;''}}
-    {{ userId = Meteor.userId() }}
+    {{ $me = currentUser;'' }}
   ion-item.item-divider.item-button-right.item-royal(
     ng-click="ff.on.headerClick()"
     )
@@ -24,6 +25,9 @@ ion-list.feed
       )
       
   div(ng-repeat="$post in ff.filteredFeed track by $post._id" )
+    div.scope-locals.hide.
+      {{ $postHead = $post.head;$postBody=$post.body;''}}
+      {{ $owner = $hFeeds.fetchOwner($post);'' }}
     ion-item.item-notification.tile.item-complex(
        ng-if="$post.type==='Notification'"
       )
@@ -42,11 +46,10 @@ ion-list.feed
       
     ion-item.item-complex.item-post(
        ng-if="$post.type!='Notification'"
-      ) 
-      div.scope-locals.hide
-        {{$postHead = $post.head;$postBody=$post.body;''}}
-        {{$owner = ff.collHelpers.findOne('User', $postHead.ownerId);''}}
+      )
+      div.scope-locals.hide.
         {{$chatWithId = $postHead.recipientIds[0];''}}
+      
         
       //- Invitation Actions  
       div.card.invitation-actions(
@@ -101,7 +104,7 @@ ion-list.feed
         ng-class="{'private item-avatar-right':$chatWithId}"
         )
         div.scope-locals.hide
-          {{ $chatWith = ff.collHelpers.findOne('User', $chatWithId);''}}
+          {{ $chatWith = $hFeeds.fetchProfile( $chatWithId);''}}
         div.avatar-wrap
           img.item-image.ink(
             ng-src="{{$owner.face}}"
@@ -136,12 +139,48 @@ ion-list.feed
         
         p.body {{$postBody.message}}
 
+        //- attachment._id, attachment is a Meteor object
         div.tile.recipe.item.item-complex.content.ink(
-          ng-if="$postBody.attachment._id"
+          ng-if="$hFeeds.isAttachment($post)=='object'"
         ) 
-          div.scope-locals.hide
+          div.scope-locals.hide.
             {{$type = $postBody.attachment.type || $postBody.attachment.className;''}}
             {{$attachment = ff.collHelpers.findOne($type, $postBody.attachment._id);''}}
+          div.hero.content(style="height:160px;")
+            div.icon-bar.top-right-toolbar.condensed.light(
+              ng-click="$event.stopImmediatePropagation()"
+              )
+              i.button.button-clear.larger.ion-heart.ink(
+                ng-class="{'selected':$attachment.favorite}"
+                )     
+              i.button.button-clear.larger.ion-map.ink(
+                xxx-ui-sref="app.map({'latlon':{{ $postBody.location.latlon }} })"
+                )
+              i.button.button-clear.larger.ink(
+                ng-class="{'ion-edit': $attachment.isOwner, 'ion-fork': !$attachment.isOwner}"
+                ng-click="action = $attachment.isOwner ? 'edit' : 'forkTile'; vm.on[action]($postHead.eventId, $attachment); "
+                )         
+              i.button.button-clear.ion-ios-upload.larger.ink(
+                )
+            div.feature.image(
+              bg-image="{{$attachment['image']}}"
+            )
+          div.body.padding
+            div.title.line-clamp-1 {{$attachment['title']}}
+            p.description.line-clamp.line-clamp-2(
+              ng-if="$attachment['description']"
+              ) {{$attachment['description']}}
+            p.site_name(
+              ng-if="$attachment['site_name']"
+              )  {{$attachment['site_name']}}
+              
+        //- attachment.id, attachment is embedded in Comment
+        div.tile.recipe.item.item-complex.content.ink(
+          ng-if="$hFeeds.isAttachment($post)=='embedded'"
+        ) 
+          div.scope-locals.hide.
+            {{$attachment = $postBody.attachment;''}}
+            {{$attachment.isOwner = $hFeeds.isAdmin($post);''}}
           div.hero.content(style="height:160px;")
             div.icon-bar.top-right-toolbar.condensed.light(
               ng-click="$event.stopImmediatePropagation()"
@@ -174,7 +213,7 @@ ion-list.feed
         div.likes
           span(ng-show="$postHead.likes.length")
             span(ng-repeat="userId in $postHead.likes")
-              {{$person=ff.collHelpers.findOne('User', userId);''}} 
+              {{$person=$hFeeds.fetchProfile( userId);''}} 
               a(
                 ui-sref="app.profile({id: $person._id })"
                 ) {{$person.displayName}}{{$last ? '':','}}
@@ -203,7 +242,7 @@ ion-list.feed
           ng-repeat="$comment in $postBody.comments | dateFilter"
           ) 
           div.scope-locals.hide
-            {{$owner = ff.collHelpers.findOne('User', $comment.head.ownerId);''}}
+            {{$owner = $hFeeds.fetchOwner( $comment);''}}
           div.avatar-wrap 
             img.item-image.ink(
               ng-src="{{$owner.face}}"
@@ -219,7 +258,7 @@ ion-list.feed
               div
                 span(ng-show="$comment.head.likes.length")
                   span(ng-repeat="userId in $comment.head.likes")
-                    {{$person=ff.collHelpers.findOne('User', userId);''}}
+                    {{$person=$hFeeds.fetchProfile( userId);''}}
                     a(
                       ui-sref="app.profile({id: $person._id })"
                       ) {{$person.displayName}}{{$last ? '':','}}
@@ -234,9 +273,9 @@ ion-list.feed
           div.wrap
             div.avatar-wrap
               img.item-image.ink(
-                ng-src="{{ff.me.face}}"
+                ng-src="{{$me.face}}"
                 ng-click="$event.stopImmediatePropagation()"
-                ui-sref="app.profile({id: ff.me._id })"
+                ui-sref="app.profile({id: $me._id })"
                 width="40"
               )
             textarea.comment(

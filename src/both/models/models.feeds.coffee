@@ -6,7 +6,8 @@ options = {
   'profile':
     fields:
       username: 1
-      profile: 1
+      displayName: 1
+      face: 1
 }
 
 
@@ -17,97 +18,82 @@ _omit$keys = (o)->
   return clean = _.omit o, omitKeys
 
 ###
-#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
+# see models.0.coffee
+# usage:
+#   hRecipes.get().fetchHost($item)
 ###
-global['FeedModel'] = class FeedModel
-  constructor: (@context)->
-  set: (@context)->
-  release: ()->
-    delete @context
+global['hFeeds'] = class FeedsHelper extends global['hModel']
+  constructor: ->
+    [@arg] = super
+
+  isAdmin: (model, userId)->
+    return false if !model
+    userId ?= if Meteor.isServer then @userId else Meteor.userId()
+    return true if model.head.ownerId == userId
+    return false
+
+  requiresAction: (model, userId, event)->
+    userId ?= if Meteor.isServer then @userId else Meteor.userId()
+    check = {}
+    switch model.type
+      when 'Invitation'
+        check['status'] = ~['new', 'pending', 'viewed'].indexOf(model.body.status)
+      when 'Participation'
+        check['status'] = ~['new', 'pending', 'viewed'].indexOf(model.body.status)
+        check['response'] = ~['Yes','Message'].indexOf( model.body.response)
+    return false if _.reject(check).length
+
+    switch model.head.nextActionBy
+      when 'owner'
+        return true if model.head.ownerId && model.head.ownerId == userId
+      when 'recipient'
+        return true if model.head.recipientIds && ~model.head.recipientIds.indexOf userId
+      when 'moderator'
+        return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
+        if event
+          return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
+    return false
 
 
-FeedModel::isAdmin = (model, userId)->
-  if @context
-    model = @context
-    [userid] = arguments
-  return false if !model
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  return true if model.head.ownerId == userId
-  return false
+  isModerator: (model, userId, event)->
+    userId ?= if Meteor.isServer then @userId else Meteor.userId()
+    return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
+    return true if model.head.ownerId == userId
+    return true if event?.moderatorIds && ~event.moderatorIds.indexOf userId
+    return false
 
-FeedModel::requiresAction = (model, userId, event)->
-  # model (post) requires Action by userId
-  if @context
-    model = @context
-    [userid, event] = arguments
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  check = {}
-  switch model.type
-    when 'Invitation'
-      check['status'] = ~['new', 'pending', 'viewed'].indexOf(model.body.status)
-    when 'Participation'
-      check['status'] = ~['new', 'pending', 'viewed'].indexOf(model.body.status)
-      check['response'] = ~['Yes','Message'].indexOf( model.body.response)
-  return false if _.reject(check).length
+  fetchOwner: (model={})->
+    return Meteor.users.findOne(model.head.ownerId, options['profile'])
 
-  switch model.head.nextActionBy
-    when 'owner'
-      return true if model.head.ownerId && model.head.ownerId == userId
-    when 'recipient'
-      return true if model.head.recipientIds && ~model.head.recipientIds.indexOf userId
-    when 'moderator'
-      return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
-      if event
-        return true if event.moderatorIds && ~event.moderatorIds.indexOf userId
-  return false
+  findEvent: (model={})->
+    # return global['mcEvents'].find({_id: model._id})
+    found = global['mcEvents'].find({_id: model._id})
+    console.log ["Feed belongsTo Event, event=", found.fetch()]
+    return found
 
+  isAttachment: (model={})->
+    return null if not (attachment = model.body?.attachment)
+    return 'embedded' if attachment.id
+    return 'object' if attachment._id
+    return 'unknown'
 
-FeedModel::isModerator = (model, userId, event)->
-  if @context
-    model = @context
-    [userid, event] = arguments
-  userId ?= Meteor.userId()   # available in Meteor.methods
-  return true if model.head.moderatorIds && ~model.head.moderatorIds.indexOf userId
-  return true if model.head.ownerId == userId
-  return true if event?.moderatorIds && ~event.moderatorIds.indexOf userId
-  return false
+  findAttachment: (model={})-> # for publishComposite
+    return if not model.body.attachment
+    # TODO: standardize form, use type(?), see message-composer
+    type = model.body.attachment.type || model.body.attachment.className
+    switch type
+      when 'Recipe'
+        return global['mcRecipes'].find(model.body.attachment._id)
 
-FeedModel::fetchOwner = (model={})->
-  if @context
-    model = @context
-  return Meteor.users.findOne(model.head.ownerId, options['profile'])
+  fetchAttachment: (model={})-> # for publishComposite
+    switch model.body.attachment.type
+      when 'Recipe'
+        return global['mcRecipes'].findOne(model.body.attachment._id).fetch()
 
-FeedModel::findEvent = (model={})->
-  if @context
-    model = @context
-  # return global['mcEvents'].find({_id: model._id})
-  found = global['mcEvents'].find({_id: model._id})
-  console.log ["Feed belongsTo Event, event=", found.fetch()]
-  return found
-
-FeedModel::findAttachment = (model={})-> # for publishComposite
-  if @context
-    model = @context
-  return if not model.body.attachment
-  # TODO: standardize form, use type(?), see message-composer
-  type = model.body.attachment.type || model.body.attachment.className
-  switch type
-    when 'Recipe'
-      return global['mcRecipes'].find(model.body.attachment._id)
-
-FeedModel::fetchAttachment = (model={})-> # for publishComposite
-  if @context
-    model = @context
-  switch model.body.attachment.type
-    when 'Recipe'
-      return global['mcRecipes'].findOne(model.body.attachment._id).fetch()
-
-FeedModel::fetchProfiles = (model={})->
-  if @context
-    model = @context
-  return if model.type != 'Invitation'
-  userIds = [model.head.ownerId].concat model.head.recipiendIds
-  return Meteor.users.find(_getByIds(userIds), options['profile']).fetch()
+  fetchProfiles: (model={})->
+    return if model.type != 'Invitation'
+    userIds = [model.head.ownerId].concat model.head.recipiendIds
+    return Meteor.users.find(_getByIds(userIds), options['profile']).fetch()
 
 
 global['mcFeeds'] = mcFeeds = new Mongo.Collection('feeds', {
@@ -259,7 +245,7 @@ methods = {
     mcFeeds.update( {_id:{$in:withCommentIds}}
     , {$set:{'body.comments':[], 'body.status':"new", 'body.response': null}}
     , {multi:true})
-    mcEvents.update("3X8pxfsEhBrpHcdfD", {$pull:
+    mcEvents.update("NCJkY7nmYeSWGqv85", {$pull:
       participations: {ownerId:"L8EdePbduQ3Aj3r3W"}
       participantId: "L8EdePbduQ3Aj3r3W"
     })

@@ -5,8 +5,8 @@ EventCtrl = (
   $ionicScrollDelegate, $state, $stateParams, $listItemDelegate
   $log, toastr
   appModalSvc, tileHelpers, openGraphSvc, eventUtils
-  AAAHelpers, locationHelpers
-  $reactive, UsersResource, EventsResource
+  AAAHelpers, locationHelpers, TableEditSvc
+  $reactive, $auth, UsersResource, EventsResource
   utils, devConfig, exportDebug
   )->
 
@@ -14,7 +14,7 @@ EventCtrl = (
     vm.viewId = ["events-view",$scope.$id].join('-')
     vm.title = "Events"
     vm.listItemDelegate = null
-    vm.RecipeM = RecipeModel::
+    vm.hEvents = hEvents
 
     # required for directive:map-view
     vm.rows = []
@@ -41,22 +41,28 @@ EventCtrl = (
         initialSlide: 1
         pagination: false
       slider: null
+      activeSlide: null
       slide: (name)->
         self = vm.pullToReveal
+        self.activeSlide = name
+        speed = 0 # no animation
         switch name
           when 'setLocation'
-            self.slider.slideTo(0)
+            self.slider.slideTo(0,speed)
           when 'searchSort'
-            self.slider.slideTo(1)
+            self.slider.slideTo(1,speed)
             selector = '#' + vm.viewId + ' input'
             setTimeout ()->return document.querySelector(selector ).focus()
-          when 'newTile'
-            self.slider.slideTo(2)
-            selector = '#' + vm.viewId + ' new-tile input'
+          when 'newTable'
+            self.slider.slideTo(2,speed)
+            selector = '#' + vm.viewId + ' table-create-wizard input'
             setTimeout ()->return document.querySelector(selector ).focus()
             return
+          when 'none','reset'
+            self.activeSlide = null
           when 'default'
-            self.slider.slideTo(self.options.initialSlide)
+            self.slide('searchSort') # same as self.initialSlide
+            # self.slider.slideTo(self.options.initialSlide)
     }
     vm.settings = {
       view:
@@ -69,9 +75,17 @@ EventCtrl = (
         pullToReveal: false
         overscrollTile: (value)->
           self = vm.settings.show
-          return true if self.emptyList
-          return true if self.pullToReveal
-          return false
+
+          # override
+          if self.emptyList && self.pullToReveal == false
+            vm.pullToReveal.slide('newTile') if not vm.pullToReveal.activeSlide
+            return self.pullToReveal = true
+
+          self.pullToReveal = value if typeof value != 'undefined'
+
+          vm.pullToReveal.slide('none') if self.pullToReveal == false
+          return self.pullToReveal
+
         fabIcon: 'ion-plus'
     }
 
@@ -147,37 +161,51 @@ EventCtrl = (
           return vm.settings.view.show = next
         return vm.settings.view.show = value
 
-      pulledToReveal: (value)->
+      pulledToReveal: ()->
+        vm.settings.show.overscrollTile(true)
         if !location = locationHelpers.lastKnownLonLat()
           return vm.pullToReveal.slide('setLocation')
         return vm.pullToReveal.slide('searchSort')
 
+      'edit': (ev, $item)->
+        data = $item
+        TableEditSvc.beginTableWizard(data.type, data)
+        .then (result)->
+          return if result == 'CANCELED'
+          return vm.on.submit(result)
 
-      createNewTile: (parentEl)->
+      createNewTable: (parentEl)->
+        # return AAAHelpers.requireUser('sign-in')
+        # .then (me)->
         vm.settings.show.pullToReveal = !vm.settings.show.pullToReveal
         if vm.settings.show.pullToReveal
-          vm.pullToReveal.slide('newTile')
+          vm.pullToReveal.slide('newTable')
         else
           $timeout(250).then ()->vm.pullToReveal.slide('default')
 
+      submit: (data)->
+        console.log ["submit New Event",data]
+        vm.call 'Event.upsert', data, null, (err, retval)->
+          if err
+            console.error ['Meteor Event.upsert', err]
+          console.log 'Meteor Event.upsert', retval
 
       fabClick: ($ev)->
         return AAAHelpers.requireUser('sign-in')
         .then ()->
           parentEl = ionic.DomUtil.getParentWithClass($ev.target, 'events')
-          return vm.on['createNewTile'](parentEl)
+          return vm.on['createNewTable'](parentEl)
 
       notReady: (value)->
         toastr.info "Sorry, " + value + " is not available yet"
         return false
 
-      'favorite': ()->
-        eventUtils['favorite']( arguments )
-
+      'favorite': eventUtils['favorite']
 
       showOnMap: ($ev, limit=5)->
         return vm.settings.show.map = false if vm.settings.show.map
         vm.mapRows = vm.rows.slice(0,limit)
+        return vm.settings.show.map = false if vm.mapRows.length == 0
         vm.settings.show.map = true
 
 
@@ -195,6 +223,7 @@ EventCtrl = (
         location = locationHelpers.lastKnownLonLat()
         baseFilter = _filters[ eventFilter ](location)
         return vm.filter = baseFilter if !value
+        baseFilter['searchString'] = value  # user provided searchString
         match = _.map value.split(' '), (word)->
           return "(?=.*" + word + ")"
         match = match.join('')
@@ -260,11 +289,12 @@ EventCtrl = (
 
       vm.autorun ()->
         vm.filter = vm.getReactively('filter', true)
+        return if _.isEmpty vm.filter
         console.log ['(autorun) events.filterBy=', vm.filter.filterBy]
         vm.title = vm.filter.label
         vm.pg.sort = vm.filter.sortBy
         return
-      # exportDebug.set 'vm', vm
+      exportDebug.set 'vm', vm
       return
 
 
@@ -272,16 +302,23 @@ EventCtrl = (
       vm.settings.show.map = false
       return $q.when()
       .then ()->
+        return $auth.waitForUser() if Meteor.loggingIn()
+      .then ()->
+        location = locationHelpers.lastKnownLonLat()
+        me = Meteor.user()
+        if !location && me?.location
+          location = locationHelpers.asLonLat me.location
+          locationHelpers.lastKnownLonLat location
+      .then (location)->
         # vm.settings.viewId = ["events-view",$scope.$id].join('-')
         # vm.listItemDelegate = $listItemDelegate.getByHandle('events-list-scroll', $scope)
         eventFilter = $stateParams.filter || 'all'
-        if me = Meteor.user()
-          location = locationHelpers.asLonLat me.location
-        else
-          location = locationHelpers.lastKnownLonLat()
+
         switch eventFilter
           when 'nearby'
-            return {eventFilter: eventFilter, location: location} if location
+            if location = locationHelpers.lastKnownLonLat()
+              return {eventFilter: eventFilter, location: location}
+
             return locationHelpers.getCurrentPosition('loading')
             .then (result)->
               lonlat = angular.copy(result.latlon).reverse()
@@ -335,8 +372,8 @@ EventCtrl.$inject = [
   '$ionicScrollDelegate', '$state', '$stateParams', '$listItemDelegate'
   '$log', 'toastr'
   'appModalSvc', 'tileHelpers', 'openGraphSvc', 'eventUtils'
-  'AAAHelpers', 'locationHelpers'
-  '$reactive', 'UsersResource', 'EventsResource'
+  'AAAHelpers', 'locationHelpers', 'TableEditSvc'
+  '$reactive', '$auth', 'UsersResource', 'EventsResource'
   'utils', 'devConfig', 'exportDebug'
 ]
 

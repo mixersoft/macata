@@ -1,0 +1,31 @@
+div#wizard-header.content.row.responsive-sm
+  div.col.col-offset-25.col-50
+    div.wizard-tile.item.item-complex.content.ink
+      div.hero.content.has-mask-reverse(
+        )
+        div.feature.image(
+          placeholder-data="bg-src" group="tile" index="{{Date.now()}}"
+          width="$ctrl.tileWidth()"
+        )
+      div.has-mask-wrap
+        h2.line-clamp-1 Host a Table
+        div.search-wrap
+          div.item-input-wrapper(style="background-color:white;")
+            i.icon.ion-link.larger.padding-right
+            div.auto-input-wrapper
+              input(
+                type="text"
+                placeholder="Enter Title or Image URL"
+                auto-input
+                ng-model="$ctrl.wizardInput"
+                return-close="true"
+                on-blur="$ctrl.on.beginTableWizard($event)"
+                )
+          button.button.button-small.button-balanced
+            i.icon.ion-ios-arrow-forward(
+              ng-show="!$ctrl.show.spinner"
+            )
+            ion-spinner.spinner-light(
+              icon="ios-small"
+              ng-show="$ctrl.show.spinner"
+            )

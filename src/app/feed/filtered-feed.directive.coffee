@@ -25,6 +25,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ###
 
         ff = this
+        ff.hFeeds = hFeeds
 
         if not this.reactiveContext.getReactively
           throw new Error "ERROR: expecting reactiveContext"
@@ -32,12 +33,11 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ff.collHelpers = new CollectionHelpers(ff.reactiveContext)
         ff.feedHelpers = new FeedHelpers(ff.reactiveContext)
         ff.postHelpers = new PostHelpers(ff.reactiveContext)
-        ff.me = ff.collHelpers.findOne('User', Meteor.userId())
 
         ff.requiresAction = (post, types)->
           return false if not ~types.indexOf post.type
           meId = Meteor.userId()
-          return FeedModel::requiresAction(post, meId, ff.event)
+          return hFeeds.get().requiresAction(post, meId, ff.event)
 
         ff.on = {
           edit: ()-> console.warn "attachment.edit: See RecipeHelpers"
@@ -86,7 +86,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
                     participation.head['moderatorIds'] = [invitation.head.ownerId, ff.event.ownerId]
                     participation.head['nextActionBy'] = 'recipient'
                     participation.head['isPublic'] = false
-                  when "kickstarter", "booking"
+                  when "kickstarter", "booking", "standard"
                   else
                     # post Booking/Participation, appears on Moderator's feed
                     # return EventActionHelpers.FeedHelpers.post(event, participation, vm)

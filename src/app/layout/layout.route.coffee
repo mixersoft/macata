@@ -1,6 +1,14 @@
 'use strict'
 
+# otherwisePath = '/app/event-detail/3X8pxfsEhBrpHcdfD'
+otherwisePath = '/app/feed/NCJkY7nmYeSWGqv85'
+# otherwisePath = '/app/invitation/mongo'
+# otherwisePath = '/app/recipe'
+# otherwisePath = '/app/home'
 otherwisePath = '/app/events/'
+# otherwisePath = '/app/events/comingSoon'
+# otherwisePath = '/app/map?id=1:Recipe'
+otherwisePath = '/app/me'
 
 appRun = (routerHelper, $location, $state) ->
   routerHelper.configureStates getStates(), otherwisePath

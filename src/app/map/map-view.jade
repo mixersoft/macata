@@ -1,13 +1,13 @@
 div.scope-locals.hide
-  {{$map = mv.map;''}}
-  {{$opt = mv.map.options;''}}
-  {{$gMap = mv.gMap;''}}
+  {{$map = mv.mapHandle.map;''}}
+  {{$opt = $map.options;''}}
+  {{$ctrls = mv.mapHandle.controls;''}}
 style-scoped(
   root-tag="ion-view"
-  id="mv.mapId"
   css-style="mv.cssStyle"
   )
 div.map-view.content.has-header(
+  id="{{mv.mapViewId}}"
   ng-show="mv.show"
   )
   div.map-view-map.item.item-complex.dark-bg
@@ -16,7 +16,7 @@ div.map-view.content.has-header(
       center='$map.center'
       zoom='$map.zoom'
       options='$opt.map.options'
-      control='$gMap.Control'
+      control='$ctrls.map'
       events='$map.events'
     )
       ui-gmap-circle(
@@ -31,7 +31,7 @@ div.map-view.content.has-header(
         coords="$opt.oneMarker.coords"
         options="$opt.oneMarker.options"
         events="$opt.oneMarker.events"
-        control="$gMap.MarkersControl"
+        control="$ctrls.markers"
         )
       ui-gmap-markers(
         ng-if="$map.type=='manyMarkers'"
@@ -43,5 +43,5 @@ div.map-view.content.has-header(
         options="$opt.manyMarkers.options"
         modelbyref="true"
         events="$opt.manyMarkers.events"
-        control="$gMap.MarkersControl"
+        control="$ctrls.markers"
         )

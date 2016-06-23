@@ -46,13 +46,16 @@ InputDirective = ($compile, $timeout)->
           ,150
 
         element.bind 'focus', (e)->
-          scope.enabled = !ngModel.$isEmpty element.val()
-          scope.$apply()
-          if scope.onFocus
-            $timeout ()-> scope.onFocus()
-          if scope.onKeydown
-            $timeout ()-> scope.onKeydown({$event:e, value: element.val()})
-          return
+          $timeout(0)
+          .then ()->
+            scope.enabled = !ngModel.$isEmpty element.val()
+            # scope.$apply()
+            if attrs['onFocus']
+              return scope.onFocus()
+
+            # if attrs['onKeydown']
+            #   return scope.onKeydown({$event:e, value: element.val()})
+            return
 
         element.bind 'blur', (e)->
           $timeout(200)
@@ -60,23 +63,32 @@ InputDirective = ($compile, $timeout)->
             # wrap in $timeout(200) because blur event occurs
             # before clear event, give time to clear
             return if ngModel.$isEmpty element.val()
-            if scope.onBlur
-              # console.log ['autoInput blur', element.val()]
-              scope.onBlur({$event: e, value: element.val()})
+
+            # console.log ['autoInput.blur', element.val()]
+
+            if attrs['onBlur']
+              return scope.onBlur({$event: e, value: element.val()})
+
             return
 
         element.bind 'keydown', (e)->
-          if e.which == 13
-            if scope.returnClose
-              element[0].blur()
-            if scope.onReturn
-              $timeout ()-> scope.onReturn()
+          $timeout(0)
+          .then ()->
+            if e.which == 13
+              if scope.returnClose
+                element[0].blur()
+              if attrs['onReturn']
+                scope.onReturn()
+              return
+            scope.enabled = !ngModel.$isEmpty element.val()
+
+            # console.info ['auto-input.keydown', element.val(), scope.enabled]
+
+            # scope.$apply()
+            if attrs['onKeydown']
+              return scope.onKeydown({$event:e, value: element.val()})
+
             return
-          scope.enabled = !ngModel.$isEmpty element.val()
-          scope.$apply()
-          if scope.onKeydown
-            $timeout ()-> scope.onKeydown({$event:e, value: element.val()})
-          return
 
 
 

@@ -53,6 +53,9 @@ EventsUtil = (utils, $document, amMoment,
 
     mockData: (event, vm)->
 
+      # TODO: deprecate: setting -> settings
+      event.setting ?= event.settings
+
       event.moderatorIds = [event.ownerId]
 
       # # @deprecated, using ng-repeat="$post in event | feedFilter:vm.$$feed

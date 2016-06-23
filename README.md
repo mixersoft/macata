@@ -43,42 +43,64 @@ Ionic tabbed view starter project implemented with Sass, Jade and CoffeeScript.
 
 The original project in JavaScript was done by [benevolentprof](https://github.com/benevolentprof "benevolentprof") @ [ionic-tabs-starter-angular-style](https://github.com/benevolentprof/ionic-tabs-starter-angular-style "ionic-tabs-starter-angular-style"),
 an Ionic tabbed view starter project refactored according to the Angular Style Guide.
-## Configure ionic deploy
-> see http://docs.ionic.io/docs/deploy-from-scratch
-```
-ionic add ionic-platform-web-client
-ionic io init
-ionic plugin add ionic-plugin-deploy
-ionic config build
-```
 
-add ATS exceptions for ionic deploy
-> see: https://mobile.awsblog.com/post/Tx2QM69ZE6BGTYX/Preparing-Your-Apps-for-iOS-9
+
+## Macata.info.plist
 ```
-    <key>NSAppTransportSecurity</key>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSExceptionDomains</key>
     <dict>
-      <key>NSExceptionDomains</key>
+      <key>snaphappi.com</key>
       <dict>
-        <key>amazonaws.com</key>
-        <dict>
-          <key>NSThirdPartyExceptionMinimumTLSVersion</key>
-          <string>TLSv1.0</string>
-          <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
-          <false/>
-          <key>NSIncludesSubdomains</key>
-          <true/>
-        </dict>
-        <key>amazonaws.com.cn</key>
-        <dict>
-          <key>NSThirdPartyExceptionMinimumTLSVersion</key>
-          <string>TLSv1.0</string>
-          <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
-          <false/>
-          <key>NSIncludesSubdomains</key>
-          <true/>
-        </dict>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
       </dict>
-      <key>NSAllowsArbitraryLoads</key>
-      <true/>
+      <key>facebook.com</key>
+      <dict>
+        <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+      </dict>
+      <key>fbcdn.net</key>
+      <dict>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+      </dict>
+      <key>akamaihd.net</key>
+      <dict>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+      </dict>
+      <key>amazonaws.com</key>
+      <dict>
+        <key>NSThirdPartyExceptionMinimumTLSVersion</key>
+        <string>TLSv1.0</string>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+      </dict>
+      <key>amazonaws.com.cn</key>
+      <dict>
+        <key>NSThirdPartyExceptionMinimumTLSVersion</key>
+        <string>TLSv1.0</string>
+        <key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+        <false/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+      </dict>
     </dict>
-```
+    <key>NSAllowsArbitraryLoads</key>
+    <false/>
+  </dict>
+  ```

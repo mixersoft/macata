@@ -69,6 +69,15 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   top: 2px;
 }
 
+.spinner-wrap {
+  .spinner svg {
+    width: 20px;
+    padding: 3px 0;
+    margin-top: -3px;
+    vertical-align: middle;
+  }
+}
+
 
  // used by <new-tile>
 .bar-inset-wrap {
@@ -116,16 +125,29 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
     }
   }
 }
-.item-input.message-composer {
-  margin-right: 16px;
-  textarea {
-    height: 70px;
+
+message-composer {
+  .item-input.message-composer {
+    margin-right: 16px;
+    textarea {
+      height: 70px;
+    }
+    .flex-icon-bar-wrap {
+      padding: 10px 0;
+    }
+    .flex-icon-bar-wrap.new-tile {
+      padding-left: 2px;
+    }
   }
-  .flex-icon-bar-wrap {
-    padding: 10px 0;
-  }
-  .flex-icon-bar-wrap.new-tile {
-    padding-left: 2px;
+  .image-attach-helper {
+    .input-label {
+      @extend .positive;
+      padding: 0;
+    }
+    .auto-input-wrapper input {
+      // cancel .item-stacked-label
+      padding: 7px 10px 7px 0px;
+    }
   }
 }
 
@@ -177,9 +199,7 @@ ion-input {
         font-size: 24px;
       }
       .spinner svg {
-        width: 20px;
-        padding: 3px 0;
-        vertical-align: middle;
+        margin-top: 0;
       }
     }
   }
@@ -193,8 +213,10 @@ ion-input {
   background: white;
   padding-left: 0;
   padding-right: 0;
-  input {
+  width: 100% !important;
+  > input {
     padding-right: 0;
+    width: 100% !important;
   }
   .icon {
     height: 29px;
@@ -415,8 +437,8 @@ ion-item.item-post {
     display: inline;
     margin-right: 10px;
     .item-image {
-      max-width: 40px;
-      max-height: 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
     }
     .icon.item-image {
@@ -731,6 +753,9 @@ ion-side-menu > ion-content {
 
 }
 
+/*
+  app.events
+*/
 
 .event {
   &.tile.item {
@@ -784,51 +809,52 @@ ion-side-menu > ion-content {
     transform: scale(0, 0); }
 }
 
-tile-set-location, tile-search-sort, tile-create-new {
+tile-set-location, tile-search-sort, tile-create-new, .tile {
   .row .col.list-item-wrap {
     margin-bottom: -10px;
   }
-  .tile.overscroll-tile {
-    .hero {
-      height: 100px;
+}
+
+.overscroll-tile, .wizard-tile {
+  .hero {
+    height: 100px;
+  }
+  .has-mask-wrap {
+    @extend .text-center;
+    position: absolute;
+    top: 15%;
+    left: 0;
+    right: 0;
+    p {
+      text-overflow: ellipsis;
     }
-    .has-mask-wrap {
-      @extend .text-center;
-      position: absolute;
-      top: 15%;
-      left: 0;
-      right: 0;
-      p {
-        text-overflow: ellipsis;
-      }
 
-      h1, h2, h3, h4, h5, h6 {
-        color: #fff;
-        font-weight: bold;
-        position: relative;
-        text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
-        z-index: 1;
-      }
+    h1, h2, h3, h4, h5, h6 {
+      color: #fff;
+      font-weight: bold;
+      position: relative;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.95);
+      z-index: 1;
+    }
+    h2 {
+      font-size: 24px;
+    }
+
+    @media(max-width: $grid-responsive-sm-break) {
       h2 {
-        font-size: 24px;
+        font-size: 20px;
       }
+    }
 
-      @media(max-width: $grid-responsive-sm-break) {
-        h2 {
-          font-size: 20px;
-        }
-      }
+    .search-wrap > * {
+      height: 34px;
+    }
 
-      .search-wrap > * {
-        height: 34px;
-      }
-
-      .item-input-wrapper {
-        display:inline-flex;
-        width: 75%;
-        ~ .button {
-          margin-left: 0;
-        }
+    .item-input-wrapper {
+      display:inline-flex;
+      width: 75%;
+      ~ .button {
+        margin-left: 0;
       }
     }
   }
@@ -871,6 +897,22 @@ $hero-wrap-bg-height: 170px;
     }
   }
 }
+
+#profile {
+  .button.image-attach {
+    position: absolute;
+    bottom: 0px;
+    margin-left: -25px;
+    left: 50%;
+  }
+  .image-attach-helper-wrap {
+    display: flex;
+    image-attach-helper {
+      width: 100%;
+    }
+  }
+}
+
 
 
 .icon-bar {
@@ -998,6 +1040,11 @@ $hero-wrap-bg-height: 170px;
         border-top-style: solid;
       }
     }
+    .image-attach-helper {
+      .input-label {
+        @extend .positive;
+      }
+    }
   }
 }
 
@@ -1015,6 +1062,11 @@ $hero-wrap-bg-height: 170px;
     color: white;
     padding: 4px 8px;
     border-radius: 14px;
+  }
+}
+
+ion-view#event {
+  @media(min-width: $grid-responsive-sm-break) {
   }
 }
 
@@ -1119,5 +1171,115 @@ eventDetail View
         width: 60%;
       }
     }
+  }
+}
+
+
+
+
+#wizard-body {
+  .list {
+    .item-avatar > div.text-middle {
+      // valign label with .item-avatar, line-clamp-1
+      line-height: 40px;
+    }
+    .input-label.icon-label {
+      width: 24px;
+      .icon {
+        color: $positive;
+      }
+    }
+    .item-complex > .card {
+      // cancel .list-item-container.condensed .card
+      margin: 10px 10px 20px 10px;
+      margin-top: 0;
+    }
+  }
+  // ???: should be global?
+  .card .item.not-first-child {
+      border-top: 1px solid #ddd;
+  }
+  .item-input.item-help {
+    flex-wrap: wrap;
+    position: relative;
+    .message {
+      font-size: smaller;
+      color: #aaa;
+      width: 100%;
+    }
+    .warn {
+      color: $energized;
+    }
+    .error {
+      color: $assertive;
+    }
+  }
+}
+
+image-attach-helper {
+  .image-attach-helper.item-input {
+    flex-wrap: wrap;
+    position: relative;
+    .input-label {
+      width: 24px;
+    }
+    input[type=file] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 37px;
+      height: 47px;
+      z-index: 2;
+      opacity: 0;
+    }
+    .progress-wrap {
+      position: relative;
+      font-size: smaller;
+      width: 100%;
+      display:flex;
+      .label {
+        color:#aaa;
+        min-width: 60px;
+      }
+      .progress {
+        border-radius: 4px;
+        vertical-align: bottom;
+        height: 16px;
+        margin: 0 10px;
+        width: 100%;
+        .progress-bar {
+          height: 14px;
+          // width: 33%;
+        }
+        &.positive {
+          border:1px solid $positive;
+          .progress-bar {
+            background-color: $positive;
+          }
+        }
+        &.energized {
+          border:1px solid $energized;
+          .progress-bar {
+            background-color: $energized;
+          }
+        }
+        &.assertive {
+          border:1px solid $assertive;
+          .progress-bar {
+            background-color: $assertive;
+          }
+        }
+      }
+
+    }
+  }
+}
+
+event-when-helper {
+}
+
+event-location-helper {
+  .map-marker .angular-google-map-container {
+    height: 160px;
   }
 }

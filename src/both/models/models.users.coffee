@@ -6,7 +6,8 @@ options = {
   'profile':
     fields:
       username: 1
-      profile: 1
+      displayName: 1
+      face: 1
 }
 
 ###
@@ -22,18 +23,6 @@ asGeoJsonPoint = (lonlat, isLatLon=false)->
     type: "Point"
     coordinates: lonlat # [lon,lat]
   }
-
-
-###
-#  NOTE: when calling from publish, set Meteor.userId() Meteor.user() explicitly
-###
-global['ProfileModel'] = class ProfileModel
-
-ProfileModel::saveLocation = (location, isLatLon=false, userId)->
-  me = Meteor.users.findOne(userId) if userid
-  me ?= Meteor.user()
-  Meteor.call 'Profile.saveLocation', location, isLatLon, (err, result)->
-    'check'
 
 
 methods = {
@@ -144,6 +133,15 @@ methods = {
           verified: true
       }
       Meteor.users.update(meId, modifier)
+    return
+  'Profile.save': (data, fields)->
+    meId = Meteor.userId()
+    modifier = {}
+    fields = _.intersection fields, [
+      'displayName', 'face', 'gender','firstname', 'lastname'
+    ]
+    modifier['$set'] = _.pick data, fields
+    Meteor.users.update(meId, modifier)
     return
 
   'Profile.saveLocation': (loc, isLatLon=false )->

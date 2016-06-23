@@ -4,13 +4,14 @@ style#new-tile-style
 ion-modal-view#new-tile-modal-view
   div.scope-locals.hide
     {{mm.data = data;''}}
+    {{show=mm.settings.show;''}}
   ion-header-bar.bar-positive 
     h1.title {{ mm.data.modal_title || "Create Tile" }}
     button.button.button-icon.button-clear.ion-close(
       ng-click="closeModal('CANCELED')"
     )
     
-  ion-content
+  ion-content(delegate-handle="new-tile-modal-view-scroll")
     div.list
       div.preview
         div.tile.recipe.item.item-complex.content.ink
@@ -52,13 +53,13 @@ ion-modal-view#new-tile-modal-view
               auto-input 
               placeholder="Enter Link"
               )
-        ion-input.item.item-input
-          i.icon.ion-image.positive.larger.padding-right
-          div.auto-input-wrapper
-            input(type="text" ng-model="mm.data.image" 
-              auto-input 
-              placeholder="Enter Url for Photo" 
-              )
+              
+        image-attach-helper(
+          ng-show="show.imageAttach"
+          preview="false"
+          src="mm.data.image"
+          on-update="mm.on.updateImage(data)"
+          )
           
         ion-input.item-input.item.flex-item-wrap(ng-show="mm.geo.setting.show.location")
           div.item-input-inset.flex-icon-bar.location
@@ -99,8 +100,10 @@ ion-modal-view#new-tile-modal-view
             
   ion-footer-bar
     div.button-bar.condensed.positive
-      button.button(ng-click="mm.on.cameraClick($event)")
-        i.icon.ion-camera.positive
+      button.button(
+        ng-click="mm.on.imageAttachClick($event)"
+        )
+        i.icon.ion-image.positive
       button.button(ng-click="mm.on.locationClick($event)")
         i.icon.ion-ios-location.positive
       button.button.positive(ng-click="mm.on.done($event)") Done

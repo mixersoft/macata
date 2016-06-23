@@ -2,7 +2,7 @@
   "public":{
     "label": "DEV",
     "facebook": {
-      "oauth_rootUrl": "http://localhost:3000/",
+      "oauth_rootUrl": "http://localhost:3333/",
       "profileFields": [
         "name",
         "first_name",

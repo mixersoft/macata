@@ -1,7 +1,23 @@
 {
   "production": [
-    "ionic/js/ionic.bundle.min.js",
-    "ionic/fonts/*"
+    "ionic/fonts/*",
+    "lodash/dist/lodash.min.js",
+    "angular-toastr/dist/angular-toastr.tpls.min.js",
+    "angular-toastr/dist/angular-toastr.min.css",
+    "robotodraft/fonts/**/*",
+    "angular-meteor/dist/angular-meteor.bundle.min.js",
+    "angular-meteor-auth/dist/angular-meteor-auth.bundle.min.js",
+    "angular-simple-logger/dist/angular-simple-logger.min.js",
+    "angular-google-maps/dist/angular-google-maps.min.js",
+    "ngstorage/ngstorage.min.js",
+    "manual/ionic.scroll.sista.js",
+    "manual/ion-fab.css",
+    "manual/ion-fab.js",
+    "manual/publish-counts.js",
+    "manual/pull-to-reveal.js",
+    "manual/fb-sdk.js",
+    "angular-file-upload/dist/angular-file-upload.min.js",
+    "angular-moment/angular-moment.min.js"
   ],
   "dev": [
     "ionic/fonts/*",
@@ -20,16 +36,18 @@
     "manual/publish-counts.js",
     "manual/pull-to-reveal.js",
     "manual/fb-sdk.js",
-    "ionic-platform-web-client/dist/ionic.io.bundle.js",
+    "xxx-ionic-platform-web-client/dist/ionic.io.bundle.js",
+    "angular-file-upload/dist/angular-file-upload.js",
     "angular-moment/angular-moment.js"
   ],
-  "copy": [
+  "loadFirst": [
     "ionic/js/ionic.bundle.js",
-    "ngCordova/dist/ng-cordova.js",
+    "ionic/js/ionic.bundle.min.js",
+    "ngCordova/dist/ng-cordova.min.js",
     "manual/meteor-runtime-config.js",
     "meteor-client-side/dist/meteor-client-side.bundle.js",
-    "manual/dist/accounts-base-client-side.bundle.js",
-    "manual/dist/accounts-password-client-side.bundle.js",
+    "manual/dist/accounts-base-client-side.bundle.min.js",
+    "manual/dist/accounts-password-client-side.bundle.min.js",
     "manual/dist/accounts-facebook-client-side.bundle.js",
     "moment/min/moment.min.js"
   ]

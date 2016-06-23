@@ -16,11 +16,10 @@ EventDetailCtrl = (
     vm = this
     vm.title = "Event Detail"
     vm.viewId = ["event-detail-view",$scope.$id].join('-')
+    vm.hEvents = hEvents
     vm.feedHelpers = new FeedHelpers(vm)
-    vm.EventM = new EventModel()
 
     vm.recipeHelpers = new RecipeHelpers(vm)  # for on.favorite()
-    vm.RecipeM = RecipeModel::                # for .isFavorite($item) in view
 
     vm.settings = {
       view:
@@ -145,14 +144,14 @@ EventDetailCtrl = (
             role = 'visitor'
           user.role = role
           console.info "addRoleToUser(), role="+role
-          setFabIcon()
+          setFabIcon(event)
     }
 
 
 
 
     setFabIcon = (event)->
-      if vm.EventM.isParticipant()
+      if hEvents.get().isParticipant(event)
         icon = 'ion-chatbox'
       else
         icon = 'ion-plus'
@@ -174,7 +173,7 @@ EventDetailCtrl = (
         return vm.settings.view.show = value
 
       fabClick: ($event)->
-        if vm.EventM.isParticipant()
+        if hEvents.get().isParticipant(vm.event)
 
           parent = ionic.DomUtil.getParentWithClass($event.target, 'event-detail')
           el = parent.querySelector('filtered-feed')
@@ -230,6 +229,14 @@ EventDetailCtrl = (
           return participation
         .then (participation)->
           # scroll to Participation in Feed
+          # TODO: save participation to Event. see
+          # participations = [{
+          #   id: Date.now()
+          #   ownerId: mi.ownerId
+          #   seats: _.random(3) + 1  # random seats for participation
+          #   contributions: [contribution]
+          #   createdAt: moment(mi.createdAt).add(i, 'hours').toJSON()
+          # }]
           return
 
       'postToFeed': (comment)->
@@ -295,8 +302,6 @@ EventDetailCtrl = (
             return event
 
         onChange: (event)->
-          vm.EventM.set(event)
-
           ## NOTE: run in onChange because event properties reset on vm.getReactively()
           eventUtils.mockData(event, vm)
 
@@ -304,6 +309,7 @@ EventDetailCtrl = (
           .then (event)->
             _lookups = {
               '$$participants': (event)->
+                # TODO: get participantIds from event.participations
                 participantIds = [event['ownerId']].concat event['participantIds']
                 return if !participantIds
                 Meteor.users.find(_getByIds(participantIds)).fetch()
@@ -335,7 +341,7 @@ EventDetailCtrl = (
           .then (event)->
             # render shareLinks
             if event.isPublic == false || event.setting.isExclusive
-              return event if not vm.EventM.isParticipant()
+              return event if not hEvents.get().isParticipant(event)
             EventActionHelpers.getShareLinks(event, vm)
             .then (sharelinks)->
               event.shareLinks = sharelinks

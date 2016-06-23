@@ -11,7 +11,7 @@ EventBookingCtrl = (
     $reactive(this).attach($scope)
     mm = this
     mm.name = "EventBookingCtrl"
-    mm.collHelpers = new CollectionHelpers(mm)
+    mm.hEvents = hEvents
     mm.afterModalShow = ()->
       # params from appModalSvc.show( template , controllerAs , params, options) available
       # mm = copyToModalViewModal = {
