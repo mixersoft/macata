@@ -107,7 +107,8 @@ gulp.task 'meteor_coffee', ->
 gulp.task 'index', ->
   # Inject in the correct order to startup app
   vendor0_paths =  vendor.loadFirst.map (p) ->
-    return "!**/"+p if /ionic.bundle|ng-cordova/.test p 
+    # manual load: ionic.bundle.js, ionic.io.bundle.js, ng-cordova.js
+    return "!**/"+p if /ionic.bundle|ionic.io.bundle|ng-cordova/.test p 
     return paths.vendor+"**/"+p
   vendor1_paths = [paths.vendor+'**/*.js','!**/lib/ionic/**']
     .concat vendor.loadFirst.map (p) -> "!**/"+p

@@ -1,6 +1,6 @@
 {
   "name": "macata",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "A social-eating platform for the sharing economy.",
   "author": "Michael Lin <michael@snaphappi.com",
   "repository": {
@@ -68,6 +68,7 @@
     },
     "cordova-plugin-file",
     "cordova-plugin-network-information",
+    "ionic-plugin-deploy",
     "cordova-plugin-splashscreen"
   ],
   "cordovaPlatforms": [

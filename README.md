@@ -45,6 +45,26 @@ The original project in JavaScript was done by [benevolentprof](https://github.c
 an Ionic tabbed view starter project refactored according to the Angular Style Guide.
 
 
+## config.xml, for facebook oauth, etc
+```
+  <allow-navigation href="https://www.facebook.com/v2.2/dialog/oauth"/>
+  <allow-navigation href="https://m.facebook.com/v2.2/dialog/oauth"/>
+  <allow-navigation href="http://staticxx.facebook.com/connect/xd_arbiter.php"/>
+  <allow-navigation href="about:blank"/>
+```
+
+## Configure ionic deploy
+> see http://docs.ionic.io/docs/deploy-from-scratch
+```
+ionic add ionic-platform-web-client
+ionic io init
+ionic plugin add ionic-plugin-deploy
+ionic config build
+```
+
+add ATS exceptions for ionic deploy
+> see: https://mobile.awsblog.com/post/Tx2QM69ZE6BGTYX/Preparing-Your-Apps-for-iOS-9
+
 ## Macata.info.plist
 ```
   <key>NSAppTransportSecurity</key>
@@ -104,3 +124,15 @@ an Ionic tabbed view starter project refactored according to the Angular Style G
     <false/>
   </dict>
   ```
+# Build Process
+
+NOTE: you must run `ionic io init` whenever you reset the `/www` folder. It copies the `app_id` and `app_key` to the `ionic.io.bundle` file
+
+```
+gulp build; ionic io init; ionic build ios;
+gulp build -p; ionic io init; ionic build ios;
+
+# Initializing app with ionic.io....
+# Saved app_id, writing to ionic.io.bundle.min.js...
+# Saved api_key, writing to ionic.io.bundle.min.js...
+```

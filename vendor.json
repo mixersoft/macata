@@ -36,13 +36,14 @@
     "manual/publish-counts.js",
     "manual/pull-to-reveal.js",
     "manual/fb-sdk.js",
-    "xxx-ionic-platform-web-client/dist/ionic.io.bundle.js",
     "angular-file-upload/dist/angular-file-upload.js",
     "angular-moment/angular-moment.js"
   ],
   "loadFirst": [
     "ionic/js/ionic.bundle.js",
     "ionic/js/ionic.bundle.min.js",
+    "ionic-platform-web-client/dist/ionic.io.bundle.js",
+    "ionic-platform-web-client/dist/ionic.io.bundle.min.js",
     "ngCordova/dist/ng-cordova.min.js",
     "manual/meteor-runtime-config.js",
     "meteor-client-side/dist/meteor-client-side.bundle.js",

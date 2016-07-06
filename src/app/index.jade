@@ -8,10 +8,14 @@ html
         // inject:css
         // endinject
 
-        script(src='lib/ionic/js/ionic.bundle.js')  // load angular first
+        script(src='lib/ionic/js/ionic.bundle.min.js')
         script(src='lib/ngCordova/dist/ng-cordova.min.js')
-        // cordova script (this will be a 404 during development)
-        script(src='cordova.js')
+        
+        //- Cordova is bootstrapped by ionic-platform-web-client, 
+        //  load cordova.js manually if you remove ionic-platform-web-client... 
+        script(src="lib/ionic-platform-web-client/dist/ionic.io.bundle.min.js")
+        //- script(src='cordova.js')
+        
         // inject:js
         // endinject
 

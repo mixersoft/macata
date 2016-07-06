@@ -5,6 +5,10 @@
 ionic add ionic-platform-web-client
 ionic io init
 ionic config build
+
+lifecycle:
+  deviceReady.waitForDevice().then ()-> new Ionic.Deploy()
+  ionicDeploy.check() called in HomeCtrl.activate()
 ###
 
 _progress = null
@@ -17,15 +21,7 @@ IonicDeploy = (
   CHECK_AGAIN_IN_MINS = 5
 
   deploy = null
-  ready = deviceReady.waitForDevice().then (device)->
-    deploy = new Ionic.Deploy()
-    return $q.reject('Ionic.Deploy not found, check configuration.') if !deploy
-    exportDebug.set('deploy',{
-      info: self.info
-      versions: self.versions
-      metadata: self.metadata
-    })
-    return device
+  ready = deviceReady.waitForDevice()
 
   self = {
     setChannel: (device)->
@@ -47,6 +43,8 @@ IonicDeploy = (
       return ready
       .catch (err)->
         console.warn(err)
+      .then ()->
+        return self.load() if !deploy
       .then ()->
         device = deviceReady.device()
         return device if force
@@ -161,8 +159,21 @@ IonicDeploy = (
         console.log ["deploy.getMetadata()", result]
       return
 
+    load: ()->
+      return deviceReady.waitForDevice()
+      .then (device)->
+        console.log "loading IonicDeploy"
+        deploy ?= new Ionic.Deploy()
+        exportDebug.set('deploy',{
+          info: self.info
+          versions: self.versions
+          metadata: self.metadata
+        })
+        return
   }
 
+
+  self.load()
   return self
 
 IonicDeploy.$inject = [
@@ -201,7 +212,6 @@ IonicDeployCtrl = ($scope, ionicDeploy, $timeout)->
     return ionicDeploy.updateProgress()
   , (newV)->
     idc.progress = newV
-
 
   return idc
 

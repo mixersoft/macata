@@ -8,7 +8,7 @@ DeviceReady = (
   ALLOW_DEVICE_ATTRS = ['checkForUpdate', 'skipUpdates']
 
   _promise = null
-  _timeout = if ionic.Platform.isWebView() then 10000 else 2000
+  _timeout = 20000
   _contentWidth = null
   _device = {}
   _device =
@@ -78,6 +78,8 @@ DeviceReady = (
 
 
     waitForDevice: ()->
+      if ionic.Platform.isReady
+        return $q.when(_device)
       return self.waitP()
       .then (device)->
         return $q.reject("NOT_A_DEVICE") if device.isDevice == false
