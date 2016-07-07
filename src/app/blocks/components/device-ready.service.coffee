@@ -2,7 +2,9 @@
 'use strict'
 
 DeviceReady = (
-  $q, $timeout, $ionicPlatform, $cordovaNetwork, $localStorage
+  $q, $timeout, $ionicPlatform
+  $cordovaNetwork, $localStorage
+  exportDebug
 )->
 
   ALLOW_DEVICE_ATTRS = ['checkForUpdate', 'skipUpdates']
@@ -50,6 +52,14 @@ DeviceReady = (
       , _timeout
       $ionicPlatform.ready ()->
         $timeout.cancel _cancel
+
+        # Hack: Meteor.isCordova is not set properly
+        #   - maybe because cordova.js loaded by ionic.io.bundle.min.js ???
+        if "use meteor bootstrap hack"
+          Meteor.isCordova = ionic.Platform.isWebView()
+          Meteor.isAndroid = ionic.Platform.isAndroid()
+          console.log "1) Meteor.isCordova=", Meteor.isCordova
+
         if $localStorage['device']?.id?
           _device = angular.copy $localStorage['device']
           return deferred.resolve( _device )
@@ -90,11 +100,13 @@ DeviceReady = (
       return !$cordovaNetwork.isOffline()
   }
   self['wait'] = self.waitP    # alias deviceReady.wait == waitP
+  exportDebug.set('ls', $localStorage)
   return self
 
 DeviceReady.$inject = [
   '$q', '$timeout',  '$ionicPlatform'
   '$cordovaNetwork', '$localStorage'
+  'exportDebug'
 ]
 
 angular.module 'blocks.components'
