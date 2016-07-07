@@ -132,7 +132,7 @@ gulp.task 'index', ->
     modules = gulp.src paths.modules
       .pipe( concat('modules.js') ).pipe gulp.dest paths.dest
     sources = gulp.src( paths.sources )
-      .pipe( concat('app.js') ).pipe gulp.dest paths.dest
+      .pipe( concat('application.js') ).pipe gulp.dest paths.dest
     styles = gulp.src paths.styles
       .pipe( concat('app.css') ).pipe gulp.dest( paths.dest + 'scss/')
   else

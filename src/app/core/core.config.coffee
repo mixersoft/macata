@@ -5,7 +5,7 @@ appRun = ($ionicPlatform, $ionicHistory, $rootScope, $location
   $log, devConfig, AAAHelpers
 ) ->
 
-  devConfig.loadData()
+  # devConfig.loadData()
 
   Meteor.call('settings.public', (err,result)->
     return if err

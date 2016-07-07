@@ -519,8 +519,11 @@ EventDetailCtrl = (
 
 
 
-
+    # TODO: deprecate
     getData = ()->
+      deprecate = "DEPRECATE EventDetailCtrl.getData()"
+      throw new Error deprecate
+
       $q.when()
       .then ()->
         users = UsersResource.query()
@@ -546,7 +549,10 @@ EventDetailCtrl = (
             post.head.$$chatWith = _.find(vm.lookup.users, {id: post.head.recipientIds[0]})
           return
 
+    # TODO: deprecate
     activate0 = ()->
+      deprecate = "DEPRECATE EventDetailCtrl.activate0()"
+      throw new Error deprecate
       # # return $q.reject("ERROR: expecting event._id") if not $stateParams.id
       return devConfig.dataReady
       .then (eventId)->

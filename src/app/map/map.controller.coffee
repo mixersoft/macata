@@ -3,12 +3,13 @@
 MapCtrl = (
   $scope, $rootScope, $q, $location, $window, $timeout
   $ionicScrollDelegate, $state, $stateParams
+  $reactive, $auth
   $log, toastr
   EventsResource, IdeasResource
   utils, devConfig, exportDebug
   )->
 
-
+    $reactive(this).attach($scope)
     vm = this
     vm.title = "Map View"
     vm.viewId = ["map-view",$scope.$id].join('-')
@@ -73,18 +74,26 @@ MapCtrl = (
     getData = ()->
       vm.rows = []
       return $q.when()
+      # .then ()->
+      #   deprecate = "DEPRECATE MapCtrl.getData()"
+      #   throw new Error deprecate
+
+      #   recipes = IdeasResource.query()  # recipes/ideas
+      #   events = EventsResource.query().then (result)->
+      #     return result[0...3]
+      #   return $q.all([recipes, events])
+      #   .then (results)->
+      #     [recipes, events] = results
+      #     data = [].concat recipes, events
+      #     return data
       .then ()->
-        recipes = IdeasResource.query()  # recipes/ideas
-        events = EventsResource.query().then (result)->
-          return result[0...3]
-        return $q.all([recipes, events])
-        .then (results)->
-          [recipes, events] = results
-          data = [].concat recipes, events
-          return data
+        recipes = mcRecipes.find().fetch()
+        events = mcEvents.find().fetch()
+        data = [].concat recipes, events
+        return _.sampleSize data, 5
       .then (data)->
         # strip $$ keys, searching for gMap bug
-        if true
+        if false
           _omit$keys = (o)->
             return o if not _.isObject o
             omitKeys = _.filter(_.keys(o), (k)->return k[0]=='$')
@@ -101,6 +110,9 @@ MapCtrl = (
         return vm.rows
 
     initialize = ()->
+      vm.subscribe 'myVisibleEvents'
+      vm.subscribe 'myVisibleRecipes'
+
       return
     #   # $ionicView.loaded: called once for EACH cached $ionicView,
     #   #   i.e. each instance of vm
@@ -111,13 +123,15 @@ MapCtrl = (
     #       vm.gMap.Dfd.resolve('gMapControls ready')
     #   # NOTE: 'map-ready' fired once for each $ionicView.loaded ONLY
     #   # NOTE: 'tilesloaded/map-ready' event does NOT fire from a cached $ionicView
+    #
 
     activate = ()->
       # $ionicView.enter
       return $q.when()
       .then ()->
-        return devConfig.getDevUser("0").then (user)->
-          return vm.me = user
+        return $auth.waitForUser() if Meteor.loggingIn()
+      .then ()->
+        return vm.me = Meteor.user()
       .then getData
       .then ()->
         # // Set Ink
@@ -175,6 +189,7 @@ MapCtrl = (
 MapCtrl.$inject = [
   '$scope', '$rootScope', '$q', '$location', '$window', '$timeout'
   '$ionicScrollDelegate', '$state', '$stateParams'
+  '$reactive', '$auth'
   '$log', 'toastr'
   'EventsResource', 'IdeasResource'
   'utils', 'devConfig', 'exportDebug'

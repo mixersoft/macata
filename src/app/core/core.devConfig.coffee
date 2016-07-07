@@ -42,9 +42,15 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
           return $rootScope['user']
 
 
-    dataReady: null # promise
+    dataReady: ()->
+      # promise
+      deprecate = "DEPRECATE devConfig.deviceReady()"
+      throw new Error deprecate
 
     loadData: ()->
+      deprecate = "DEPRECATE devConfig.loadData()"
+      throw new Error deprecate
+
       users = []
       ideas = []
       events = []
@@ -69,6 +75,7 @@ DevConfig = ($rootScope, $q, $log, openGraphSvc, exportDebug, toastr
         events = result
         _.each events, (event, i)->
           event.createdAt = moment().subtract(i, 'days').toJSON()
+          # deprecate, use $hModel.fetchHost(event)
           event.$$host = _.find users, {id: event.ownerId}
           event.visibleAddress = event.address
           # console.warn("TESTDATA: using currentUser as event Moderator")

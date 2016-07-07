@@ -53,6 +53,21 @@ an Ionic tabbed view starter project refactored according to the Angular Style G
   <allow-navigation href="about:blank"/>
 ```
 
+
+
+## Configure accounts-facebook-cordova
+> see https://github.com/mixersoft/accounts-facebook-client-side 
+
+```
+git clone https://github.com/jeduan/cordova-plugin-facebook4.git \
+  ./plugins/cordova-plugin-facebook4-git
+ionic plugin add ./plugins/cordova-plugin-facebook4-git \
+   --variable APP_ID="224167074626723" \
+   --variable APP_NAME="macata"
+```
+
+
+
 ## Configure ionic deploy
 > see http://docs.ionic.io/docs/deploy-from-scratch
 ```
@@ -126,7 +141,7 @@ add ATS exceptions for ionic deploy
   ```
 # Build Process
 
-NOTE: you must run `ionic io init` whenever you reset the `/www` folder. It copies the `app_id` and `app_key` to the `ionic.io.bundle` file
+> You must run `ionic io init` whenever you reset the `/www` folder. It copies the `app_id` and `app_key` to the `ionic.io.bundle` file
 
 ```
 gulp build; ionic io init; ionic build ios;

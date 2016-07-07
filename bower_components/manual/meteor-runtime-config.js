@@ -40,7 +40,7 @@ setMeteorRuntime = function(){
           console.error("ERROR: unknown runtime configuration");
           break;
         } else {
-          console.error("WARN: ionic.Platform.isReady not ready?");
+          console.warn("WARN: ionic.Platform.isReady not ready?");
         }
       }
       runConfig = "DEVICE";
@@ -77,7 +77,7 @@ setMeteorRuntime = function(){
   OR add manually, see setMeteorSettingsPublic() below
 
 
-  IMPORTANT: 
+  IMPORTANT:
     facebook.oauth_rootUrl sets OAuth._redirectUri(,,,{rootUrl:})
     which MUST point to the client rootUrl requesting loginWithFacebook
     - see: /path/to/meteor/.meteor/local/build/programs/server/packages/facebook.js
