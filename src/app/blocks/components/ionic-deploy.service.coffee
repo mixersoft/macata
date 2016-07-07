@@ -21,11 +21,10 @@ IonicDeploy = (
   CHECK_AGAIN_IN_MINS = 5
 
   deploy = null
-  ready = deviceReady.waitForDevice()
 
   self = {
     setChannel: (device)->
-      return ready
+      return deviceReady.waitForDevice()
       .then ()->
         device ?= deviceReady.device()
         # check for channel update first
@@ -40,9 +39,10 @@ IonicDeploy = (
         return dfd.promise
 
     check: (force)->
-      return ready
+      return deviceReady.waitForDevice()
       .catch (err)->
-        console.warn(err)
+        return $q.reject err if err == 'NOT_A_DEVICE'
+        throw err
       .then ()->
         return self.load() if !deploy
       .then ()->
@@ -71,7 +71,7 @@ IonicDeploy = (
 
     askToUpdate: (metadata)->
       # return deviceReady.wait()
-      return ready
+      return deviceReady.waitForDevice()
       .then ()->
         device = deviceReady.device()
         found = _.find( device.skipUpdates, metadata)
@@ -101,7 +101,7 @@ IonicDeploy = (
     update: (isChecked, watch = {})->
       # $scope.$watch '[watch].progress', (newV, oldV)->
       #   progress = newV
-      return ready
+      return deviceReady.waitForDevice()
       .then ()->
         device = deviceReady.device()
         if not isChecked
@@ -161,6 +161,10 @@ IonicDeploy = (
 
     load: ()->
       return deviceReady.waitForDevice()
+      .catch (err)->
+        # console.warn(err)
+        return $q.reject err if err == 'NOT_A_DEVICE'
+        throw err
       .then (device)->
         console.log "loading IonicDeploy"
         deploy ?= new Ionic.Deploy()
@@ -170,6 +174,7 @@ IonicDeploy = (
           metadata: self.metadata
         })
         return
+      ,
   }
 
 
