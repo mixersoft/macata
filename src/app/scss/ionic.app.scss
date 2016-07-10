@@ -126,6 +126,10 @@ $ionicons-font-path: '../lib/ionic/fonts' !default;
   }
 }
 
+content-opener > a {
+  text-decoration: none;
+}
+
 message-composer {
   .item-input.message-composer {
     margin-right: 16px;
@@ -251,8 +255,7 @@ ion-input {
   .list {
     background-color: #EEE;
   }
-  .tile > a {
-    text-decoration: none;
+  content-opener {
     .body {
       color: $dark;
     }

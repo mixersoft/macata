@@ -174,12 +174,7 @@ ion-list.feed
           div.scope-locals.hide.
             {{$type = $postBody.attachment.type || $postBody.attachment.className;''}}
             {{$attachment = ff.collHelpers.findOne($type, $postBody.attachment._id);''}}
-          a(
-            ng-href="{{ff.on.contentOpener($attachment.url)}}"
-            ng-click="ff.on.contentOpener($attachment.url, $event)"
-            target="_blank"
-            style="text-decoration: none!important;"
-            )
+          content-opener(href="$attachment['url']")
             div.hero.content(style="height:160px;")
               div.icon-bar.top-right-toolbar.condensed.light(
                 ng-click="$event.stopImmediatePropagation()"
@@ -215,12 +210,7 @@ ion-list.feed
           div.scope-locals.hide.
             {{$attachment = $postBody.attachment;''}}
             {{$attachment.isOwner = $hFeeds.isAdmin($post);''}}
-          a(
-            ng-href="{{ff.on.contentOpener($attachment.url)}}"
-            ng-click="ff.on.contentOpener($attachment.url, $event)"
-            target="_blank"
-            style="text-decoration: none!important;"
-            )
+          content-opener(href="$attachment['url']")
             div.hero.content(style="height:160px;")
               div.feature.image(
                 bg-image="{{$attachment['image']}}"

@@ -65,12 +65,10 @@ list-item-detail
       ng-show="true"
       ng-click="$event.stopImmediatePropagation()"
       )
-      a.button(
-        href="{{$item['url']}}"
-        target="_blank"
-        )
-        i.icon.positive.ion-android-open.ink(
-        )
+      content-opener(href="$item['url']")
+        button.button
+          i.icon.positive.ion-android-open.ink(
+          )
       button.button(
         ng-click="vm.on.favorite($event, $item)"
         )
