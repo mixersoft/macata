@@ -251,6 +251,12 @@ ion-input {
   .list {
     background-color: #EEE;
   }
+  .tile > a {
+    text-decoration: none;
+    .body {
+      color: $dark;
+    }
+  }
 }
 
 ion-item > a {

@@ -13,6 +13,7 @@ FeedCtrl = (
   $scope, $rootScope, $stateParams, $q, $window
   $reactive, ReactiveTransformSvc, $auth
   $filter, $ionicHistory, $state
+  $cordovaInAppBrowser
   CollectionHelpers, FeedHelpers, PostHelpers
   exportDebug
   eventUtils
@@ -158,6 +159,7 @@ FeedCtrl.$inject = [
   '$scope', '$rootScope', '$stateParams', '$q', '$window'
   '$reactive', 'ReactiveTransformSvc', '$auth'
   '$filter', '$ionicHistory', '$state'
+  '$cordovaInAppBrowser'
   'CollectionHelpers', 'FeedHelpers', 'PostHelpers'
   'exportDebug'
   'eventUtils'

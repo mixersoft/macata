@@ -24,6 +24,33 @@ ion-list.feed
       location="$postDefaults.location"
       )
       
+  //- # post.body = {
+  //- #   message: String
+  //- #   address: String
+  //- #   location: // geocodeSvc result
+  //- #     address: String
+  //- #     geoCodeResult: Object  TODO: change to 'geocodeResult'
+  //- #       place_id: String
+  //- #       formatted_address: String
+  //- #      address_components: []
+  //- #     geojson: Object
+  //- #     lonlat: [lon, lat]
+  //- #   attachment:
+  //- #     _id: optional
+  //- #     className: [Recipe, Event, Post]
+  //- #     createdAt: String, moment().toISOString()
+  //- #     title: String
+  //- #     description: String
+  //- #     image: String, URL to JPG
+  //- #     url: String, URL
+  //- #     site_name: String
+  //- #     extras: {}
+  //- #     geojson: Object
+  //- #     location: {lat: lon:} deprecate?
+  //- #     ownerId: optional
+  //- #     favorite: [] ???
+  //- # }    
+      
   div(ng-repeat="$post in ff.filteredFeed track by $post._id" )
     div.scope-locals.hide.
       {{ $postHead = $post.head;$postBody=$post.body;''}}
@@ -140,74 +167,72 @@ ion-list.feed
         p.body {{$postBody.message}}
 
         //- attachment._id, attachment is a Meteor object
+        //- isAttachment($post)=='object', do a DB lookup for attachment
         div.tile.recipe.item.item-complex.content.ink(
-          ng-if="$hFeeds.isAttachment($post)=='object'"
+          ng-if="$hFeeds.isAttachment($post)=='db_object'"
         ) 
           div.scope-locals.hide.
             {{$type = $postBody.attachment.type || $postBody.attachment.className;''}}
             {{$attachment = ff.collHelpers.findOne($type, $postBody.attachment._id);''}}
-          div.hero.content(style="height:160px;")
-            div.icon-bar.top-right-toolbar.condensed.light(
-              ng-click="$event.stopImmediatePropagation()"
-              )
-              i.button.button-clear.larger.ion-heart.ink(
-                ng-class="{'selected':$attachment.favorite}"
-                )     
-              i.button.button-clear.larger.ion-map.ink(
-                xxx-ui-sref="app.map({'latlon':{{ $postBody.location.latlon }} })"
-                )
-              i.button.button-clear.larger.ink(
-                ng-class="{'ion-edit': $attachment.isOwner, 'ion-fork': !$attachment.isOwner}"
-                ng-click="action = $attachment.isOwner ? 'edit' : 'forkTile'; vm.on[action]($postHead.eventId, $attachment); "
-                )         
-              i.button.button-clear.ion-ios-upload.larger.ink(
-                )
-            div.feature.image(
-              bg-image="{{$attachment['image']}}"
+          a(
+            ng-href="{{ff.on.contentOpener($attachment.url)}}"
+            ng-click="ff.on.contentOpener($attachment.url, $event)"
+            target="_blank"
+            style="text-decoration: none!important;"
             )
-          div.body.padding
-            div.title.line-clamp-1 {{$attachment['title']}}
-            p.description.line-clamp.line-clamp-2(
-              ng-if="$attachment['description']"
-              ) {{$attachment['description']}}
-            p.site_name(
-              ng-if="$attachment['site_name']"
-              )  {{$attachment['site_name']}}
+            div.hero.content(style="height:160px;")
+              div.icon-bar.top-right-toolbar.condensed.light(
+                ng-click="$event.stopImmediatePropagation()"
+                )
+                i.button.button-clear.larger.ion-heart.ink(
+                  ng-class="{'selected':$attachment.favorite}"
+                  )     
+                i.button.button-clear.larger.ion-map.ink(
+                  xxx-ui-sref="app.map({'latlon':{{ $postBody.location.latlon }} })"
+                  )
+                i.button.button-clear.larger.ink(
+                  ng-class="{'ion-edit': $attachment.isOwner, 'ion-fork': !$attachment.isOwner}"
+                  ng-click="action = $attachment.isOwner ? 'edit' : 'forkTile'; vm.on[action]($postHead.eventId, $attachment); "
+                  )         
+                i.button.button-clear.ion-ios-upload.larger.ink(
+                  )
+              div.feature.image(
+                bg-image="{{$attachment['image']}}"
+              )
+            div.body.padding(ng-if="$attachment['title']")
+              div.title.line-clamp-1 {{$attachment['title']}}
+              p.description.line-clamp.line-clamp-2(
+                ng-if="$attachment['description']"
+                ) {{$attachment['description']}}
+              p.site_name(
+                ng-if="$attachment['site_name']"
+                )  {{$attachment['site_name']}}
               
-        //- attachment.id, attachment is embedded in Comment
+        //- attachment.type = 'Post', attachment is embedded directly in Post, Comment
         div.tile.recipe.item.item-complex.content.ink(
           ng-if="$hFeeds.isAttachment($post)=='embedded'"
         ) 
           div.scope-locals.hide.
             {{$attachment = $postBody.attachment;''}}
             {{$attachment.isOwner = $hFeeds.isAdmin($post);''}}
-          div.hero.content(style="height:160px;")
-            div.icon-bar.top-right-toolbar.condensed.light(
-              ng-click="$event.stopImmediatePropagation()"
-              )
-              i.button.button-clear.larger.ion-heart.ink(
-                ng-class="{'selected':$attachment.favorite}"
-                )     
-              i.button.button-clear.larger.ion-map.ink(
-                xxx-ui-sref="app.map({'latlon':{{ $postBody.location.latlon }} })"
-                )
-              i.button.button-clear.larger.ink(
-                ng-class="{'ion-edit': $attachment.isOwner, 'ion-fork': !$attachment.isOwner}"
-                ng-click="action = $attachment.isOwner ? 'edit' : 'forkTile'; vm.on[action]($postHead.eventId, $attachment); "
-                )         
-              i.button.button-clear.ion-ios-upload.larger.ink(
-                )
-            div.feature.image(
-              bg-image="{{$attachment['image']}}"
+          a(
+            ng-href="{{ff.on.contentOpener($attachment.url)}}"
+            ng-click="ff.on.contentOpener($attachment.url, $event)"
+            target="_blank"
+            style="text-decoration: none!important;"
             )
-          div.body.padding
-            div.title.line-clamp-1 {{$attachment['title']}}
-            p.description.line-clamp.line-clamp-2(
-              ng-if="$attachment['description']"
-              ) {{$attachment['description']}}
-            p.site_name(
-              ng-if="$attachment['site_name']"
-              )  {{$attachment['site_name']}}
+            div.hero.content(style="height:160px;")
+              div.feature.image(
+                bg-image="{{$attachment['image']}}"
+              )
+            div.body.padding(ng-if="$attachment['title']")
+              div.title.line-clamp-1 {{$attachment['title']}}
+              p.description.line-clamp.line-clamp-2(
+                ng-if="$attachment['description']"
+                ) {{$attachment['description']}}
+              p.site_name(
+                ng-if="$attachment['site_name']"
+                )  {{$attachment['site_name']}}
 
       div.item-body.post-actions
         div.likes

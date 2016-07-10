@@ -17,9 +17,9 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
     templateUrl: 'feed/filtered-feed.html'
     controller: [
       '$q', '$state', '$filter', 'FEED_DB_TRIGGERS', 'EventActionHelpers'
-      'utils', 'toastr'
+      'utils', 'toastr', 'deviceReady', '$cordovaInAppBrowser'
       ($q, $state, $filter, FEED_DB_TRIGGERS, EventActionHelpers
-      utils, toastr)->
+      utils, toastr, deviceReady, $cordovaInAppBrowser)->
         ###
         TODO: ???: should we just make this controller $reactive?
         ###
@@ -49,6 +49,22 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
           postToFeed: (comment)->
             ff.feedHelpers.postCommentToFeed(comment)
             return $q.when()    # TODO: fix in message-composer.on.post()
+          contentOpener: ( url, ev )->
+            return if !url
+
+            # use HTML target="_blank" for browsers
+            return url if deviceReady.device().isBrowser
+
+            return 'javacript:void(0)' if !ev
+            # $cordovaInAppBrowser.open for devices
+            ev.stopImmediatePropagation()
+            options = {
+              location: 'yes'
+              clearcache: 'yes'
+              toolbar: 'no'
+            }
+            $cordovaInAppBrowser.open(url, '_system', options)
+            return false
         }
 
         DB_TRIGGERS = new FEED_DB_TRIGGERS(ff)

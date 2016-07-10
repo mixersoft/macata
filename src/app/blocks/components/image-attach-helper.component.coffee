@@ -131,7 +131,7 @@ ImageServer = ($timeout, FileUploader)->
 
       uploader.onErrorItem = (fileItem, response, status, headers)->
         # console.info('onErrorItem', fileItem, response, status, headers)
-        console.error response
+        console.error response if response
         self.setResult( fileItem, response )
         callbacks?['onErrorItem']?.apply( uploader, arguments )
         $timeout().then ()->
@@ -167,8 +167,8 @@ ImageAttachHelper = {
   templateUrl: "blocks/components/image-attach-helper.template.html"
   # require:
   controller: [
-    '$scope', '$timeout', 'imageServer'
-    ($scope, $timeout, imageServer)->
+    '$scope', '$timeout', 'imageServer', 'toastr'
+    ($scope, $timeout, imageServer, toastr)->
       $ctrl = this
       this.fileUploader = null
       this.data = {
@@ -214,7 +214,9 @@ ImageAttachHelper = {
               return
 
             onErrorItem: (fileItem, response, status, headers)->
-              _.extend $ctrl.data, fileItem.result
+              response = "Image upload error. Check ImageServer status" if status == 0
+              toastr.warning response
+              # _.extend $ctrl.data, fileItem.result
               return
             onCancelItem: (fileItem, response, status, headers)->
               _.extend $ctrl.data, fileItem.result

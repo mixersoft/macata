@@ -73,9 +73,8 @@ global['hFeeds'] = class FeedsHelper extends global['hModel']
 
   isAttachment: (model={})->
     return null if not (attachment = model.body?.attachment)
-    return 'embedded' if attachment.id
-    return 'object' if attachment._id
-    return 'unknown'
+    return 'db_object' if attachment._id
+    return 'embedded'
 
   findAttachment: (model={})-> # for publishComposite
     return if not model.body.attachment

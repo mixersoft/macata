@@ -59,7 +59,7 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
               _ionScroll = $ionicScrollDelegate.$getByHandle(scrollHandle)
               $timeout ()->
                 _ionScroll.scrollBy(0, el.clientHeight, true)
-                el.getElementsByTagName('INPUT')?[0].focus()
+                el.focus() if el.tagName == 'INPUT'
                 # $mc.$container[0].querySelector(selector).scrollIntoView()
             return show[key]
           'imageAttachClick': ($event)->
@@ -68,8 +68,13 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
             $mc.LOCATION.getLocation(value)
             .then (result)->
               $scope.location = result || {}
-          'updateImage': (data)->
-            $scope.attachment.imageUrl = data.src
+          'updateImage': (data={})->
+            $scope.attachment = _.extend {}, $scope.attachment, {
+              id: Date.now()
+              className: 'Post' # attachment is embedded in post, no DB lookup required
+              image: data.src
+            }
+
           'post': ($event)->
             # check if there is a link that needs to be fetched
             return if $mc.settings.show.newTile
@@ -149,18 +154,9 @@ MessageComposerDirective = ($compile, $q, $timeout, $ionicScrollDelegate
             $mc.scope.attachment = null
 
           attachTile: (result)->
-            return $mc.TILE.submitNewTile(result)
-            .then (result)->
-              $mc.scope.attachment = result
-
-              # tile = $mc.on.makeTile(result)
-              # $scope['attachmentContainer'].push tile
-
-          submitNewTile: (result)->
-            console.log ['submitNewTile', result]
+            $mc.scope.attachment = _.extend {className: 'Post'}, result
             $mc.settings.show.newTile = false
-            if result
-              return IdeasResource.save(result)
+
         }
 
         $mc.LOCATION = {
