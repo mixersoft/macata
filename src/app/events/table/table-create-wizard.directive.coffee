@@ -18,33 +18,66 @@ TableCreateWizard = {
     onSubmit: '&'
   }
   templateUrl: 'events/table/table-create-wizard.html'
-  controller:[ 'TableEditSvc', (TableEditSvc)->
-    $ctrl = this
+  controller:[
+    '$q', 'TableEditSvc', 'openGraphSvc'
+    ($q, TableEditSvc, openGraphSvc)->
+      $ctrl = this
 
-    $ctrl.wizardInput = null
-    $ctrl.show = {
-      spinner: false
-    }
-    $ctrl.$onInit = ()=>
-      return
+      # coffeelint: disable=max_line_length
+      isImageUrl = new RegExp('^https?://.*\.(?:jpe?g|gif|png)$', 'i')
+      # coffeelint: enable=max_line_length
 
-    $ctrl.on = {
+      parseInput = (url)->
+        if !openGraphSvc.matchUrl(url)
+          # not a URL
+          return $q.when({
+              title: url
+            })
 
-      'beginTableWizard':(ev, type)->
-        type ?= 'standard'
-        data = {
-          title: $ctrl.wizardInput
-          # image: $ctrl.wizardInput
-        }
-        TableEditSvc.beginTableWizard(type, data)
-        .then (result)->
-          return if result == 'CANCELED'
-          return $ctrl.onSubmit({data: result})
+        if isImageUrl.test(url)
+          # just an image URL
+          return $q.when({
+              image: url
+            })
+
+        # parse url for opengraph attrs
+        $ctrl.show.spinner = true
+        return openGraphSvc.get(url)
+        .then (og)->
+          return data = openGraphSvc.normalize(og)
+        , (err)->
+          console.warn ['openGraphSvc.get()', err]
+          return $q.reject err
         .finally ()->
-          $ctrl.wizardInput = null
+          $ctrl.show.spinner = false
 
-    }
-    return
+      $ctrl.wizardInput = null
+      $ctrl.show = {
+        spinner: false
+      }
+      $ctrl.$onInit = ()=>
+        return
+
+      $ctrl.on = {
+
+        'beginTableWizard':(ev, type)->
+          type ?= 'standard'
+          # parse URL, if necessary
+          return parseInput($ctrl.wizardInput)
+          .catch (err)->
+            return data = {
+              title: $ctrl.wizardInput
+            }
+          .then (data)->
+            TableEditSvc.beginTableWizard(type, data)
+          .then (result)->
+            return if result == 'CANCELED'
+            return $ctrl.onSubmit({data: result})
+          .finally ()->
+            $ctrl.wizardInput = null
+
+      }
+      return
   ]
 }
 
