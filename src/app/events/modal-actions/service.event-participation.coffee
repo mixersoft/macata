@@ -93,9 +93,9 @@ EventActionHelpers = ($rootScope, $q, $timeout
           baseurl += '#'
           eventLink = baseurl + '/app/event-detail/' + event._id
           shareLinks = {
-            'event': if event.setting['isExclusive'] then false else eventLink
+            'event': if event.settings['isExclusive'] then false else eventLink
           }
-          if event.setting['denyGuestShare'] && $rootScope.currentUser._id != vm.event.ownerId
+          if event.settings['denyGuestShare'] && $rootScope.currentUser._id != vm.event.ownerId
             shareLinks['invitations'] = false
           else
             shareLinks['invitations'] = _.map tokens, (token)->
@@ -240,11 +240,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
           if person?.displayName # override
             options['displayName'] = person.displayName
 
-          if event.setting['denyRsvpFriends']
+          if event.settings['denyRsvpFriends']
             options['maxSeats'] = 1
             options['defaultSeats'] = 1
           else
-            options['maxSeats'] = Math.min event.seatsOpen, event.setting['rsvpFriendsLimit']
+            options['maxSeats'] = Math.min event.seatsOpen, event.settings['rsvpFriendsLimit']
             options['defaultSeats'] = 0
 
           return options
@@ -374,9 +374,9 @@ EventActionHelpers = ($rootScope, $q, $timeout
 
           # new response
           maxSeats =
-            if myResponse.event.setting['denyRsvpFriends']
+            if myResponse.event.settings['denyRsvpFriends']
             then 1
-            else myResponse.event.setting['rsvpFriendsLimit']
+            else myResponse.event.settings['rsvpFriendsLimit']
           return $q.reject('RSVP FRIENDS LIMIT') if data['seats'] > maxSeats
 
           return ParticipationsResource['post'](data)
@@ -422,11 +422,11 @@ EventActionHelpers = ($rootScope, $q, $timeout
         .then ()->
           # utils.ga_PageView('/booking', '.booking', 'append')
 
-          if event.setting['denyRsvpFriends']
+          if event.settings['denyRsvpFriends']
             options['maxSeats'] = 1
             options['defaultSeats'] = 1
           else
-            options['maxSeats'] = Math.min event.seatsOpen, event.setting['rsvpFriendsLimit']
+            options['maxSeats'] = Math.min event.seatsOpen, event.settings['rsvpFriendsLimit']
             options['defaultSeats'] = 0
           # modalAfterShow()
           return appModalSvc.show( template
@@ -457,7 +457,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
         return $q.when()
         .then ()->
           return true if $state.is('app.invitation')
-          if event.setting.isExclusive || $state.params.invitation
+          if event.settings['isExclusive'] || $state.params.invitation
             return TokensResource.isValid($state.params.invitation, 'Event', event._id)
         .catch (result)->
           $log.info "Token check, value="+result
@@ -491,7 +491,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
             selected: category
           submitContribute: (contribution, onSuccess)->
             if contribution.isNewMenuItem
-              if vm.event.setting['denyAddMenu']
+              if vm.event.settings['denyAddMenu']
                 return $q.reject("DENY ADD MENU")
               promise = self.createMenuItem.call(vm, contribution.menuItem)
               .then (menuItem)->

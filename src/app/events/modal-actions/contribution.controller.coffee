@@ -47,9 +47,9 @@ EventContributionCtrl = (
 
       # booking by definition is a new response
       maxSeats =
-        if event.setting['denyRsvpFriends']
+        if event.settings['denyRsvpFriends']
         then 1
-        else event.setting['rsvpFriendsLimit']
+        else event.settings['rsvpFriendsLimit']
       return $q.reject('RSVP FRIENDS LIMIT') if particip['seats'] > maxSeats
 
       return $q.when(particip)

@@ -101,7 +101,7 @@ FeedCtrl = (
         event = vm.getReactively('event' , true)
         eventTransforms.onChange(event)
         .then (event)->
-          eventUtils.mockData(event, vm)
+          # eventUtils.mockData(event, vm)
           setFabIcon(event)
 
 

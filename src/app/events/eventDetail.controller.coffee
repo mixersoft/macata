@@ -45,7 +45,7 @@ EventDetailCtrl = (
       return $q.when()
       .then ()->
         return true if $state.is('app.invitation')
-        if event.setting['isExclusive'] || $state.params.invitation
+        if event.settings['isExclusive'] || $state.params.invitation
           return TokensResource.isValid($state.params.invitation, 'Event', event._id)
       .catch (result)->
         $log.info "Token check, value="+result
@@ -303,7 +303,7 @@ EventDetailCtrl = (
 
         onChange: (event)->
           ## NOTE: run in onChange because event properties reset on vm.getReactively()
-          eventUtils.mockData(event, vm)
+          # eventUtils.mockData(event, vm)
 
           return $q.when(event)
           .then (event)->
@@ -340,7 +340,7 @@ EventDetailCtrl = (
             return event
           .then (event)->
             # render shareLinks
-            if event.isPublic == false || event.setting.isExclusive
+            if event.isPublic == false || event.settings['isExclusive']
               return event if not hEvents.get().isParticipant(event)
             EventActionHelpers.getShareLinks(event, vm)
             .then (sharelinks)->

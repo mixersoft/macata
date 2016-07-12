@@ -161,7 +161,7 @@ FeedDbTriggers = ( notificationTemplates )->
           # TODO: handle with subclass
           switch event.type
             when 'progressive-invite'
-              if event.setting.isExclusive
+              if isExclusive
                 shareTemplate = 'event.booking.sendInvites'
                 # vm.settings.show.hideInvitations = false
               else
