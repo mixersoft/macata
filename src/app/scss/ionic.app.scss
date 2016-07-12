@@ -1225,6 +1225,52 @@ eventDetail View
   }
 }
 
+.progress-wrap {
+  position: relative;
+  font-size: smaller;
+  width: 100%;
+  display:flex;
+  .label {
+    color:#aaa;
+    min-width: 60px;
+  }
+  .progress {
+    border-radius: 4px;
+    vertical-align: bottom;
+    height: 16px;
+    margin: 0 10px;
+    width: 100%;
+    .progress-bar {
+      height: 14px;
+      // width: 33%;
+    }
+    &.positive {
+      border:1px solid $positive;
+      .progress-bar {
+        background-color: $positive;
+      }
+    }
+    &.energized {
+      border:1px solid $energized;
+      .progress-bar {
+        background-color: $energized;
+      }
+    }
+    &.assertive {
+      border:1px solid $assertive;
+      .progress-bar {
+        background-color: $assertive;
+      }
+    }
+    &.royal {
+      border:1px solid $royal;
+      .progress-bar {
+        background-color: $royal;
+      }
+    }
+  }
+}
+
 image-attach-helper {
   .image-attach-helper.item-input {
     flex-wrap: wrap;
@@ -1240,46 +1286,6 @@ image-attach-helper {
       height: 47px;
       z-index: 2;
       opacity: 0;
-    }
-    .progress-wrap {
-      position: relative;
-      font-size: smaller;
-      width: 100%;
-      display:flex;
-      .label {
-        color:#aaa;
-        min-width: 60px;
-      }
-      .progress {
-        border-radius: 4px;
-        vertical-align: bottom;
-        height: 16px;
-        margin: 0 10px;
-        width: 100%;
-        .progress-bar {
-          height: 14px;
-          // width: 33%;
-        }
-        &.positive {
-          border:1px solid $positive;
-          .progress-bar {
-            background-color: $positive;
-          }
-        }
-        &.energized {
-          border:1px solid $energized;
-          .progress-bar {
-            background-color: $energized;
-          }
-        }
-        &.assertive {
-          border:1px solid $assertive;
-          .progress-bar {
-            background-color: $assertive;
-          }
-        }
-      }
-
     }
   }
 }

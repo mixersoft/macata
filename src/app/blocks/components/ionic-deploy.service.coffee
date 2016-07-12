@@ -11,7 +11,10 @@ lifecycle:
   ionicDeploy.check() called in HomeCtrl.activate()
 ###
 
-_progress = null
+_progress = {
+  value: null
+  color: 'royal'
+}
 
 IonicDeploy = (
   $q, $timeout, deviceReady, appModalSvc
@@ -86,7 +89,7 @@ IonicDeploy = (
         )
         .then (result)->
 
-          self.updateProgress(null)
+          self.updateProgress(null, 'royal')
 
           result ?= 'LATER'
           switch result
@@ -109,11 +112,12 @@ IonicDeploy = (
         return isChecked
       .then (isUpdate)->
         if isUpdate
-          self.updateProgress(0)
+          self.updateProgress(0, 'royal')
           deploy.update()
           .then (result)->
             console.info ['deploy.update() result=', result]
           , (err)->
+            self.updateProgress null, 'assertive'
             console.warn ['deploy.update() err=', err]
           , (progress)->
             $timeout().then ()->
@@ -137,8 +141,9 @@ IonicDeploy = (
       })
       return device.skipUpdates
 
-    updateProgress: (value)->
-      _progress = value if typeof value != 'undefined'
+    updateProgress: (value, color)->
+      _progress.value = value if typeof value != 'undefined'
+      _progress.color = color if typeof color != 'undefined'
       return _progress
 
     #  for debug
@@ -191,7 +196,10 @@ IonicDeploy.$inject = [
 
 IonicDeployCtrl = ($scope, ionicDeploy, $timeout)->
   idc = this
-  idc.progress = null
+  idc.progress = {
+    value: null
+    color: ''
+  }
 
   idc.afterModalShow = ()->
     return if _.isEmpty $scope.metadata
@@ -216,7 +224,7 @@ IonicDeployCtrl = ($scope, ionicDeploy, $timeout)->
   $scope.$watch ()->
     return ionicDeploy.updateProgress()
   , (newV)->
-    idc.progress = newV
+    idc.progress = newV  # {value:, color:}
 
   return idc
 

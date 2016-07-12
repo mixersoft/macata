@@ -14,18 +14,15 @@ ion-modal-view#ionic-deploy-modal-view
             ) {{idc.metadata}}
         
         div.text-center.padding(
-          ng-show="idc.progress!=null"
+          ng-show="idc.progress.value!=null"
           )
-          div.button.button-royal(
-            style="padding-top:14px;"
-            )
-            ion-spinner.spinner-light(
-              icon="ios"
-              style="line-height:24px;"
+          div.progress-wrap
+            div.progress(
+              ng-class="idc.progress.color"
               )
-            div.inline.padding-left.text-left(
-              style="line-height:24px;vertical-align:top;min-width:130px;"
-              ) updating...{{idc.progress}}%
+              div.progress-bar(
+                ng-style="{ 'width': idc.progress.value + '%' }"
+                )
         
         div.text-center.padding
         
