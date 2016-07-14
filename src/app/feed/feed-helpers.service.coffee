@@ -34,6 +34,9 @@ FeedHelpers = (
   class FeedHelpersClass
     constructor: (@context)->
 
+    setContext: (context)->
+      @context = context
+
     postDefaults: {}
     show:
       messageComposer: false
@@ -72,6 +75,7 @@ FeedHelpers = (
     ###
     postToFeed: (post, cb={})->
       self = @
+      throw new Error("context is null for PostHelpers") if !self.context
       return AAAHelpers.requireUser('sign-in')
       .then ()->
         missingKeys = _.difference ['type','head','body'], _.keys post

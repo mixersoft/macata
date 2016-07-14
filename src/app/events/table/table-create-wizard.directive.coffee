@@ -104,6 +104,7 @@ TableEditSvc = (
 
       updateLocation: (data)->
         # data = _.pick data,['startTime', 'duration']
+        $ctrl.data['isPublicLocation'] = data['isPublicLocation']
         $ctrl.data['address'] = data['address']
         $ctrl.data['neighborhood'] = data['neighborhood']
         $ctrl.data['geojson'] = data['geojson']
@@ -275,7 +276,8 @@ TableStandard = ($q)->
       seatsTotal: 12
       startTime: null
       duration: null
-      isPublic: false
+      isPublic: true            # event appears in search results, subscribe
+      isPublicLocation: false   # event location is public and visible(?)
       locationName: null
       address: null
       neighborhood: null

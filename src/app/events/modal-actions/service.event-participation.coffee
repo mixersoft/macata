@@ -81,16 +81,7 @@ EventActionHelpers = ($rootScope, $q, $timeout
           return TokensResource.post(token).then (token)->
             return [token]
         .then (tokens)->
-          baseurl =
-            if $location.host() == 'localhost'
-            then $location.absUrl().split('#').shift()
-            else 'http://app.snaphappi.com/foodie.App/'
-          # if ionic.Platform.isWebView()
-          #   baseurl = "http://app.snaphappi.com/foodie.App/#"
-          # else
-          #   path = $location.path()
-          #   baseurl = $location.absUrl().slice(0, $location.absUrl().indexOf(path))
-          baseurl += '#'
+          baseurl = __meteor_runtime_config__.DDP_DEFAULT_CONNECTION_URL + '/#'
           eventLink = baseurl + '/app/event-detail/' + event._id
           shareLinks = {
             'event': if event.settings['isExclusive'] then false else eventLink
@@ -426,7 +417,9 @@ EventActionHelpers = ($rootScope, $q, $timeout
             options['maxSeats'] = 1
             options['defaultSeats'] = 1
           else
-            options['maxSeats'] = Math.min event.seatsOpen, event.settings['rsvpFriendsLimit']
+            options['maxSeats'] = Math.min( event.seatsOpen
+            , event.settings['rsvpFriendsLimit'] || 999
+            )
             options['defaultSeats'] = 0
           # modalAfterShow()
           return appModalSvc.show( template

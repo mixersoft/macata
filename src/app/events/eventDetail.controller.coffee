@@ -200,10 +200,9 @@ EventDetailCtrl = (
         .then (participation)->
           switch vm.event.type
             when 'progressive-invite'
-              participation.head['invitationId'] = invitation._id
-              participation.head['recipientIds'] = [invitation.head.ownerId]
+              participation.head['recipientIds'] = [vm.event.ownerId]
               # invite owner responds to booking request
-              participation.head['moderatorIds'] = [invitation.head.ownerId]
+              participation.head['moderatorIds'] = [vm.event.ownerId]
               participation.head['nextActionBy'] = 'moderator'
               participation.head['isPublic'] = false
               return participation
@@ -211,10 +210,10 @@ EventDetailCtrl = (
             when 'kickstarter', 'booking'
               break
             else
+              ~["standard"].indexOf(vm.event.type)
               # post Booking/Participation, appears on Moderator's feed
               # return EventActionHelpers.FeedHelpers.post(event, participation, vm)
-              participation.head['invitationId'] = invitation._id
-              participation.head['recipientIds'] = [invitation.head.ownerId]
+              participation.head['recipientIds'] = [vm.event.ownerId]
               # event owner responds to booking request
               participation.head['moderatorIds'] = [vm.event.ownerId]
               participation.head['nextActionBy'] = 'moderator'
@@ -307,6 +306,7 @@ EventDetailCtrl = (
 
           return $q.when(event)
           .then (event)->
+            return $q.reject() if !event
             _lookups = {
               '$$participants': (event)->
                 # TODO: get participantIds from event.participations

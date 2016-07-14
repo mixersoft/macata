@@ -120,11 +120,12 @@ EVENT_ATTRIBUTES = {
     #   seats: _.random(3) + 1  # random seats for participation
     #   contributions: [{
     #     _id:
-    #     className:
-    #     ???: quantity:
+    #     className: [Recipe]
+    #     portions:
     #     comment:
+    #     sort:
     #   }]
-    #   comment:
+    #   comment: []
     #   createdAt: moment(mi.createdAt).add(i, 'hours').toJSON()
     # }]
     "moderatorIds"
@@ -201,6 +202,7 @@ methods = {
       createdAt: new Date()
       ownerId: booking.head.ownerId
       contributions: []
+      comment:[]
     }
     participation.seats += booking.body.seats
     participation.modifiedAt = now
@@ -222,6 +224,7 @@ methods = {
         if not found2
           participation.contributions.push contrib
       else
+        participation.comment.push booking.body.message
         if !_.isEmpty booking.body.attachment
           participation.contributions.push booking.body.attachment
         else
@@ -239,7 +242,7 @@ methods = {
       ids = _.chain(p.contributions).filter({className:'Recipe'}).map('_id').value()
       return result = result.concat ids
     ,[]
-    seatsBooked = _.sum event.participations, 'seats'
+    seatsBooked = _.chain(event.participations).map('seats').sum().value()
     event.seatsOpen = event.seatsTotal - seatsBooked
 
     modified = _.pick event, [

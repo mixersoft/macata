@@ -16,9 +16,9 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
     }
     templateUrl: 'feed/filtered-feed.html'
     controller: [
-      '$q', '$state', '$filter', 'FEED_DB_TRIGGERS', 'EventActionHelpers'
+      '$scope', '$q', '$state', '$filter', 'FEED_DB_TRIGGERS', 'EventActionHelpers'
       'utils', 'toastr', 'deviceReady', '$cordovaInAppBrowser'
-      ($q, $state, $filter, FEED_DB_TRIGGERS, EventActionHelpers
+      ($scope, $q, $state, $filter, FEED_DB_TRIGGERS, EventActionHelpers
       utils, toastr, deviceReady, $cordovaInAppBrowser)->
         ###
         TODO: ???: should we just make this controller $reactive?
@@ -33,6 +33,14 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
         ff.collHelpers = new CollectionHelpers(ff.reactiveContext)
         ff.feedHelpers = new FeedHelpers(ff.reactiveContext)
         ff.postHelpers = new PostHelpers(ff.reactiveContext)
+
+        ff.$onInit = ()->
+          ff.event = ff.feedHelpers.context.event
+          ff.eventId = ff.feedHelpers.context.eventId
+
+        $scope.$watch 'ff.feedHelpers.context.event', (newV)->
+          return if !newV
+          ff.$onInit()
 
         ff.requiresAction = (post, types)->
           return false if not ~types.indexOf post.type
@@ -71,6 +79,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
 
         ff.inviteActions = {
           accept: ($event, invitation)->
+            ff.event = ff.feedHelpers.context.event if !ff.event
             return $q.when()
             .then ()->
               return $q.reject("Invitation Not Found") if invitation.type != 'Invitation'
@@ -166,6 +175,7 @@ FilteredFeed = ( CollectionHelpers, FeedHelpers, PostHelpers)->
 
         ff.moderatorActions = {
           accept: ($event, post)->
+            ff.event = ff.feedHelpers.context.event if !ff.event
             # confirm sign-in
             # add booking to event
             # respondToInvite, update body status, resonse

@@ -62,7 +62,7 @@ FeedCtrl = (
       vm.subscribe 'myVisibleEvents' # , {_id: vm.getReactively('feedId')}
       vm.subscribe 'myEventFeeds'
       ,()->
-        eventId = vm.getReactively('feedId')
+        vm.eventId = eventId = vm.getReactively('feedId')
         myUserId = Meteor.userId()
         params = [
           {
@@ -99,6 +99,7 @@ FeedCtrl = (
       eventTransforms = new ReactiveTransformSvc(vm)
       vm.autorun (tracker)->
         event = vm.getReactively('event' , true)
+        vm.feedHelpers.setContext(vm)
         eventTransforms.onChange(event)
         .then (event)->
           # eventUtils.mockData(event, vm)
