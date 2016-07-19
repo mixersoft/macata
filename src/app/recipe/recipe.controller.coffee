@@ -81,8 +81,9 @@ RecipeCtrl = (
 
       #  list-item-container[on-select]
       select: ($item, $index, silent)->
+        return if !$item
         # update history url
-        id = $item?._id || $item.id
+        id = $item._id || $item.id
         if id && !$index
           $index = _.findIndex mcRecipes.find().fetch(), {_id: id}
         $state.transitionTo($state.current.name

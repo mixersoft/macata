@@ -25,7 +25,7 @@ div.item.item-complex.event-location-helper
         label.toggle.toggle-balanced
           input(
             type="checkbox"
-            ng-model="$ctrl.data.isPublic"
+            ng-model="$ctrl.data.isPublicLocation"
             ng-blur="$ctrl.on.blur($event)"
             )
           div.track
@@ -34,7 +34,7 @@ div.item.item-complex.event-location-helper
         The Table is in a restaurant, bar, or other public place.
     
     
-    div(ng-hide="$ctrl.data.isPublic")
+    div(ng-hide="$ctrl.data.isPublicLocation")
       //- Neighborhood text
       label.item.item-input.not-first-child
         span.input-label Neighborhood
@@ -58,7 +58,7 @@ div.item.item-complex.event-location-helper
         div.message.item-text-wrap.
           The exact address will be revealed only after booking.
                   
-    div(ng-show="$ctrl.data.isPublic")
+    div(ng-show="$ctrl.data.isPublicLocation")
       div.item.item-input.not-first-child
         span.input-label Name
         input(

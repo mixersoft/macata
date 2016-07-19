@@ -33,6 +33,7 @@ ion-input.item-input.item-stacked-label.message-composer(
   image-attach-helper(
     ng-show="show.imageAttach"
     src="$mc.data.image"
+    preview="false"
     on-update="$mc.on.updateImage(data)"
     )    
   div.button-bar.condensed.positive(

@@ -84,9 +84,9 @@ ImageServer = ($timeout, FileUploader)->
       uploader.filters.push({
         name: 'imageFilter'
         fn: (item , options)->
-            type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|'
-            # return ~'|jpg|png|jpeg|bmp|gif|'.indexOf(type)
-            return ~'|jpg|png|jpeg|'.indexOf(type)
+          type = '|' + item.type.slice(item.type.lastIndexOf('/') + 1) + '|'
+          # return ~'|jpg|png|jpeg|bmp|gif|'.indexOf(type)
+          return ~'|jpg|png|jpeg|'.indexOf(type)
       })
 
       # event handlers
@@ -239,17 +239,17 @@ ImageAttachHelper = {
       ,true
 
 
-      this.$onChanges = (changes)=>
+      this.$onChanges = (changes)->
         console.log ["onChanges", changes]
 
       this.on = {}
-      this.on['blurImageUrl'] = (ev)=>
+      this.on['blurImageUrl'] = (ev)->
         # manual entry, remove other attrs
         $ctrl.data = _.pick $ctrl.data, ['src', 'placeholder']
         $ctrl.onUpdate({ data: _.pick( $ctrl.data,['src'] ) })
         console.info 'blurImageUrl'
         return
-      this.on['pauseUpload'] = (ev)=>
+      this.on['pauseUpload'] = (ev)->
         return
 
       return this

@@ -8,18 +8,19 @@ bootstrap = ()->
   global._ = lodash
   console.log(['lodash.VERSION=', global._.VERSION, lodash.VERSION])
 
-  # server/packages/facebook.js calls:
-  #   OAuth._redirectUri('facebook', config)
-  #   > Meteor.absoluteUrl('_oauth/' + serviceName, absoluteUrlOptions)
-  # without setting absoluteUrlOptions
-  # set manually:
-  oauth_rootUrl = Meteor.settings.public.facebook.oauth_rootUrl
-  # OAuth._redirectUri(): Meteor.isServer && Meteor.isCordova
-  # # Meteor.absoluteUrl()
-  __meteor_runtime_config__.ROOT_URL = oauth_rootUrl
-  # Meteor.absoluteUrl(): Meteor.isServer
-  Meteor.absoluteUrl.defaultOptions.rootUrl = oauth_rootUrl
-  console.log("__meteor_runtime_config__.ROOT_URL", __meteor_runtime_config__.ROOT_URL)
+  if Meteor.isServer
+    # server/packages/facebook.js calls:
+    #   OAuth._redirectUri('facebook', config)
+    #   > Meteor.absoluteUrl('_oauth/' + serviceName, absoluteUrlOptions)
+    # without setting absoluteUrlOptions
+    # set manually:
+    oauth_rootUrl = Meteor.settings.public.facebook.oauth_rootUrl
+    # OAuth._redirectUri(): Meteor.isServer && Meteor.isCordova
+    # # Meteor.absoluteUrl()
+    __meteor_runtime_config__.ROOT_URL = oauth_rootUrl
+    # Meteor.absoluteUrl(): Meteor.isServer
+    Meteor.absoluteUrl.defaultOptions.rootUrl = oauth_rootUrl
+    console.log("__meteor_runtime_config__.ROOT_URL", __meteor_runtime_config__.ROOT_URL)
 
   # meteor-client-side: load Meteor.settings.public
   Meteor.methods( {
