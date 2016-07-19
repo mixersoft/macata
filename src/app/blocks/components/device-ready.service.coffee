@@ -88,9 +88,10 @@ DeviceReady = (
 
 
     waitForDevice: ()->
-      if ionic.Platform.isReady
-        return $q.when(_device)
-      return self.waitP()
+      $q.when()
+      .then ()->
+        return self.device() if ionic.Platform.isReady
+        return self.waitP()
       .then (device)->
         return $q.reject("NOT_A_DEVICE") if device.isDevice == false
         return device
